@@ -1,0 +1,155 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum KnowledgeLevel {
+  junior
+  middle
+  senior
+}
+
+enum AssistantRole {
+  hr
+  technical
+  algorithms
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+}
+
+enum TestMode {
+  topic
+  time_attack
+  one_mistake
+  ai_generated
+}
+
+enum QuestionSource {
+  static
+  ai
+}
+
+model User {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  passwordHash      String
+  fullName          String         @default("")
+  avatarUrl         String?
+  knowledgeLevel    KnowledgeLevel @default(junior)
+  isProfileComplete Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  favorites    UserFavorite[]
+  chatSessions ChatSession[]
+  testSessions TestSession[]
+  reminder     Reminder?
+}
+
+model Material {
+  id               String         @id @default(cuid())
+  title            String
+  shortDescription String
+  content          String         @db.Text
+  tags             String[]
+  level            KnowledgeLevel
+  createdAt        DateTime       @default(now())
+
+  favoritedBy UserFavorite[]
+}
+
+model UserFavorite {
+  userId     String
+  materialId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@id([userId, materialId])
+}
+
+model ChatSession {
+  id            String        @id @default(cuid())
+  userId        String
+  title         String        @default("Новый чат")
+  assistantRole AssistantRole @default(technical)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  role      MessageRole
+  content   String      @db.Text
+  createdAt DateTime    @default(now())
+
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model Question {
+  id                 String         @id @default(cuid())
+  topic              String
+  text               String         @db.Text
+  options            String[]
+  correctAnswerIndex Int
+  explanation        String         @db.Text
+  difficulty         KnowledgeLevel @default(junior)
+  sourceType         QuestionSource @default(static)
+  createdAt          DateTime       @default(now())
+
+  answerHistory TestAnswerHistory[]
+}
+
+model TestSession {
+  id              String   @id @default(cuid())
+  userId          String
+  mode            TestMode
+  topic           String?
+  correctCount    Int      @default(0)
+  incorrectCount  Int      @default(0)
+  totalQuestions  Int      @default(0)
+  durationSeconds Int      @default(0)
+  accuracyPercent Float    @default(0)
+  createdAt       DateTime @default(now())
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answerHistory TestAnswerHistory[]
+}
+
+model TestAnswerHistory {
+  id                  String   @id @default(cuid())
+  testSessionId       String
+  questionId          String
+  selectedAnswerIndex Int
+  isCorrect           Boolean
+  createdAt           DateTime @default(now())
+
+  testSession TestSession @relation(fields: [testSessionId], references: [id], onDelete: Cascade)
+  question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model Reminder {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  enabled   Boolean  @default(false)
+  time      String   @default("09:00")
+  weekdays  Int[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
