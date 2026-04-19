@@ -65,8 +65,12 @@ export async function cropAvatarFile(file: File, options: AvatarCropOptions) {
   const viewportToOutput = outputSize / options.viewportSize
   const drawWidth = image.width * baseScale * normalizedZoom
   const drawHeight = image.height * baseScale * normalizedZoom
-  const drawX = (outputSize - drawWidth) / 2 + options.offsetX * viewportToOutput
-  const drawY = (outputSize - drawHeight) / 2 + options.offsetY * viewportToOutput
+  const maxOffsetX = Math.max(0, (drawWidth - outputSize) / 2 / viewportToOutput)
+  const maxOffsetY = Math.max(0, (drawHeight - outputSize) / 2 / viewportToOutput)
+  const offsetX = Math.min(Math.max(options.offsetX, -maxOffsetX), maxOffsetX)
+  const offsetY = Math.min(Math.max(options.offsetY, -maxOffsetY), maxOffsetY)
+  const drawX = (outputSize - drawWidth) / 2 + offsetX * viewportToOutput
+  const drawY = (outputSize - drawHeight) / 2 + offsetY * viewportToOutput
 
   canvas.width = outputSize
   canvas.height = outputSize
