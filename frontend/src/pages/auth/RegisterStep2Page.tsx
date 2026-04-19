@@ -10,6 +10,8 @@ import { Input } from '@/shared/ui/Input'
 import { useRegisterStore } from '@/features/auth/useRegisterStore'
 import { authApi } from '@/shared/api/auth.api'
 import { profileApi } from '@/shared/api/profile.api'
+import { getApiErrorMessage } from '@/shared/lib/apiErrors'
+import { resizeAvatarFile } from '@/shared/lib/avatarImage'
 
 const schema = z.object({
   fullName: z.string().min(2, 'Минимум 2 символа').max(50, 'Максимум 50 символов'),
@@ -39,6 +41,7 @@ export default function RegisterStep2Page() {
   const [serverError, setServerError] = useState('')
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarScale, setAvatarScale] = useState(100)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -76,18 +79,15 @@ export default function RegisterStep2Page() {
 
       if (avatarFile) {
         const avatarForm = new FormData()
-        avatarForm.append('file', avatarFile)
+        const preparedAvatar = await resizeAvatarFile(avatarFile, avatarScale / 100)
+        avatarForm.append('file', preparedAvatar)
         await profileApi.uploadAvatar(avatarForm)
       }
 
       setStep2({ fullName: formData.fullName, avatarFile: avatarFile ?? undefined })
       navigate('/register/level')
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: { message?: string; details?: string[] } } } }
-      const message = error.response?.data?.error?.details?.[0]
-        ?? error.response?.data?.error?.message
-        ?? 'Ошибка при сохранении профиля'
-      setServerError(message)
+      setServerError(getApiErrorMessage(err, 'Ошибка при сохранении профиля'))
     } finally {
       setIsLoading(false)
     }
@@ -113,7 +113,12 @@ export default function RegisterStep2Page() {
                 onClick={() => fileInputRef.current?.click()}
               >
                 {avatarPreview ? (
-                  <img src={avatarPreview} alt="Avatar preview" className="h-full w-full object-cover" />
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    className="h-full w-full object-cover"
+                    style={{ transform: `scale(${avatarScale / 100})` }}
+                  />
                 ) : (
                   <Camera size={24} className="text-muted-foreground" />
                 )}
@@ -125,6 +130,7 @@ export default function RegisterStep2Page() {
                   onClick={() => {
                     setAvatarPreview(null)
                     setAvatarFile(null)
+                    setAvatarScale(100)
                   }}
                 >
                   <X size={11} />
@@ -140,6 +146,24 @@ export default function RegisterStep2Page() {
             </div>
           </div>
 
+          {avatarPreview && (
+            <div className="mb-6 rounded-lg border border-border bg-secondary/40 p-3">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="text-xs font-medium text-foreground">Размер фото</span>
+                <span className="text-xs text-muted-foreground">{avatarScale}%</span>
+              </div>
+              <input
+                type="range"
+                min="75"
+                max="150"
+                step="5"
+                value={avatarScale}
+                onChange={(event) => setAvatarScale(Number(event.target.value))}
+                className="w-full accent-primary"
+              />
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
             <Input
               label="Имя"
@@ -151,9 +175,13 @@ export default function RegisterStep2Page() {
             />
 
             {serverError && (
-              <p className="text-sm text-destructive rounded-lg bg-destructive/10 px-3 py-2">
-                {serverError}
-              </p>
+              <div
+                role="alert"
+                className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2"
+              >
+                <p className="text-sm font-medium text-destructive">Не удалось сохранить профиль</p>
+                <p className="mt-0.5 text-xs text-destructive/90">{serverError}</p>
+              </div>
             )}
 
             <Button type="submit" className="w-full" loading={isLoading}>

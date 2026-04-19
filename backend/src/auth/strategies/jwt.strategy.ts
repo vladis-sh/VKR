@@ -11,6 +11,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private configService: ConfigService,
     private prisma: PrismaService,
   ) {
+    const accessSecret = configService.get<string>('jwt.accessSecret');
+    if (!accessSecret) {
+      throw new Error('jwt.accessSecret is not configured');
+    }
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
@@ -19,8 +23,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey:
-        configService.get<string>('jwt.accessSecret') || 'access-secret-change-in-production',
+      secretOrKey: accessSecret,
     });
   }
 

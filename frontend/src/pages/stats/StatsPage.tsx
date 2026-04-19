@@ -4,6 +4,8 @@ import { Trophy } from 'lucide-react'
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -21,6 +23,15 @@ function formatDate(dateStr: string) {
     day: 'numeric',
     month: 'short',
   })
+}
+
+function formatDuration(seconds: number) {
+  if (seconds < 60) return `${seconds}с`
+  const minutes = Math.floor(seconds / 60)
+  const restSeconds = seconds % 60
+  if (minutes < 60) return restSeconds > 0 ? `${minutes}м ${restSeconds}с` : `${minutes}м`
+  const hours = Math.floor(minutes / 60)
+  return `${hours}ч ${minutes % 60}м`
 }
 
 function StatsSkeleton() {
@@ -67,7 +78,14 @@ export default function StatsPage() {
     accuracy: Math.round(s.accuracy),
     correct: s.correctAnswers,
     total: s.totalQuestions,
+    durationSeconds: s.durationSeconds,
   })).reverse()
+  const averageDuration = stats.completedTests > 0
+    ? Math.round(stats.totalTimeSeconds / stats.completedTests)
+    : 0
+  const fastestDuration = chartData.length > 0
+    ? Math.min(...chartData.map((session) => session.durationSeconds))
+    : 0
 
   return (
     <div className="space-y-6">
@@ -133,6 +151,64 @@ export default function StatsPage() {
           </ResponsiveContainer>
         </motion.div>
       )}
+
+      {/* Time statistics */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+      >
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">Время прохождения</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Считается по завершённым тестам с ненулевой длительностью.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-right">
+            <div className="rounded-lg bg-secondary px-3 py-2">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Среднее</p>
+              <p className="text-sm font-semibold text-foreground">{formatDuration(averageDuration)}</p>
+            </div>
+            <div className="rounded-lg bg-secondary px-3 py-2">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Быстрее всего</p>
+              <p className="text-sm font-semibold text-foreground">{formatDuration(fastestDuration)}</p>
+            </div>
+          </div>
+        </div>
+
+        {chartData.length > 0 && (
+          <ResponsiveContainer width="100%" height={170}>
+            <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={false}
+                axisLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `${Math.round(Number(value) / 60)}м`}
+              />
+              <Tooltip
+                contentStyle={{
+                  background: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '12px',
+                  fontSize: 12,
+                  color: 'hsl(var(--foreground))',
+                }}
+                formatter={(value: number) => [formatDuration(value), 'Время']}
+              />
+              <Bar dataKey="durationSeconds" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </motion.div>
 
       {/* Summary */}
       <motion.div

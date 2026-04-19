@@ -8,6 +8,7 @@ import { useAuthStore } from '@/features/auth/useAuthStore'
 import { authApi } from '@/shared/api/auth.api'
 import { KNOWLEDGE_LEVELS } from '@/shared/constants'
 import { cn } from '@/shared/lib/cn'
+import { getApiErrorMessage } from '@/shared/lib/apiErrors'
 import { toast } from '@/features/theme/useToastStore'
 
 function StepDots({ current }: { current: number }) {
@@ -50,11 +51,7 @@ export default function RegisterStep3Page() {
       toast.success('Добро пожаловать в PrepAI!')
       navigate('/app/materials', { replace: true })
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: { message?: string; details?: string[] } } } }
-      const message = error.response?.data?.error?.details?.[0]
-        ?? error.response?.data?.error?.message
-        ?? 'Ошибка при завершении регистрации'
-      setServerError(message)
+      setServerError(getApiErrorMessage(err, 'Ошибка при завершении регистрации'))
     } finally {
       setIsLoading(false)
     }
@@ -111,9 +108,15 @@ export default function RegisterStep3Page() {
           </div>
 
           {serverError && (
-            <p className="text-sm text-destructive rounded-lg bg-destructive/10 px-3 py-2 mb-4">
-              {serverError}
-            </p>
+            <div
+              role="alert"
+              className="mb-4 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2"
+            >
+              <p className="text-sm font-medium text-destructive">
+                Не удалось завершить регистрацию
+              </p>
+              <p className="mt-0.5 text-xs text-destructive/90">{serverError}</p>
+            </div>
           )}
 
           <Button className="w-full" loading={isLoading} onClick={handleFinish}>

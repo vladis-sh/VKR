@@ -1,6 +1,6 @@
 import { useState, useCallback, useDeferredValue } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, Heart, X } from 'lucide-react'
+import { Search, Heart, X, BookOpen, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMaterials, useToggleFavorite } from '@/features/materials/useMaterials'
 import { MaterialCard } from '@/widgets/MaterialCard'
@@ -20,7 +20,7 @@ const LEVELS: { value: KnowledgeLevel | 'all'; label: string }[] = [
 
 function MaterialSkeleton() {
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 space-y-3">
+    <div className="rounded-lg border border-border bg-card p-4 space-y-3">
       <Skeleton className="h-5 w-16 rounded-full" />
       <Skeleton className="h-4 w-full" />
       <Skeleton className="h-4 w-3/4" />
@@ -62,62 +62,92 @@ export default function MaterialsPage() {
   )
 
   const materials = data?.items ?? []
+  const visibleLevelLabel = LEVELS.find((level) => level.value === levelFilter)?.label ?? 'Все'
 
   return (
     <div className="space-y-6">
       {/* Page title + favorites link */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-foreground">Материалы</h1>
-        <Link
-          to="/app/materials/favorites"
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-        >
-          <Heart size={15} />
-          Избранное
-        </Link>
+      <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <BookOpen size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">Материалы</h1>
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+                Подборка тем, конспектов и практических заметок для подготовки к интервью.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/app/materials/favorites"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+          >
+            <Heart size={15} />
+            Избранное
+          </Link>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg bg-secondary px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">В каталоге</p>
+            <p className="text-lg font-semibold text-foreground">{data?.pagination.total ?? 0}</p>
+          </div>
+          <div className="rounded-lg bg-secondary px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Фильтр</p>
+            <p className="text-lg font-semibold text-foreground">{visibleLevelLabel}</p>
+          </div>
+          <div className="rounded-lg bg-secondary px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Ваш уровень</p>
+            <p className="text-lg font-semibold text-foreground capitalize">{userLevel}</p>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="search"
-          placeholder="Поиск по названию или теме..."
-          className="w-full rounded-xl border border-border bg-background py-2.5 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <AnimatePresence>
-          {search && (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              onClick={() => setSearch('')}
-            >
-              <X size={15} />
-            </motion.button>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Level filter */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {LEVELS.map((l) => (
-          <button
-            key={l.value}
-            onClick={() => setLevelFilter(l.value)}
-            className={cn(
-              'shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors',
-              levelFilter === l.value
-                ? 'bg-primary text-white'
-                : 'bg-secondary text-secondary-foreground hover:bg-accent'
+      <div className="rounded-lg border border-border bg-card p-3 shadow-sm">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            placeholder="Поиск по названию или теме..."
+            className="w-full rounded-lg border border-border bg-background py-2.5 pl-9 pr-9 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <AnimatePresence>
+            {search && (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => setSearch('')}
+              >
+                <X size={15} />
+              </motion.button>
             )}
-          >
-            {l.label}
-          </button>
-        ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Level filter */}
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {LEVELS.map((l) => (
+            <button
+              key={l.value}
+              onClick={() => setLevelFilter(l.value)}
+              className={cn(
+                'shrink-0 rounded-lg px-4 py-2 text-xs font-medium transition-colors',
+                levelFilter === l.value
+                  ? 'bg-primary text-white'
+                  : 'bg-secondary text-secondary-foreground hover:bg-accent'
+              )}
+            >
+              {l.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Recommendations (show only when no active search/filter) */}
@@ -130,6 +160,7 @@ export default function MaterialsPage() {
             className="space-y-3"
           >
             <div className="flex items-center gap-2">
+              <Sparkles size={15} className="text-primary" />
               <h2 className="text-sm font-semibold text-foreground">
                 Рекомендации для вас
               </h2>

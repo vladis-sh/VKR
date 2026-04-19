@@ -10,6 +10,7 @@ export class StatsService {
       where: {
         userId,
         totalQuestions: { gt: 0 },
+        durationSeconds: { gt: 0 },
       },
       orderBy: { createdAt: 'desc' },
       select: {
@@ -25,7 +26,10 @@ export class StatsService {
 
     const totalCorrect = sessions.reduce((sum, session) => sum + session.correctCount, 0);
     const totalIncorrect = sessions.reduce((sum, session) => sum + session.incorrectCount, 0);
-    const totalTimeSeconds = sessions.reduce((sum, session) => sum + session.durationSeconds, 0);
+    const totalTimeSeconds = sessions.reduce(
+      (sum, session) => sum + Math.max(session.durationSeconds, 0),
+      0,
+    );
     const completedTests = sessions.length;
     const totalAnswered = totalCorrect + totalIncorrect;
     const accuracy = totalAnswered > 0 ? (totalCorrect / totalAnswered) * 100 : 0;
@@ -36,7 +40,7 @@ export class StatsService {
       accuracy: session.accuracyPercent,
       correctAnswers: session.correctCount,
       totalQuestions: session.totalQuestions,
-      durationSeconds: session.durationSeconds,
+      durationSeconds: Math.max(session.durationSeconds, 0),
     }));
 
     return {
@@ -54,64 +58,65 @@ export class StatsService {
     sort: 'correctAnswers' | 'studyTime' = 'correctAnswers',
     limit: number = 10,
   ) {
+    const aggregates = await this.prisma.testSession.groupBy({
+      by: ['userId'],
+      where: { totalQuestions: { gt: 0 }, durationSeconds: { gt: 0 } },
+      _sum: {
+        correctCount: true,
+        incorrectCount: true,
+        durationSeconds: true,
+      },
+    });
+
+    if (aggregates.length === 0) {
+      return [];
+    }
+
+    const sorted = aggregates.sort((left, right) => {
+      if (sort === 'studyTime') {
+        return (right._sum.durationSeconds ?? 0) - (left._sum.durationSeconds ?? 0);
+      }
+      return (right._sum.correctCount ?? 0) - (left._sum.correctCount ?? 0);
+    });
+
+    const topUserIds = sorted.slice(0, limit).map((row) => row.userId);
+
     const users = await this.prisma.user.findMany({
-      where: { isProfileComplete: true },
+      where: {
+        id: { in: topUserIds },
+        isProfileComplete: true,
+      },
       select: {
         id: true,
         fullName: true,
         avatarUrl: true,
         knowledgeLevel: true,
-        testSessions: {
-          where: {
-            totalQuestions: { gt: 0 },
-          },
-          select: {
-            correctCount: true,
-            incorrectCount: true,
-            durationSeconds: true,
-          },
-        },
       },
     });
 
-    const leaderboard = users.map((user) => {
-      const correctAnswers = user.testSessions.reduce(
-        (sum, session) => sum + session.correctCount,
-        0,
-      );
-      const totalIncorrect = user.testSessions.reduce(
-        (sum, session) => sum + session.incorrectCount,
-        0,
-      );
-      const studyTimeSeconds = user.testSessions.reduce(
-        (sum, session) => sum + session.durationSeconds,
-        0,
-      );
-      const totalAnswered = correctAnswers + totalIncorrect;
+    const userMap = new Map(users.map((user) => [user.id, user]));
 
-      return {
-        userId: user.id,
-        fullName: user.fullName || 'Аноним',
-        avatarUrl: user.avatarUrl,
-        knowledgeLevel: user.knowledgeLevel,
-        correctAnswers,
-        studyTimeSeconds,
-        accuracy: totalAnswered > 0 ? (correctAnswers / totalAnswered) * 100 : 0,
-        isCurrentUser: user.id === currentUserId,
-      };
-    });
+    return sorted
+      .slice(0, limit)
+      .filter((row) => userMap.has(row.userId))
+      .map((row, index) => {
+        const user = userMap.get(row.userId)!;
+        const correctAnswers = row._sum.correctCount ?? 0;
+        const incorrectAnswers = row._sum.incorrectCount ?? 0;
+        const studyTimeSeconds = row._sum.durationSeconds ?? 0;
+        const totalAnswered = correctAnswers + incorrectAnswers;
 
-    const sorted = leaderboard.sort((left, right) => {
-      if (sort === 'studyTime') {
-        return right.studyTimeSeconds - left.studyTimeSeconds;
-      }
-
-      return right.correctAnswers - left.correctAnswers;
-    });
-
-    return sorted.slice(0, limit).map((user, index) => ({
-      rank: index + 1,
-      ...user,
-    }));
+        return {
+          rank: index + 1,
+          userId: user.id,
+          fullName: user.fullName || 'Аноним',
+          avatarUrl: user.avatarUrl,
+          knowledgeLevel: user.knowledgeLevel,
+          correctAnswers,
+          studyTimeSeconds,
+          accuracy: totalAnswered > 0 ? (correctAnswers / totalAnswered) * 100 : 0,
+          isCurrentUser: user.id === currentUserId,
+        };
+      });
   }
 }

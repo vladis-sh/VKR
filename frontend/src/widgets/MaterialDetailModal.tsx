@@ -63,7 +63,7 @@ export function MaterialDetailModal({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 40 }}
             transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-card shadow-xl md:inset-0 md:m-auto md:max-h-[85vh] md:max-w-2xl md:rounded-2xl"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-lg border border-border bg-card shadow-xl md:inset-0 md:m-auto md:max-h-[85vh] md:max-w-2xl md:rounded-lg"
           >
             <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-border bg-card px-5 py-4">
               <div className="flex-1">
@@ -74,7 +74,7 @@ export function MaterialDetailModal({
                       ? 'Middle'
                       : 'Senior'}
                 </Badge>
-                <h2 className="text-base font-semibold text-foreground leading-snug">
+                <h2 className="text-lg font-semibold text-foreground leading-snug">
                   {resolvedMaterial.title}
                 </h2>
               </div>
@@ -119,7 +119,7 @@ export function MaterialDetailModal({
                 </div>
               )}
 
-              <div className="prose prose-sm max-w-none">
+              <div className="prose prose-sm max-w-none dark:prose-invert">
                 {isLoading ? (
                   <div className="space-y-2">
                     <Skeleton className="h-4 w-full" />

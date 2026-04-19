@@ -9,6 +9,7 @@ import {
   Moon,
   Monitor,
   ChevronRight,
+  ShieldAlert,
 } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/useAuthStore'
 import { useThemeStore, type Theme } from '@/features/theme/useThemeStore'
@@ -31,12 +32,23 @@ function LogoutModal({ open, onClose, onConfirm }: {
   onConfirm: () => void
 }) {
   return (
-    <Modal open={open} onClose={onClose} title="Выйти из аккаунта?">
-      <p className="text-sm text-muted-foreground mb-5">
-        Вы будете перенаправлены на страницу входа.
-      </p>
-      <div className="flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={onClose}>Отмена</Button>
+    <Modal
+      open={open}
+      onClose={onClose}
+      hideClose
+      title="Выйти из аккаунта?"
+      description="Текущая сессия завершится, а несохранённые изменения на странице будут потеряны."
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
+          <ShieldAlert size={20} />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          После выхода вы сможете снова войти по email и паролю.
+        </p>
+      </div>
+      <div className="mt-6 flex gap-2">
+        <Button variant="outline" className="flex-1" onClick={onClose}>Остаться</Button>
         <Button variant="destructive" className="flex-1" onClick={onConfirm}>Выйти</Button>
       </div>
     </Modal>

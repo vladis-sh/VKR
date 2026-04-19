@@ -17,9 +17,10 @@ export function MaterialCard({ material, onToggleFavorite, onClick, isFavoriteLo
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md cursor-pointer"
+      className="group relative flex min-h-[190px] cursor-pointer flex-col gap-3 overflow-hidden rounded-lg border border-border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
       onClick={() => onClick(material)}
     >
+      <div className="absolute inset-x-0 top-0 h-1 bg-primary/70" />
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <Badge variant="level" level={material.level}>
@@ -47,12 +48,12 @@ export function MaterialCard({ material, onToggleFavorite, onClick, isFavoriteLo
       </div>
 
       {/* Title */}
-      <h3 className="text-sm font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+      <h3 className="text-base font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
         {material.title}
       </h3>
 
       {/* Description */}
-      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+      <p className="text-sm text-muted-foreground line-clamp-3 leading-relaxed">
         {material.shortDescription}
       </p>
 
@@ -62,7 +63,7 @@ export function MaterialCard({ material, onToggleFavorite, onClick, isFavoriteLo
           {material.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className="rounded-md bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground"
+              className="rounded-md bg-secondary px-2 py-1 text-[10px] font-medium text-secondary-foreground"
             >
               {tag}
             </span>

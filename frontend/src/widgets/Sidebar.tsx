@@ -4,7 +4,7 @@ import {
   MessageSquare,
   ClipboardList,
   BarChart2,
-  User,
+  Code2,
   BrainCircuit,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
@@ -13,8 +13,8 @@ const navItems = [
   { to: '/app/materials', label: 'Материалы', icon: BookOpen },
   { to: '/app/chat', label: 'Чат с ИИ', icon: MessageSquare },
   { to: '/app/tests', label: 'Тесты', icon: ClipboardList },
+  { to: '/app/live-coding', label: 'Live Coding', icon: Code2 },
   { to: '/app/stats', label: 'Статистика', icon: BarChart2 },
-  { to: '/app/profile', label: 'Профиль', icon: User },
 ]
 
 export function Sidebar() {

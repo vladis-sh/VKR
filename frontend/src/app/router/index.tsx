@@ -19,6 +19,8 @@ const TopicsPage = lazy(() => import('@/pages/tests/TopicsPage'))
 const TestSessionPage = lazy(() => import('@/pages/tests/TestSessionPage'))
 const TestResultsPage = lazy(() => import('@/pages/tests/TestResultsPage'))
 const TestHistoryPage = lazy(() => import('@/pages/tests/TestHistoryPage'))
+const LiveCodingPage = lazy(() => import('@/pages/live-coding/LiveCodingPage'))
+const LiveCodingTaskPage = lazy(() => import('@/pages/live-coding/LiveCodingTaskPage'))
 const StatsPage = lazy(() => import('@/pages/stats/StatsPage'))
 const LeaderboardPage = lazy(() => import('@/pages/leaderboard/LeaderboardPage'))
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'))
@@ -106,6 +108,14 @@ export const router = createBrowserRouter([
       {
         path: 'tests/history/:sessionId',
         element: <LazyWrapper><TestHistoryPage /></LazyWrapper>,
+      },
+      {
+        path: 'live-coding',
+        element: <LazyWrapper><LiveCodingPage /></LazyWrapper>,
+      },
+      {
+        path: 'live-coding/:slug',
+        element: <LazyWrapper><LiveCodingTaskPage /></LazyWrapper>,
       },
       {
         path: 'stats',

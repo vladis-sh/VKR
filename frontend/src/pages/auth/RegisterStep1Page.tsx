@@ -9,11 +9,19 @@ import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { useRegisterStore } from '@/features/auth/useRegisterStore'
 import { authApi } from '@/shared/api/auth.api'
+import { getApiErrorMessage } from '@/shared/lib/apiErrors'
 
 const schema = z
   .object({
     email: z.string().email('Некорректный email'),
-    password: z.string().min(6, 'Минимум 6 символов'),
+    password: z
+      .string()
+      .min(8, 'Минимум 8 символов')
+      .max(100, 'Максимум 100 символов')
+      .regex(/[A-Z]/, 'Добавьте хотя бы одну заглавную букву')
+      .regex(/[a-z]/, 'Добавьте хотя бы одну строчную букву')
+      .regex(/\d/, 'Добавьте хотя бы одну цифру')
+      .regex(/[^A-Za-z0-9]/, 'Добавьте хотя бы один специальный символ'),
     confirmPassword: z.string(),
   })
   .refine((d) => d.password === d.confirmPassword, {
@@ -63,10 +71,7 @@ export default function RegisterStep1Page() {
       setStep1({ email: data.email, password: data.password })
       navigate('/register/profile')
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { error?: { message?: string; details?: string[] } } } }
-      const details = error.response?.data?.error?.details
-      const message = details?.[0] ?? error.response?.data?.error?.message ?? 'Ошибка при регистрации'
-      setServerError(message)
+      setServerError(getApiErrorMessage(err, 'Ошибка при регистрации'))
     } finally {
       setIsLoading(false)
     }
@@ -105,7 +110,7 @@ export default function RegisterStep1Page() {
             <Input
               label="Пароль"
               type="password"
-              placeholder="Минимум 6 символов"
+              placeholder="Password123!"
               autoComplete="new-password"
               error={errors.password?.message}
               {...register('password')}
@@ -121,9 +126,15 @@ export default function RegisterStep1Page() {
             />
 
             {serverError && (
-              <p className="text-sm text-destructive rounded-lg bg-destructive/10 px-3 py-2">
-                {serverError}
-              </p>
+              <div
+                role="alert"
+                className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2"
+              >
+                <p className="text-sm font-medium text-destructive">
+                  Не удалось создать аккаунт
+                </p>
+                <p className="mt-0.5 text-xs text-destructive/90">{serverError}</p>
+              </div>
             )}
 
             <Button type="submit" className="w-full" loading={isLoading}>

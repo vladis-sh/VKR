@@ -73,6 +73,7 @@ export class ProfileService {
         where: {
           userId,
           totalQuestions: { gt: 0 },
+          durationSeconds: { gt: 0 },
         },
         skip,
         take: limit,
@@ -82,6 +83,7 @@ export class ProfileService {
         where: {
           userId,
           totalQuestions: { gt: 0 },
+          durationSeconds: { gt: 0 },
         },
       }),
     ]);

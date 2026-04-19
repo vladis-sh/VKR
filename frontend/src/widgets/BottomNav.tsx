@@ -1,13 +1,13 @@
 import { NavLink } from 'react-router-dom'
-import { BookOpen, MessageSquare, ClipboardList, BarChart2, User } from 'lucide-react'
+import { BookOpen, MessageSquare, ClipboardList, BarChart2, Code2 } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 
 const navItems = [
   { to: '/app/materials', label: 'Материалы', icon: BookOpen },
   { to: '/app/chat', label: 'Чат', icon: MessageSquare },
   { to: '/app/tests', label: 'Тесты', icon: ClipboardList },
+  { to: '/app/live-coding', label: 'Кодинг', icon: Code2 },
   { to: '/app/stats', label: 'Статы', icon: BarChart2 },
-  { to: '/app/profile', label: 'Профиль', icon: User },
 ]
 
 export function BottomNav() {

@@ -10,6 +10,7 @@ import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { KNOWLEDGE_LEVELS } from '@/shared/constants'
 import { cn } from '@/shared/lib/cn'
+import { resizeAvatarFile } from '@/shared/lib/avatarImage'
 import { toast } from '@/features/theme/useToastStore'
 
 const schema = z.object({
@@ -25,6 +26,7 @@ export default function EditProfilePage() {
   const [isSaving, setIsSaving] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatarUrl ?? null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarScale, setAvatarScale] = useState(100)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -50,6 +52,7 @@ export default function EditProfilePage() {
     if (file.size > 5 * 1024 * 1024) { toast.error('Файл слишком большой (макс. 5 МБ)'); return }
     setAvatarFile(file)
     setAvatarPreview(URL.createObjectURL(file))
+    setAvatarScale(100)
   }
 
   const onSubmit = async (data: FormData) => {
@@ -58,7 +61,8 @@ export default function EditProfilePage() {
       let avatarUrl = user?.avatarUrl
       if (avatarFile) {
         const formData = new FormData()
-        formData.append('file', avatarFile)
+        const preparedAvatar = await resizeAvatarFile(avatarFile, avatarScale / 100)
+        formData.append('file', preparedAvatar)
         const uploadRes = await profileApi.uploadAvatar(formData)
         avatarUrl = uploadRes.data.avatarUrl
       }
@@ -101,7 +105,12 @@ export default function EditProfilePage() {
               onClick={() => fileInputRef.current?.click()}
             >
               {currentAvatar ? (
-                <img src={currentAvatar} alt="Avatar" className="h-full w-full object-cover" />
+                <img
+                  src={currentAvatar}
+                  alt="Avatar"
+                  className="h-full w-full object-cover"
+                  style={{ transform: avatarFile ? `scale(${avatarScale / 100})` : undefined }}
+                />
               ) : (
                 <div className="flex flex-col items-center gap-1">
                   <Camera size={22} className="text-muted-foreground" />
@@ -113,7 +122,11 @@ export default function EditProfilePage() {
               <button
                 type="button"
                 className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-white shadow"
-                onClick={() => { setAvatarPreview(user?.avatarUrl ?? null); setAvatarFile(null) }}
+                onClick={() => {
+                  setAvatarPreview(user?.avatarUrl ?? null)
+                  setAvatarFile(null)
+                  setAvatarScale(100)
+                }}
               >
                 <X size={11} />
               </button>
@@ -134,6 +147,27 @@ export default function EditProfilePage() {
             onChange={handleFileChange}
           />
         </div>
+
+        {avatarFile && (
+          <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <span className="text-sm font-medium text-foreground">Размер фото</span>
+              <span className="text-xs text-muted-foreground">{avatarScale}%</span>
+            </div>
+            <input
+              type="range"
+              min="75"
+              max="150"
+              step="5"
+              value={avatarScale}
+              onChange={(event) => setAvatarScale(Number(event.target.value))}
+              className="w-full accent-primary"
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Изменение применится к новому аватару после сохранения.
+            </p>
+          </div>
+        )}
 
         {/* Name */}
         <div className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-sm">

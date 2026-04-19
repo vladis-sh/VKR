@@ -65,6 +65,8 @@ model Material {
   createdAt        DateTime       @default(now())
 
   favoritedBy UserFavorite[]
+
+  @@index([level])
 }
 
 model UserFavorite {
@@ -88,6 +90,8 @@ model ChatSession {
 
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages ChatMessage[]
+
+  @@index([userId, updatedAt])
 }
 
 model ChatMessage {
@@ -98,6 +102,8 @@ model ChatMessage {
   createdAt DateTime    @default(now())
 
   session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
 }
 
 model Question {
@@ -112,6 +118,9 @@ model Question {
   createdAt          DateTime       @default(now())
 
   answerHistory TestAnswerHistory[]
+
+  @@index([topic])
+  @@index([topic, difficulty])
 }
 
 model TestSession {
@@ -128,6 +137,9 @@ model TestSession {
 
   user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   answerHistory TestAnswerHistory[]
+
+  @@index([userId])
+  @@index([userId, createdAt])
 }
 
 model TestAnswerHistory {
@@ -140,6 +152,8 @@ model TestAnswerHistory {
 
   testSession TestSession @relation(fields: [testSessionId], references: [id], onDelete: Cascade)
   question    Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([testSessionId])
 }
 
 model Reminder {

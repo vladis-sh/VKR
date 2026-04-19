@@ -1,4 +1,9 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AiService } from '../ai/ai.service';
 import {
@@ -113,14 +118,19 @@ export class TestsService {
     });
     const questionMap = new Map(questions.map((question) => [question.id, question]));
 
+    const missingQuestionIds = questionIds.filter((id) => !questionMap.has(id));
+    if (missingQuestionIds.length > 0) {
+      throw new BadRequestException(
+        `Unknown question ids: ${missingQuestionIds.join(', ')}`,
+      );
+    }
+
     let correctCount = 0;
     let incorrectCount = 0;
 
     const answerHistoryData = dto.answers.map((answer) => {
-      const question = questionMap.get(answer.questionId);
-      const isCorrect = question
-        ? question.correctAnswerIndex === answer.selectedAnswerIndex
-        : false;
+      const question = questionMap.get(answer.questionId)!;
+      const isCorrect = question.correctAnswerIndex === answer.selectedAnswerIndex;
 
       if (isCorrect) {
         correctCount += 1;
@@ -138,19 +148,25 @@ export class TestsService {
 
     const totalQuestions = dto.answers.length;
     const accuracyPercent = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+    const durationSeconds = Math.min(
+      Math.max(Math.trunc(dto.durationSeconds || 0), totalQuestions > 0 ? 1 : 0),
+      24 * 60 * 60,
+    );
 
-    await this.prisma.testAnswerHistory.deleteMany({ where: { testSessionId: sessionId } });
-    await this.prisma.testAnswerHistory.createMany({ data: answerHistoryData });
+    const updatedSession = await this.prisma.$transaction(async (tx) => {
+      await tx.testAnswerHistory.deleteMany({ where: { testSessionId: sessionId } });
+      await tx.testAnswerHistory.createMany({ data: answerHistoryData });
 
-    const updatedSession = await this.prisma.testSession.update({
-      where: { id: sessionId },
-      data: {
-        correctCount,
-        incorrectCount,
-        totalQuestions,
-        durationSeconds: dto.durationSeconds,
-        accuracyPercent,
-      },
+      return tx.testSession.update({
+        where: { id: sessionId },
+        data: {
+          correctCount,
+          incorrectCount,
+          totalQuestions,
+          durationSeconds,
+          accuracyPercent,
+        },
+      });
     });
 
     const result = this.mapSessionResult({
@@ -200,7 +216,8 @@ export class TestsService {
 
     const questions = await this.aiService.generateQuizQuestions(topic, count, difficulty);
 
-    const savedQuestions = await Promise.all(
+    const createdAt = new Date();
+    const savedQuestions = await this.prisma.$transaction(
       questions.map((question) =>
         this.prisma.question.create({
           data: {
@@ -211,6 +228,7 @@ export class TestsService {
             explanation: question.explanation,
             difficulty: difficulty || KnowledgeLevel.junior,
             sourceType: QuestionSource.ai,
+            createdAt,
           },
         }),
       ),

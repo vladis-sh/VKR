@@ -33,26 +33,31 @@ function NewChatModal({
   const [selectedRole, setSelectedRole] = useState<AssistantRole>('technical')
 
   return (
-    <Modal open={open} onClose={onClose} title="Новый чат">
-      <div className="space-y-3 py-1">
-        <p className="text-sm text-muted-foreground">Выберите роль ИИ-ассистента:</p>
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Новый чат"
+      description="Выберите сценарий, под который ассистент будет вести разговор."
+      className="max-w-lg"
+    >
+      <div className="grid gap-3 py-1 sm:grid-cols-3">
         {ASSISTANT_ROLES.map((role) => (
           <button
             key={role.value}
             type="button"
             onClick={() => setSelectedRole(role.value as AssistantRole)}
             className={cn(
-              'w-full flex items-start gap-3 rounded-xl border-2 p-3.5 text-left transition-all',
+              'w-full rounded-lg border-2 p-3.5 text-left transition-all',
               selectedRole === role.value
                 ? 'border-primary bg-primary/5'
                 : 'border-border hover:border-primary/30 bg-background'
             )}
           >
-            <span className="text-2xl shrink-0">{role.icon}</span>
-            <div>
-              <p className="text-sm font-semibold text-foreground">{role.label}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{role.description}</p>
-            </div>
+            <span className="text-2xl">{role.icon}</span>
+            <p className="mt-2 text-sm font-semibold text-foreground">{role.label}</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {role.description}
+            </p>
           </button>
         ))}
       </div>
@@ -85,9 +90,14 @@ function DeleteAllModal({
   isLoading: boolean
 }) {
   return (
-    <Modal open={open} onClose={onClose} title="Удалить все чаты?">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Удалить все чаты?"
+      description="История сообщений и все созданные сессии будут удалены без восстановления."
+    >
       <p className="text-sm text-muted-foreground mb-5">
-        Это действие нельзя отменить. Все чаты и история сообщений будут удалены.
+        Проверьте, что в чатах не осталось важных заметок.
       </p>
       <div className="flex gap-2">
         <Button variant="outline" className="flex-1" onClick={onClose}>

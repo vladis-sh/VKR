@@ -114,6 +114,7 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const initialized = useRef(false)
+  const timeUpSubmitted = useRef(false)
   const { data: topics } = useTestTopics()
 
   const isTimeAttack = mode === 'time-attack'
@@ -201,7 +202,8 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
   useEffect(() => {
     if (isTimeAttack) {
       setTimerSeconds(timerValue)
-      if (timerValue === 0 && !loading) {
+      if (timerValue === 0 && !loading && !timeUpSubmitted.current) {
+        timeUpSubmitted.current = true
         stopTimer()
         handleTimeUp()
       }
@@ -209,6 +211,12 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
       setElapsedSeconds(timerValue)
     }
   }, [timerValue, isTimeAttack, loading, stopTimer, handleTimeUp, setTimerSeconds, setElapsedSeconds])
+
+  useEffect(() => {
+    if (isSubmitting) {
+      stopTimer()
+    }
+  }, [isSubmitting, stopTimer])
 
   // ── Render ──────────────────────────────────────────────────────────────────
   if (loading) {
