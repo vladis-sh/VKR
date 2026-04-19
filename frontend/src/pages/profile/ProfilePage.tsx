@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import {
   Edit,
   ClipboardList,
-  Bell,
   LogOut,
   Sun,
   Moon,
@@ -14,7 +13,6 @@ import {
 import { useAuthStore } from '@/features/auth/useAuthStore'
 import { useThemeStore, type Theme } from '@/features/theme/useThemeStore'
 import { Avatar } from '@/shared/ui/Avatar'
-import { Badge } from '@/shared/ui/Badge'
 import { Button } from '@/shared/ui/Button'
 import { Modal } from '@/shared/ui/Modal'
 import { useState } from 'react'
@@ -63,7 +61,6 @@ export default function ProfilePage() {
   const navLinks = [
     { to: '/app/profile/edit', icon: <Edit size={16} />, label: 'Редактировать профиль' },
     { to: '/app/profile/history', icon: <ClipboardList size={16} />, label: 'История тестов' },
-    { to: '/app/profile/notifications', icon: <Bell size={16} />, label: 'Уведомления' },
   ]
 
   return (
@@ -82,11 +79,6 @@ export default function ProfilePage() {
         />
         <h2 className="text-base font-bold text-foreground">{user?.fullName || 'Пользователь'}</h2>
         <p className="text-xs text-muted-foreground mt-0.5">{user?.email}</p>
-        <div className="mt-2 flex justify-center">
-          <Badge variant="level" level={user?.knowledgeLevel ?? 'junior'}>
-          {user?.knowledgeLevel === 'senior' ? 'Senior' : user?.knowledgeLevel === 'middle' ? 'Middle' : 'Junior'}
-        </Badge>
-        </div>
       </motion.div>
 
       {/* Navigation links */}

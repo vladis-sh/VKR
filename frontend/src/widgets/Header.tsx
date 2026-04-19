@@ -1,6 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, Settings, User, Bell } from 'lucide-react'
+import { LogOut, Settings, User } from 'lucide-react'
 import { Avatar } from '@/shared/ui/Avatar'
 import { useAuthStore } from '@/features/auth/useAuthStore'
 import { cn } from '@/shared/lib/cn'
@@ -20,7 +20,6 @@ const routeTitles: Record<string, string> = {
   '/app/profile': 'Профиль',
   '/app/profile/edit': 'Редактировать профиль',
   '/app/profile/history': 'История тестов',
-  '/app/profile/notifications': 'Уведомления',
 }
 
 export function Header() {
@@ -37,6 +36,7 @@ export function Header() {
       if (pathname === key) return val
     }
     if (pathname.startsWith('/app/tests/topic/')) return 'Тест по теме'
+    if (pathname.startsWith('/app/tests/theme/')) return 'Тесты по теме'
     if (pathname.startsWith('/app/tests/results/')) return 'Результаты теста'
     if (pathname.startsWith('/app/tests/history/')) return 'Разбор ответов'
     if (pathname.startsWith('/app/live-coding/')) return 'Задача Live Coding'
@@ -46,7 +46,6 @@ export function Header() {
   const profileLinks = [
     { to: '/app/profile', label: 'Профиль', icon: User },
     { to: '/app/profile/edit', label: 'Настройки', icon: Settings },
-    { to: '/app/profile/notifications', label: 'Уведомления', icon: Bell },
   ]
 
   const handleLogout = async () => {

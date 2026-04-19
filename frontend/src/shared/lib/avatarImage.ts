@@ -1,5 +1,13 @@
 const DEFAULT_AVATAR_SIZE = 512
 
+export interface AvatarCropOptions {
+  zoom: number
+  offsetX: number
+  offsetY: number
+  viewportSize: number
+  outputSize?: number
+}
+
 function loadImage(file: File) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image()
@@ -31,6 +39,45 @@ function canvasToBlob(canvas: HTMLCanvasElement) {
       0.9
     )
   })
+}
+
+function createAvatarFile(blob: Blob, sourceFile: File) {
+  const baseName = sourceFile.name.replace(/\.[^.]+$/, '') || 'avatar'
+
+  return new File([blob], `${baseName}.jpg`, {
+    type: 'image/jpeg',
+    lastModified: Date.now(),
+  })
+}
+
+export async function cropAvatarFile(file: File, options: AvatarCropOptions) {
+  const image = await loadImage(file)
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+
+  if (!context) {
+    throw new Error('Canvas недоступен')
+  }
+
+  const outputSize = options.outputSize ?? DEFAULT_AVATAR_SIZE
+  const normalizedZoom = Math.min(Math.max(options.zoom, 1), 3)
+  const baseScale = outputSize / Math.min(image.width, image.height)
+  const viewportToOutput = outputSize / options.viewportSize
+  const drawWidth = image.width * baseScale * normalizedZoom
+  const drawHeight = image.height * baseScale * normalizedZoom
+  const drawX = (outputSize - drawWidth) / 2 + options.offsetX * viewportToOutput
+  const drawY = (outputSize - drawHeight) / 2 + options.offsetY * viewportToOutput
+
+  canvas.width = outputSize
+  canvas.height = outputSize
+
+  context.fillStyle = '#ffffff'
+  context.fillRect(0, 0, outputSize, outputSize)
+  context.drawImage(image, drawX, drawY, drawWidth, drawHeight)
+
+  const blob = await canvasToBlob(canvas)
+
+  return createAvatarFile(blob, file)
 }
 
 export async function resizeAvatarFile(
@@ -69,10 +116,6 @@ export async function resizeAvatarFile(
   )
 
   const blob = await canvasToBlob(canvas)
-  const baseName = file.name.replace(/\.[^.]+$/, '') || 'avatar'
 
-  return new File([blob], `${baseName}.jpg`, {
-    type: 'image/jpeg',
-    lastModified: Date.now(),
-  })
+  return createAvatarFile(blob, file)
 }

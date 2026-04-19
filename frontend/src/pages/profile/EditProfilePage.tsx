@@ -3,19 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Camera, X, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Camera, X } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/useAuthStore'
 import { profileApi } from '@/shared/api/profile.api'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
-import { KNOWLEDGE_LEVELS } from '@/shared/constants'
-import { cn } from '@/shared/lib/cn'
 import { resizeAvatarFile } from '@/shared/lib/avatarImage'
 import { toast } from '@/features/theme/useToastStore'
 
 const schema = z.object({
   fullName: z.string().min(2, 'Минимум 2 символа').max(50, 'Максимум 50 символов'),
-  knowledgeLevel: z.enum(['junior', 'middle', 'senior']),
 })
 
 type FormData = z.infer<typeof schema>
@@ -32,18 +29,13 @@ export default function EditProfilePage() {
   const {
     register,
     handleSubmit,
-    watch,
-    setValue,
     formState: { errors, isDirty },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       fullName: user?.fullName ?? '',
-      knowledgeLevel: user?.knowledgeLevel ?? 'junior',
     },
   })
-
-  const selectedLevel = watch('knowledgeLevel')
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -68,7 +60,6 @@ export default function EditProfilePage() {
       }
       const res = await profileApi.updateProfile({
         fullName: data.fullName,
-        knowledgeLevel: data.knowledgeLevel,
       })
       setUser({ ...user!, ...res.data, avatarUrl })
       toast.success('Профиль обновлён')
@@ -177,42 +168,6 @@ export default function EditProfilePage() {
             error={errors.fullName?.message}
             {...register('fullName')}
           />
-
-          {/* Knowledge level */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Уровень подготовки</label>
-            <div className="space-y-2">
-              {KNOWLEDGE_LEVELS.map((level) => (
-                <button
-                  key={level.value}
-                  type="button"
-                  onClick={() => setValue('knowledgeLevel', level.value as 'junior' | 'middle' | 'senior', { shouldDirty: true })}
-                  className={cn(
-                    'w-full flex items-center gap-3 rounded-xl border-2 p-3 text-left transition-all',
-                    selectedLevel === level.value
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/30'
-                  )}
-                >
-                  <div className={cn(
-                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                    selectedLevel === level.value
-                      ? 'border-primary bg-primary text-white'
-                      : 'border-border text-muted-foreground'
-                  )}>
-                    {selectedLevel === level.value
-                      ? <CheckCircle size={14} />
-                      : <span className="text-[10px] font-bold">{level.label[0]}</span>
-                    }
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{level.label}</p>
-                    <p className="text-xs text-muted-foreground">{level.description}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Actions */}

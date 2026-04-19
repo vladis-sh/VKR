@@ -16,6 +16,8 @@ const FavoritesPage = lazy(() => import('@/pages/materials/FavoritesPage'))
 const ChatPage = lazy(() => import('@/pages/chat/ChatPage'))
 const TestsHubPage = lazy(() => import('@/pages/tests/TestsHubPage'))
 const TopicsPage = lazy(() => import('@/pages/tests/TopicsPage'))
+const TestThemePage = lazy(() => import('@/pages/tests/TestThemePage'))
+const SubtopicTestPage = lazy(() => import('@/pages/tests/SubtopicTestPage'))
 const TestSessionPage = lazy(() => import('@/pages/tests/TestSessionPage'))
 const TestResultsPage = lazy(() => import('@/pages/tests/TestResultsPage'))
 const TestHistoryPage = lazy(() => import('@/pages/tests/TestHistoryPage'))
@@ -84,6 +86,14 @@ export const router = createBrowserRouter([
       {
         path: 'tests/topics',
         element: <LazyWrapper><TopicsPage /></LazyWrapper>,
+      },
+      {
+        path: 'tests/theme/:themeSlug',
+        element: <LazyWrapper><TestThemePage /></LazyWrapper>,
+      },
+      {
+        path: 'tests/theme/:themeSlug/:subtopicSlug',
+        element: <LazyWrapper><SubtopicTestPage /></LazyWrapper>,
       },
       {
         path: 'tests/topic/:slug',
