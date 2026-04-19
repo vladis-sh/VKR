@@ -54,6 +54,309 @@ export const DIFFICULTY_LABELS: Record<LiveCodingDifficulty, string> = {
 
 export const LIVE_CODING_TASKS: LiveCodingTask[] = [
   {
+    id: 'lc-contains-duplicate',
+    slug: 'contains-duplicate',
+    title: 'Есть ли дубликаты',
+    category: 'Arrays',
+    difficulty: 'easy',
+    companies: ['Neetcode', 'Amazon', 'Frontend'],
+    successRate: 78,
+    estimatedMinutes: 10,
+    languages: ['javascript', 'typescript'],
+    isNew: true,
+    description:
+      'Дан массив чисел. Верните true, если хотя бы одно число встречается больше одного раза, иначе верните false.',
+    constraints: [
+      'массив может быть пустым',
+      'числа могут быть отрицательными',
+      'исходный массив нельзя мутировать',
+    ],
+    examples: [
+      {
+        input: 'solution([1, 2, 3, 1])',
+        output: 'true',
+      },
+      {
+        input: 'solution([1, 2, 3, 4])',
+        output: 'false',
+      },
+    ],
+    starterCode: {
+      javascript: jsStarter('nums', '  // ваш код\n  return false'),
+      typescript: jsStarter('nums', '  // ваш код\n  return false'),
+    },
+    tests: [
+      {
+        title: 'находит повторяющийся элемент',
+        input: '[1, 2, 3, 1]',
+        expected: 'true',
+        assertion: 'assertDeepEqual(candidate([1, 2, 3, 1]), true)',
+      },
+      {
+        title: 'возвращает false для уникальных чисел',
+        input: '[1, 2, 3, 4]',
+        expected: 'false',
+        assertion: 'assertDeepEqual(candidate([1, 2, 3, 4]), false)',
+      },
+      {
+        title: 'работает с пустым массивом',
+        input: '[]',
+        expected: 'false',
+        assertion: 'assertDeepEqual(candidate([]), false)',
+      },
+    ],
+    solutionNotes: [
+      'Самый короткий путь: сравнить размер Set с длиной массива.',
+      'Можно пройти массив циклом и хранить встреченные числа в Set.',
+      'Если элемент уже есть в Set, сразу возвращайте true.',
+    ],
+  },
+  {
+    id: 'lc-valid-parentheses',
+    slug: 'valid-parentheses',
+    title: 'Валидные скобки',
+    category: 'Stack',
+    difficulty: 'easy',
+    companies: ['Neetcode', 'Google', 'Yandex'],
+    successRate: 67,
+    estimatedMinutes: 15,
+    languages: ['javascript', 'typescript'],
+    isNew: true,
+    description:
+      'Дана строка, состоящая только из символов (), [] и {}. Нужно определить, закрываются ли скобки в правильном порядке.',
+    constraints: [
+      'строка содержит только скобочные символы',
+      'пустая строка считается валидной',
+      'каждая открывающая скобка должна закрываться скобкой того же типа',
+    ],
+    examples: [
+      {
+        input: 'solution("()[]{}")',
+        output: 'true',
+      },
+      {
+        input: 'solution("([)]")',
+        output: 'false',
+      },
+    ],
+    starterCode: {
+      javascript: jsStarter('s', '  // ваш код\n  return false'),
+      typescript: jsStarter('s', '  // ваш код\n  return false'),
+    },
+    tests: [
+      {
+        title: 'простая валидная строка',
+        input: '"()[]{}"',
+        expected: 'true',
+        assertion: "assertDeepEqual(candidate('()[]{}'), true)",
+      },
+      {
+        title: 'вложенные скобки',
+        input: '"([{}])"',
+        expected: 'true',
+        assertion: "assertDeepEqual(candidate('([{}])'), true)",
+      },
+      {
+        title: 'неверный порядок',
+        input: '"([)]"',
+        expected: 'false',
+        assertion: "assertDeepEqual(candidate('([)]'), false)",
+      },
+      {
+        title: 'неверный тип закрывающей скобки',
+        input: '"(]"',
+        expected: 'false',
+        assertion: "assertDeepEqual(candidate('(]'), false)",
+      },
+    ],
+    solutionNotes: [
+      'Используйте стек для открывающих скобок.',
+      'При закрывающей скобке сравните её с последним элементом стека.',
+      'В конце стек должен быть пустым.',
+    ],
+  },
+  {
+    id: 'lc-chunk-array',
+    slug: 'chunk-array',
+    title: 'Разбить массив на части',
+    category: 'Arrays',
+    difficulty: 'easy',
+    companies: ['BFE', 'Lodash', 'Frontend'],
+    successRate: 72,
+    estimatedMinutes: 12,
+    languages: ['javascript', 'typescript'],
+    isNew: true,
+    description:
+      'Реализуйте функцию chunk: она разбивает массив на группы длиной size. Последняя группа может быть короче.',
+    constraints: [
+      'size всегда больше 0',
+      'исходный массив нельзя мутировать',
+      'элементы массива могут быть любого типа',
+    ],
+    examples: [
+      {
+        input: 'solution([1, 2, 3, 4, 5], 2)',
+        output: '[[1, 2], [3, 4], [5]]',
+      },
+    ],
+    starterCode: {
+      javascript: jsStarter('items, size', '  // ваш код\n  return []'),
+      typescript: jsStarter('items, size', '  // ваш код\n  return []'),
+    },
+    tests: [
+      {
+        title: 'разбивает на равные группы и хвост',
+        input: '[1, 2, 3, 4, 5], 2',
+        expected: '[[1, 2], [3, 4], [5]]',
+        assertion:
+          'assertDeepEqual(candidate([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]])',
+      },
+      {
+        title: 'пустой массив возвращает пустой массив',
+        input: '[], 3',
+        expected: '[]',
+        assertion: 'assertDeepEqual(candidate([], 3), [])',
+      },
+      {
+        title: 'size больше длины массива',
+        input: '[1, 2, 3], 5',
+        expected: '[[1, 2, 3]]',
+        assertion: 'assertDeepEqual(candidate([1, 2, 3], 5), [[1, 2, 3]])',
+      },
+    ],
+    solutionNotes: [
+      'Идите по массиву с шагом size.',
+      'На каждом шаге добавляйте items.slice(i, i + size).',
+      'Не используйте splice, если не хотите мутировать исходный массив.',
+    ],
+  },
+  {
+    id: 'lc-title-case',
+    slug: 'title-case',
+    title: 'Title Case для строки',
+    category: 'Strings',
+    difficulty: 'easy',
+    companies: ['Frontend', 'VK', 'Sber'],
+    successRate: 74,
+    estimatedMinutes: 10,
+    languages: ['javascript', 'typescript'],
+    description:
+      'Преобразуйте строку в Title Case: каждое слово должно начинаться с заглавной буквы, остальные буквы должны быть строчными.',
+    constraints: [
+      'лишние пробелы в начале, конце и между словами нужно убрать',
+      'пустая строка должна вернуть пустую строку',
+      'слова состоят из латинских букв',
+    ],
+    examples: [
+      {
+        input: 'solution("hello world")',
+        output: '"Hello World"',
+      },
+      {
+        input: 'solution("  react   developer ")',
+        output: '"React Developer"',
+      },
+    ],
+    starterCode: {
+      javascript: jsStarter('text', '  // ваш код\n  return text'),
+      typescript: jsStarter('text', '  // ваш код\n  return text'),
+    },
+    tests: [
+      {
+        title: 'форматирует простую строку',
+        input: '"hello world"',
+        expected: '"Hello World"',
+        assertion: "assertDeepEqual(candidate('hello world'), 'Hello World')",
+      },
+      {
+        title: 'убирает лишние пробелы',
+        input: '"  react   developer "',
+        expected: '"React Developer"',
+        assertion: "assertDeepEqual(candidate('  react   developer '), 'React Developer')",
+      },
+      {
+        title: 'работает с разным регистром',
+        input: '"jAvA sCrIpT"',
+        expected: '"Java Script"',
+        assertion: "assertDeepEqual(candidate('jAvA sCrIpT'), 'Java Script')",
+      },
+      {
+        title: 'пустая строка',
+        input: '""',
+        expected: '""',
+        assertion: "assertDeepEqual(candidate(''), '')",
+      },
+    ],
+    solutionNotes: [
+      'Сначала сделайте trim и split по одному или нескольким пробелам.',
+      'Каждое слово приведите к lowerCase, затем поднимите первый символ.',
+      'Соедините слова через один пробел.',
+    ],
+  },
+  {
+    id: 'lc-first-unique-character',
+    slug: 'first-unique-character',
+    title: 'Первый уникальный символ',
+    category: 'Strings',
+    difficulty: 'easy',
+    companies: ['Neetcode', 'Amazon', 'Tinkoff'],
+    successRate: 69,
+    estimatedMinutes: 15,
+    languages: ['javascript', 'typescript'],
+    description:
+      'Дана строка. Верните индекс первого символа, который встречается только один раз. Если такого символа нет, верните -1.',
+    constraints: [
+      'строка может быть пустой',
+      'регистр символов важен',
+      'нужно вернуть индекс, а не сам символ',
+    ],
+    examples: [
+      {
+        input: 'solution("leetcode")',
+        output: '0',
+      },
+      {
+        input: 'solution("loveleetcode")',
+        output: '2',
+      },
+    ],
+    starterCode: {
+      javascript: jsStarter('s', '  // ваш код\n  return -1'),
+      typescript: jsStarter('s', '  // ваш код\n  return -1'),
+    },
+    tests: [
+      {
+        title: 'первый символ уникален',
+        input: '"leetcode"',
+        expected: '0',
+        assertion: "assertDeepEqual(candidate('leetcode'), 0)",
+      },
+      {
+        title: 'уникальный символ в середине',
+        input: '"loveleetcode"',
+        expected: '2',
+        assertion: "assertDeepEqual(candidate('loveleetcode'), 2)",
+      },
+      {
+        title: 'уникального символа нет',
+        input: '"aabb"',
+        expected: '-1',
+        assertion: "assertDeepEqual(candidate('aabb'), -1)",
+      },
+      {
+        title: 'пустая строка',
+        input: '""',
+        expected: '-1',
+        assertion: "assertDeepEqual(candidate(''), -1)",
+      },
+    ],
+    solutionNotes: [
+      'Сначала посчитайте частоты символов через Map или объект.',
+      'Затем пройдите строку второй раз и найдите первый символ с частотой 1.',
+      'Так решение будет O(n) по времени.',
+    ],
+  },
+  {
     id: 'lc-flatten-depth',
     slug: 'flatten-depth',
     title: 'Flatten с ограничением глубины',

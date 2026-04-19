@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import Editor, { type OnMount } from '@monaco-editor/react'
+import Editor, { type BeforeMount, type OnMount } from '@monaco-editor/react'
 import {
   ArrowLeft,
   CheckCircle2,
@@ -40,6 +40,41 @@ const leftTabs: Array<{ value: LeftTab; label: string }> = [
   { value: 'solutions', label: 'Решения' },
 ]
 
+const helperDefinitions = [
+  {
+    name: 'print',
+    signature: 'print(...values)',
+    description: 'Выводит значения в результат запуска.',
+    snippet: 'print(${1:value})',
+  },
+  {
+    name: 'range',
+    signature: 'range(end) / range(start, end, step?)',
+    description: 'Создаёт массив чисел, как в Python.',
+    snippet: 'range(${1:end})',
+  },
+  {
+    name: 'deepClone',
+    signature: 'deepClone(value)',
+    description: 'Возвращает глубокую копию значения.',
+    snippet: 'deepClone(${1:value})',
+  },
+  {
+    name: 'isEqual',
+    signature: 'isEqual(actual, expected)',
+    description: 'Глубоко сравнивает массивы, объекты и примитивы.',
+    snippet: 'isEqual(${1:actual}, ${2:expected})',
+  },
+]
+
+const helperTypes = `
+declare function print(...values: unknown[]): void;
+declare function range(end: number): number[];
+declare function range(start: number, end: number, step?: number): number[];
+declare function deepClone<T>(value: T): T;
+declare function isEqual(actual: unknown, expected: unknown): boolean;
+`
+
 function difficultyTone(difficulty: LiveCodingTask['difficulty']) {
   if (difficulty === 'easy') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
   if (difficulty === 'medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
@@ -64,6 +99,43 @@ function CodeEditor({
   language: LiveCodingLanguage
   onChange: (value: string) => void
 }) {
+  const handleBeforeMount: BeforeMount = (monaco) => {
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+      helperTypes,
+      'file:///live-coding-helpers-js.d.ts'
+    )
+    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+      helperTypes,
+      'file:///live-coding-helpers-ts.d.ts'
+    )
+
+    monaco.languages.registerCompletionItemProvider(language, {
+      triggerCharacters: ['p', 'r', 'd', 'i'],
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position)
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        }
+
+        return {
+          suggestions: helperDefinitions.map((helper) => ({
+            label: helper.name,
+            kind: monaco.languages.CompletionItemKind.Function,
+            insertText: helper.snippet,
+            insertTextRules:
+              monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            detail: helper.signature,
+            documentation: helper.description,
+            range,
+          })),
+        }
+      },
+    })
+  }
+
   const handleMount: OnMount = (editor) => {
     editor.focus()
   }
@@ -76,10 +148,24 @@ function CodeEditor({
         theme="vs-dark"
         value={code}
         onChange={(value) => onChange(value ?? '')}
+        beforeMount={handleBeforeMount}
         onMount={handleMount}
         loading={
-          <div className="flex h-[440px] items-center justify-center text-sm text-slate-400">
-            Загрузка редактора...
+          <div className="h-[440px] bg-slate-950 p-4">
+            <div className="mb-5 flex gap-2">
+              <div className="h-2 w-2 rounded-full bg-slate-700" />
+              <div className="h-2 w-2 rounded-full bg-slate-700" />
+              <div className="h-2 w-2 rounded-full bg-slate-700" />
+            </div>
+            <div className="space-y-3">
+              {Array.from({ length: 9 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-3 animate-pulse rounded bg-slate-800"
+                  style={{ width: `${88 - (index % 4) * 12}%` }}
+                />
+              ))}
+            </div>
           </div>
         }
         options={{
@@ -99,6 +185,40 @@ function CodeEditor({
           wordWrap: 'on',
         }}
       />
+    </div>
+  )
+}
+
+function BuiltInFunctionsPanel({
+  onInsert,
+}: {
+  onInsert: (snippet: string) => void
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-background p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-foreground">Встроенные функции</p>
+          <p className="text-xs text-muted-foreground">
+            Доступны прямо в решении и в автодополнении Monaco.
+          </p>
+        </div>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {helperDefinitions.map((helper) => (
+          <button
+            key={helper.name}
+            type="button"
+            onClick={() => onInsert(helper.snippet.replace(/\$\{\d+:([^}]+)\}/g, '$1'))}
+            className="rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40 hover:bg-accent"
+          >
+            <code className="text-xs font-semibold text-primary">{helper.signature}</code>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {helper.description}
+            </p>
+          </button>
+        ))}
+      </div>
     </div>
   )
 }
@@ -248,6 +368,11 @@ export default function LiveCodingTaskPage() {
     setCode(starter)
     saveCode(task.id, language, starter)
     setRunResult(null)
+  }
+
+  const insertHelper = (snippet: string) => {
+    const nextCode = `${code.trimEnd()}\n\n${snippet}`
+    handleCodeChange(nextCode)
   }
 
   return (
@@ -432,6 +557,9 @@ export default function LiveCodingTaskPage() {
               </Button>
             </div>
             <CodeEditor code={code} language={language} onChange={handleCodeChange} />
+            <div className="mt-3">
+              <BuiltInFunctionsPanel onInsert={insertHelper} />
+            </div>
           </div>
 
           <div className="rounded-lg border border-border bg-card shadow-sm">

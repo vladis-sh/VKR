@@ -11,6 +11,7 @@ export interface CodeRunResult {
   passed: boolean
   results: CodeRunCaseResult[]
   error?: string
+  logs?: string[]
 }
 
 const WORKER_TIMEOUT_MS = 2500
@@ -18,6 +19,19 @@ const WORKER_TIMEOUT_MS = 2500
 const workerSource = `
 self.onmessage = async (event) => {
   const { code, tests } = event.data;
+  const logs = [];
+
+  function serialize(value) {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'undefined') return 'undefined';
+    if (typeof value === 'function') return '[Function]';
+
+    try {
+      return JSON.stringify(normalize(value));
+    } catch {
+      return String(value);
+    }
+  }
 
   function normalize(value) {
     if (Number.isNaN(value)) return '__NaN__';
@@ -31,11 +45,45 @@ self.onmessage = async (event) => {
     return value;
   }
 
-  function assertDeepEqual(actual, expected) {
+  function print(...values) {
+    logs.push(values.map(serialize).join(' '));
+  }
+
+  function range(start, end, step = 1) {
+    const from = end === undefined ? 0 : start;
+    const to = end === undefined ? start : end;
+
+    if (step === 0) {
+      throw new Error('range step не может быть 0');
+    }
+
+    const result = [];
+    if (step > 0) {
+      for (let value = from; value < to; value += step) result.push(value);
+    } else {
+      for (let value = from; value > to; value += step) result.push(value);
+    }
+    return result;
+  }
+
+  function deepClone(value) {
+    if (typeof structuredClone === 'function') {
+      return structuredClone(value);
+    }
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function isEqual(actual, expected) {
     const left = JSON.stringify(normalize(actual));
     const right = JSON.stringify(normalize(expected));
 
-    if (left !== right) {
+    return left === right;
+  }
+
+  function assertDeepEqual(actual, expected) {
+    if (!isEqual(actual, expected)) {
+      const left = JSON.stringify(normalize(actual));
+      const right = JSON.stringify(normalize(expected));
       throw new Error('Ожидалось ' + right + ', получено ' + left);
     }
   }
@@ -46,9 +94,13 @@ self.onmessage = async (event) => {
     const factory = new Function(
       'module',
       'exports',
+      'print',
+      'range',
+      'deepClone',
+      'isEqual',
       code + '\\n; return module.exports.default ?? module.exports.solution ?? exports.default ?? exports.solution ?? (typeof solution !== "undefined" ? solution : undefined);'
     );
-    const candidate = factory(module, exports);
+    const candidate = factory(module, exports, print, range, deepClone, isEqual);
 
     if (typeof candidate !== 'function') {
       throw new Error('Экспортируйте функцию через module.exports или объявите function solution(...)');
@@ -61,9 +113,13 @@ self.onmessage = async (event) => {
         const run = new Function(
           'candidate',
           'assertDeepEqual',
+          'print',
+          'range',
+          'deepClone',
+          'isEqual',
           'return (async () => { ' + test.assertion + ' })();'
         );
-        await run(candidate, assertDeepEqual);
+        await run(candidate, assertDeepEqual, print, range, deepClone, isEqual);
         results.push({
           title: test.title,
           passed: true,
@@ -79,12 +135,13 @@ self.onmessage = async (event) => {
       }
     }
 
-    self.postMessage({ passed: results.every((result) => result.passed), results });
+    self.postMessage({ passed: results.every((result) => result.passed), results, logs });
   } catch (error) {
     self.postMessage({
       passed: false,
       results: [],
       error: error instanceof Error ? error.message : String(error),
+      logs,
     });
   }
 };
