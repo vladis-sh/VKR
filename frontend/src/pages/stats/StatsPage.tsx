@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Trophy } from 'lucide-react'
 import {
   LineChart,
   Line,
@@ -89,15 +88,7 @@ export default function StatsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-bold text-foreground">Статистика</h1>
-        <Button variant="outline" size="sm" asChild>
-          <Link to="/app/leaderboard">
-            <Trophy size={14} />
-            Лидерборд
-          </Link>
-        </Button>
-      </div>
+      <h1 className="text-lg font-bold text-foreground">Статистика</h1>
 
       {/* Stats cards */}
       <StatsCards stats={stats} />

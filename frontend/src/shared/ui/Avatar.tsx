@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import * as RadixAvatar from '@radix-ui/react-avatar'
 import { cn } from '@/shared/lib/cn'
+import { resolveAssetUrl } from '@/shared/lib/assetUrl'
 import { getInitials } from '@/shared/lib/utils'
 
 export interface AvatarProps {
@@ -19,15 +20,16 @@ const sizeClasses = {
 }
 
 export function Avatar({ src, name = '', size = 'md', className }: AvatarProps) {
+  const imageSrc = resolveAssetUrl(src)
   const initials = getInitials(name)
   const [imageStatus, setImageStatus] = useState<'idle' | 'loading' | 'loaded' | 'error'>(
-    src ? 'loading' : 'idle'
+    imageSrc ? 'loading' : 'idle'
   )
-  const isLoading = Boolean(src) && (imageStatus === 'idle' || imageStatus === 'loading')
+  const isLoading = Boolean(imageSrc) && (imageStatus === 'idle' || imageStatus === 'loading')
 
   useEffect(() => {
-    setImageStatus(src ? 'loading' : 'idle')
-  }, [src])
+    setImageStatus(imageSrc ? 'loading' : 'idle')
+  }, [imageSrc])
 
   return (
     <RadixAvatar.Root
@@ -38,7 +40,7 @@ export function Avatar({ src, name = '', size = 'md', className }: AvatarProps) 
       )}
     >
       <RadixAvatar.Image
-        src={src}
+        src={imageSrc}
         alt={name}
         className="aspect-square h-full w-full object-cover"
         onLoadingStatusChange={setImageStatus}

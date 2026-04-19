@@ -14,6 +14,7 @@ import { useAuthStore } from '@/features/auth/useAuthStore'
 import { profileApi } from '@/shared/api/profile.api'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
+import { resolveAssetUrl } from '@/shared/lib/assetUrl'
 import { cropAvatarFile } from '@/shared/lib/avatarImage'
 import { toast } from '@/features/theme/useToastStore'
 
@@ -269,7 +270,7 @@ export default function EditProfilePage() {
     }
   }
 
-  const currentAvatar = avatarPreview
+  const currentAvatar = avatarFile ? avatarPreview : resolveAssetUrl(avatarPreview)
   const isAvatarPreparing = Boolean(avatarFile && !avatarImageSize)
   const cropMetrics = avatarImageSize ? getCropMetrics(avatarImageSize, cropZoom) : null
   const cropImageStyle = cropMetrics
