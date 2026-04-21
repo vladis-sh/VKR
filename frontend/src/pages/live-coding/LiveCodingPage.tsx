@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import {
-  Building2,
   CheckCircle2,
+  ChevronDown,
+  Circle,
+  Clock,
   Code2,
   Lock,
   Search,
   Star,
-  TrendingUp,
   X,
 } from 'lucide-react'
 import {
@@ -20,18 +20,30 @@ import {
   type LiveCodingTask,
 } from '@/entities/liveCoding'
 import { useLiveCodingProgress } from '@/features/live-coding/useLiveCodingProgress'
-import { Button } from '@/shared/ui/Button'
 import { cn } from '@/shared/lib/cn'
 
 const difficulties: Array<LiveCodingDifficulty | 'all'> = ['all', 'easy', 'medium', 'hard']
 
 function difficultyTone(difficulty: LiveCodingDifficulty) {
-  if (difficulty === 'easy') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-  if (difficulty === 'medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-  return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+  if (difficulty === 'easy')
+    return 'text-green-600 dark:text-green-400'
+  if (difficulty === 'medium')
+    return 'text-amber-600 dark:text-amber-400'
+  return 'text-red-600 dark:text-red-400'
 }
 
-function TaskCard({
+function difficultyDot(difficulty: LiveCodingDifficulty) {
+  if (difficulty === 'easy') return 'bg-green-500'
+  if (difficulty === 'medium') return 'bg-amber-500'
+  return 'bg-red-500'
+}
+
+interface CategoryStats {
+  solved: number
+  total: number
+}
+
+function TaskRow({
   task,
   solved,
   favorite,
@@ -42,100 +54,157 @@ function TaskCard({
   favorite: boolean
   onToggleFavorite: () => void
 }) {
-  return (
-    <motion.article
-      layout
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        'relative flex min-h-[230px] flex-col gap-4 overflow-hidden rounded-lg border bg-card p-4 shadow-sm',
-        task.isPremium ? 'border-amber-300/70' : 'border-border'
-      )}
-    >
-      <div className="absolute inset-x-0 top-0 h-1 bg-primary/70" />
-
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="mb-2 flex flex-wrap items-center gap-2">
-            <span className={cn('rounded-md px-2 py-1 text-[10px] font-semibold', difficultyTone(task.difficulty))}>
-              {DIFFICULTY_LABELS[task.difficulty]}
-            </span>
-            {task.isNew && (
-              <span className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-semibold text-primary">
-                Новая
-              </span>
-            )}
-            {task.isPremium && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-1 text-[10px] font-semibold text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                <Lock size={11} />
-                Premium
-              </span>
-            )}
-          </div>
-          <h2 className="line-clamp-2 text-base font-semibold leading-snug text-foreground">
-            {task.title}
-          </h2>
-        </div>
-
-        <button
-          type="button"
-          className={cn(
-            'rounded-md p-2 transition-colors',
-            favorite ? 'text-amber-500' : 'text-muted-foreground hover:text-amber-500'
-          )}
-          onClick={onToggleFavorite}
-          aria-label={favorite ? 'Убрать из избранного' : 'Добавить в избранное'}
-        >
-          <Star size={17} className={cn(favorite && 'fill-current')} />
-        </button>
+  const rowContent = (
+    <>
+      <div className="flex w-6 shrink-0 justify-center">
+        {solved ? (
+          <CheckCircle2 size={18} className="text-green-500" />
+        ) : (
+          <Circle size={18} className="text-muted-foreground/40" />
+        )}
       </div>
 
-      <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-        {task.description}
-      </p>
+      <button
+        type="button"
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          onToggleFavorite()
+        }}
+        className={cn(
+          'flex w-6 shrink-0 justify-center transition-colors',
+          favorite ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-amber-500'
+        )}
+        aria-label={favorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+      >
+        <Star size={16} className={cn(favorite && 'fill-current')} />
+      </button>
 
-      <div className="mt-auto space-y-3">
-        <div className="flex flex-wrap gap-1.5">
-          {task.companies.slice(0, 3).map((company) => (
-            <span key={company} className="rounded-md bg-secondary px-2 py-1 text-[10px] text-secondary-foreground">
-              {company}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              'truncate text-sm font-medium',
+              task.isPremium ? 'text-muted-foreground' : 'text-foreground'
+            )}
+          >
+            {task.title}
+          </span>
+          {task.isNew && (
+            <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+              Новая
             </span>
+          )}
+          {task.isPremium && (
+            <Lock size={12} className="shrink-0 text-amber-500" aria-label="Premium" />
+          )}
+        </div>
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+          <span className="truncate">
+            {task.companies.slice(0, 3).join(' · ')}
+            {task.companies.length > 3 && ` +${task.companies.length - 3}`}
+          </span>
+        </div>
+      </div>
+
+      <div className="hidden w-20 shrink-0 items-center gap-1 text-xs text-muted-foreground sm:flex">
+        <Clock size={12} />
+        <span>{task.estimatedMinutes}м</span>
+      </div>
+
+      <div className={cn('w-20 shrink-0 text-right text-xs font-semibold', difficultyTone(task.difficulty))}>
+        {DIFFICULTY_LABELS[task.difficulty]}
+      </div>
+    </>
+  )
+
+  const commonClasses =
+    'group flex items-center gap-3 border-b border-border/60 px-4 py-2.5 last:border-b-0 transition-colors'
+
+  if (task.isPremium) {
+    return (
+      <div className={cn(commonClasses, 'cursor-not-allowed opacity-70')}>
+        {rowContent}
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      to={`/app/live-coding/${task.slug}`}
+      className={cn(commonClasses, 'hover:bg-accent/60')}
+    >
+      {rowContent}
+    </Link>
+  )
+}
+
+function CategorySection({
+  category,
+  tasks,
+  stats,
+  defaultOpen,
+  isSolved,
+  isFavorite,
+  onToggleFavorite,
+}: {
+  category: string
+  tasks: LiveCodingTask[]
+  stats: CategoryStats
+  defaultOpen: boolean
+  isSolved: (id: string) => boolean
+  isFavorite: (id: string) => boolean
+  onToggleFavorite: (id: string) => void
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  const percent = stats.total > 0 ? Math.round((stats.solved / stats.total) * 100) : 0
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/40"
+        aria-expanded={open}
+      >
+        <ChevronDown
+          size={16}
+          className={cn(
+            'shrink-0 text-muted-foreground transition-transform',
+            open ? 'rotate-0' : '-rotate-90'
+          )}
+        />
+        <span className="text-sm font-semibold text-foreground">{category}</span>
+        <span className="text-xs text-muted-foreground">
+          {stats.solved} / {stats.total}
+        </span>
+        <div className="ml-auto flex items-center gap-3">
+          <div className="hidden h-1.5 w-24 overflow-hidden rounded-full bg-secondary sm:block">
+            <div
+              className="h-full rounded-full bg-primary transition-all"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <span className="w-8 text-right text-xs font-medium text-muted-foreground">
+            {percent}%
+          </span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-border">
+          {tasks.map((task) => (
+            <TaskRow
+              key={task.id}
+              task={task}
+              solved={isSolved(task.id)}
+              favorite={isFavorite(task.id)}
+              onToggleFavorite={() => onToggleFavorite(task.id)}
+            />
           ))}
         </div>
-
-        <div className="grid grid-cols-3 gap-2 text-xs">
-          <div className="rounded-md bg-secondary px-2 py-1.5">
-            <p className="text-muted-foreground">Успех</p>
-            <p className="font-semibold text-foreground">{task.successRate}%</p>
-          </div>
-          <div className="rounded-md bg-secondary px-2 py-1.5">
-            <p className="text-muted-foreground">Время</p>
-            <p className="font-semibold text-foreground">{task.estimatedMinutes}м</p>
-          </div>
-          <div className="rounded-md bg-secondary px-2 py-1.5">
-            <p className="text-muted-foreground">Статус</p>
-            <p className="font-semibold text-foreground">{solved ? 'Решена' : 'Новая'}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            {solved ? <CheckCircle2 size={14} className="text-green-500" /> : <Code2 size={14} />}
-            {task.languages.map((language) => LANGUAGE_LABELS[language]).join(', ')}
-          </div>
-          {task.isPremium ? (
-            <Button size="sm" variant="secondary" disabled>
-              <Lock size={14} />
-              По подписке
-            </Button>
-          ) : (
-            <Button size="sm" asChild>
-              <Link to={`/app/live-coding/${task.slug}`}>Решать</Link>
-            </Button>
-          )}
-        </div>
-      </div>
-    </motion.article>
+      )}
+    </div>
   )
 }
 
@@ -144,6 +213,7 @@ export default function LiveCodingPage() {
   const [difficulty, setDifficulty] = useState<LiveCodingDifficulty | 'all'>('all')
   const [company, setCompany] = useState('all')
   const [language, setLanguage] = useState<LiveCodingLanguage | 'all'>('all')
+  const [onlyFavorites, setOnlyFavorites] = useState(false)
   const { progress, isSolved, isFavorite, toggleFavorite } = useLiveCodingProgress()
 
   const companies = useMemo(
@@ -163,108 +233,155 @@ export default function LiveCodingPage() {
       const matchesDifficulty = difficulty === 'all' || task.difficulty === difficulty
       const matchesCompany = company === 'all' || task.companies.includes(company)
       const matchesLanguage = language === 'all' || task.languages.includes(language)
+      const matchesFavorite = !onlyFavorites || isFavorite(task.id)
 
-      return matchesSearch && matchesDifficulty && matchesCompany && matchesLanguage
+      return (
+        matchesSearch &&
+        matchesDifficulty &&
+        matchesCompany &&
+        matchesLanguage &&
+        matchesFavorite
+      )
     })
-  }, [company, difficulty, language, search])
+  }, [company, difficulty, language, onlyFavorites, search, isFavorite])
 
-  const solvedFreeTasks = LIVE_CODING_TASKS.filter(
-    (task) => !task.isPremium && progress.solved.includes(task.id)
-  )
-  const freeTasksCount = LIVE_CODING_TASKS.filter((task) => !task.isPremium).length
-  const progressPercent = freeTasksCount > 0
-    ? Math.round((solvedFreeTasks.length / freeTasksCount) * 100)
-    : 0
+  const groupedTasks = useMemo(() => {
+    const map = new Map<string, LiveCodingTask[]>()
+    for (const task of filteredTasks) {
+      if (!map.has(task.category)) map.set(task.category, [])
+      map.get(task.category)!.push(task)
+    }
+    return Array.from(map.entries())
+  }, [filteredTasks])
 
-  const solvedByDifficulty = difficulties
-    .filter((item): item is LiveCodingDifficulty => item !== 'all')
-    .map((item) => ({
+  const freeTasks = LIVE_CODING_TASKS.filter((task) => !task.isPremium)
+  const solvedFree = freeTasks.filter((task) => progress.solved.includes(task.id))
+  const progressPercent =
+    freeTasks.length > 0 ? Math.round((solvedFree.length / freeTasks.length) * 100) : 0
+
+  const difficultyCounts = (['easy', 'medium', 'hard'] as const).map((item) => {
+    const tasksInDifficulty = LIVE_CODING_TASKS.filter(
+      (task) => task.difficulty === item && !task.isPremium
+    )
+    return {
       difficulty: item,
-      solved: LIVE_CODING_TASKS.filter(
-        (task) => task.difficulty === item && progress.solved.includes(task.id)
-      ).length,
-      total: LIVE_CODING_TASKS.filter((task) => task.difficulty === item && !task.isPremium).length,
-    }))
+      solved: tasksInDifficulty.filter((task) => progress.solved.includes(task.id)).length,
+      total: tasksInDifficulty.length,
+    }
+  })
+
+  const isFiltering =
+    Boolean(search) ||
+    difficulty !== 'all' ||
+    company !== 'all' ||
+    language !== 'all' ||
+    onlyFavorites
+
+  const resetFilters = () => {
+    setSearch('')
+    setDifficulty('all')
+    setCompany('all')
+    setLanguage('all')
+    setOnlyFavorites(false)
+  }
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Code2 size={24} />
+    <div className="space-y-4">
+      {/* Compact header: title + difficulty counters + overall progress */}
+      <section className="rounded-lg border border-border bg-card px-4 py-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Code2 size={18} />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                Interview practice
-              </p>
-              <h1 className="mt-1 text-2xl font-bold text-foreground">Live Coding</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                Практические задачи в формате технического интервью: фильтруйте по сложности,
-                компаниям и языкам, запускайте тесты прямо внутри платформы.
+              <h1 className="text-lg font-bold leading-tight text-foreground">Live Coding</h1>
+              <p className="text-xs text-muted-foreground">
+                Задачи в формате технического интервью
               </p>
             </div>
           </div>
 
-          <div className="w-full rounded-lg border border-border bg-background p-4 lg:w-72">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-semibold text-foreground">Прогресс</span>
-              <span className="text-sm font-semibold text-primary">{progressPercent}%</span>
+          <div className="flex items-center gap-2">
+            {difficultyCounts.map((item) => (
+              <div
+                key={item.difficulty}
+                className="flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1 text-xs"
+              >
+                <span className={cn('h-1.5 w-1.5 rounded-full', difficultyDot(item.difficulty))} />
+                <span className="font-medium text-foreground">
+                  {DIFFICULTY_LABELS[item.difficulty]}
+                </span>
+                <span className="text-muted-foreground">
+                  {item.solved}/{item.total}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="ml-auto flex min-w-[180px] items-center gap-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-secondary">
-              <div className="h-full rounded-full bg-primary" style={{ width: `${progressPercent}%` }} />
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Решено {solvedFreeTasks.length} из {freeTasksCount} доступных задач
-            </p>
+            <span className="shrink-0 text-xs font-semibold text-foreground">
+              {progressPercent}%
+            </span>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-3">
-        {solvedByDifficulty.map((item) => (
-          <div key={item.difficulty} className="rounded-lg border border-border bg-card p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-semibold text-foreground">
-                {DIFFICULTY_LABELS[item.difficulty]}
-              </span>
-              <TrendingUp size={16} className="text-muted-foreground" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">
-              {item.solved}
-              <span className="text-sm font-medium text-muted-foreground"> / {item.total}</span>
-            </p>
-          </div>
-        ))}
-      </section>
-
-      <section className="rounded-lg border border-border bg-card p-4 shadow-sm">
-        <div className="grid gap-3 lg:grid-cols-[1fr_180px_180px]">
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      {/* Sticky filter bar */}
+      <section className="sticky top-0 z-10 rounded-lg border border-border bg-card/95 p-3 shadow-sm backdrop-blur">
+        <div className="flex flex-wrap gap-2">
+          <div className="relative min-w-[220px] flex-1">
+            <Search
+              size={15}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
             <input
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Поиск по названию, категории или компании"
-              className="h-10 w-full rounded-lg border border-border bg-background pl-9 pr-9 text-sm outline-none transition focus:ring-2 focus:ring-ring"
+              placeholder="Поиск задачи, категории или компании"
+              className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-9 text-sm outline-none transition focus:ring-2 focus:ring-ring"
             />
             {search && (
               <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                onClick={() => setSearch('')}
                 type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 aria-label="Очистить поиск"
               >
-                <X size={15} />
+                <X size={14} />
               </button>
             )}
+          </div>
+
+          <div className="flex gap-1 rounded-lg border border-border bg-background p-0.5">
+            {difficulties.map((item) => (
+              <button
+                key={item}
+                type="button"
+                onClick={() => setDifficulty(item)}
+                className={cn(
+                  'rounded-md px-3 py-1 text-xs font-medium transition-colors',
+                  difficulty === item
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {item === 'all' ? 'Все' : DIFFICULTY_LABELS[item]}
+              </button>
+            ))}
           </div>
 
           <select
             value={company}
             onChange={(event) => setCompany(event.target.value)}
-            className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:ring-2 focus:ring-ring"
+            className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm outline-none transition focus:ring-2 focus:ring-ring"
             aria-label="Компания"
           >
             <option value="all">Все компании</option>
@@ -277,8 +394,10 @@ export default function LiveCodingPage() {
 
           <select
             value={language}
-            onChange={(event) => setLanguage(event.target.value as LiveCodingLanguage | 'all')}
-            className="h-10 rounded-lg border border-border bg-background px-3 text-sm outline-none transition focus:ring-2 focus:ring-ring"
+            onChange={(event) =>
+              setLanguage(event.target.value as LiveCodingLanguage | 'all')
+            }
+            className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm outline-none transition focus:ring-2 focus:ring-ring"
             aria-label="Язык"
           >
             <option value="all">Все языки</option>
@@ -288,57 +407,65 @@ export default function LiveCodingPage() {
               </option>
             ))}
           </select>
-        </div>
 
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {difficulties.map((item) => (
+          <button
+            type="button"
+            onClick={() => setOnlyFavorites((current) => !current)}
+            className={cn(
+              'inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-xs font-medium transition-colors',
+              onlyFavorites
+                ? 'border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300'
+                : 'border-border bg-background text-muted-foreground hover:text-foreground'
+            )}
+            aria-pressed={onlyFavorites}
+          >
+            <Star size={13} className={cn(onlyFavorites && 'fill-current')} />
+            Избранное
+          </button>
+
+          {isFiltering && (
             <button
-              key={item}
               type="button"
-              onClick={() => setDifficulty(item)}
-              className={cn(
-                'shrink-0 rounded-lg px-4 py-2 text-xs font-semibold transition-colors',
-                difficulty === item
-                  ? 'bg-primary text-white'
-                  : 'bg-secondary text-secondary-foreground hover:bg-accent'
-              )}
+              onClick={resetFilters}
+              className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              {item === 'all' ? 'Все сложности' : DIFFICULTY_LABELS[item]}
+              <X size={13} />
+              Сбросить
             </button>
-          ))}
+          )}
         </div>
       </section>
 
+      {/* Grouped task list */}
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-foreground">
-            Найдено задач: {filteredTasks.length}
-          </h2>
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Building2 size={14} />
-            Компании и формат близки к BigFrontend
-          </div>
-        </div>
-
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {filteredTasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              solved={isSolved(task.id)}
-              favorite={isFavorite(task.id)}
-              onToggleFavorite={() => toggleFavorite(task.id)}
-            />
-          ))}
-        </div>
-
-        {filteredTasks.length === 0 && (
+        {groupedTasks.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
             <p className="text-sm font-semibold text-foreground">Задачи не найдены</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Измените фильтры или очистите строку поиска.
             </p>
           </div>
+        ) : (
+          groupedTasks.map(([category, tasks]) => {
+            const categoryFree = tasks.filter((task) => !task.isPremium)
+            const stats: CategoryStats = {
+              solved: categoryFree.filter((task) => progress.solved.includes(task.id)).length,
+              total: categoryFree.length,
+            }
+
+            return (
+              <CategorySection
+                key={category}
+                category={category}
+                tasks={tasks}
+                stats={stats}
+                defaultOpen={false}
+                isSolved={isSolved}
+                isFavorite={isFavorite}
+                onToggleFavorite={toggleFavorite}
+              />
+            )
+          })
         )}
       </section>
     </div>

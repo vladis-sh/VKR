@@ -5,7 +5,6 @@ interface RegisterData {
   password: string
   fullName: string
   avatarFile?: File
-  knowledgeLevel: string
 }
 
 interface RegisterState {
@@ -13,7 +12,6 @@ interface RegisterState {
   currentStep: number
   setStep1: (data: { email: string; password: string }) => void
   setStep2: (data: { fullName: string; avatarFile?: File }) => void
-  setStep3: (data: { knowledgeLevel: string }) => void
   reset: () => void
 }
 
@@ -28,12 +26,6 @@ export const useRegisterStore = create<RegisterState>((set) => ({
     })),
 
   setStep2: (data) =>
-    set((state) => ({
-      data: { ...state.data, ...data },
-      currentStep: 3,
-    })),
-
-  setStep3: (data) =>
     set((state) => ({
       data: { ...state.data, ...data },
     })),

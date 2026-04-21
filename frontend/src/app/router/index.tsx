@@ -10,7 +10,6 @@ const LandingPage = lazy(() => import('@/pages/landing/LandingPage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterStep1Page = lazy(() => import('@/pages/auth/RegisterStep1Page'))
 const RegisterStep2Page = lazy(() => import('@/pages/auth/RegisterStep2Page'))
-const RegisterStep3Page = lazy(() => import('@/pages/auth/RegisterStep3Page'))
 const MaterialsPage = lazy(() => import('@/pages/materials/MaterialsPage'))
 const FavoritesPage = lazy(() => import('@/pages/materials/FavoritesPage'))
 const ChatPage = lazy(() => import('@/pages/chat/ChatPage'))
@@ -50,10 +49,6 @@ export const router = createBrowserRouter([
   {
     path: '/register/profile',
     element: <LazyWrapper><RegisterStep2Page /></LazyWrapper>,
-  },
-  {
-    path: '/register/level',
-    element: <LazyWrapper><RegisterStep3Page /></LazyWrapper>,
   },
   {
     path: '/app',

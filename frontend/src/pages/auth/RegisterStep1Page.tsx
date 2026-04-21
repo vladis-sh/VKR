@@ -34,7 +34,7 @@ type FormData = z.infer<typeof schema>
 function StepDots({ current }: { current: number }) {
   return (
     <div className="flex items-center gap-2 mb-6">
-      {[1, 2, 3].map((n) => (
+      {[1, 2].map((n) => (
         <div
           key={n}
           className={`h-1.5 flex-1 rounded-full transition-colors ${
@@ -42,7 +42,7 @@ function StepDots({ current }: { current: number }) {
           }`}
         />
       ))}
-      <span className="text-xs text-muted-foreground ml-2 shrink-0">Шаг 1 из 3</span>
+      <span className="text-xs text-muted-foreground ml-2 shrink-0">Шаг 1 из 2</span>
     </div>
   )
 }
@@ -92,8 +92,7 @@ export default function RegisterStep1Page() {
         </Link>
 
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
-          <h1 className="text-xl font-bold text-foreground mb-1">Создать аккаунт</h1>
-          <p className="text-sm text-muted-foreground mb-5">Бесплатно. Без карты.</p>
+          <h1 className="text-xl font-bold text-foreground mb-5">Создать аккаунт</h1>
 
           <StepDots current={1} />
 
