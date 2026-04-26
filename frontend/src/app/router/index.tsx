@@ -5,6 +5,7 @@ import { AppLayout } from '@/widgets/AppLayout'
 // Pages - lazy loaded for better performance
 import { lazy, Suspense } from 'react'
 import { FullPageSpinner } from '@/shared/ui/Spinner'
+import { ErrorBoundary } from '@/shared/ui/ErrorBoundary'
 
 const LandingPage = lazy(() => import('@/pages/landing/LandingPage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
@@ -22,6 +23,8 @@ const TestResultsPage = lazy(() => import('@/pages/tests/TestResultsPage'))
 const TestHistoryPage = lazy(() => import('@/pages/tests/TestHistoryPage'))
 const LiveCodingPage = lazy(() => import('@/pages/live-coding/LiveCodingPage'))
 const LiveCodingTaskPage = lazy(() => import('@/pages/live-coding/LiveCodingTaskPage'))
+const RoadmapsPage = lazy(() => import('@/pages/roadmaps/RoadmapsPage'))
+const RoadmapDetailPage = lazy(() => import('@/pages/roadmaps/RoadmapDetailPage'))
 const StatsPage = lazy(() => import('@/pages/stats/StatsPage'))
 const LeaderboardPage = lazy(() => import('@/pages/leaderboard/LeaderboardPage'))
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'))
@@ -30,7 +33,11 @@ const ProfileHistoryPage = lazy(() => import('@/pages/profile/ProfileHistoryPage
 const NotificationsPage = lazy(() => import('@/pages/profile/NotificationsPage'))
 
 function LazyWrapper({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<FullPageSpinner />}>{children}</Suspense>
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={<FullPageSpinner />}>{children}</Suspense>
+    </ErrorBoundary>
+  )
 }
 
 export const router = createBrowserRouter([
@@ -121,6 +128,14 @@ export const router = createBrowserRouter([
       {
         path: 'live-coding/:slug',
         element: <LazyWrapper><LiveCodingTaskPage /></LazyWrapper>,
+      },
+      {
+        path: 'roadmaps',
+        element: <LazyWrapper><RoadmapsPage /></LazyWrapper>,
+      },
+      {
+        path: 'roadmaps/:slug',
+        element: <LazyWrapper><RoadmapDetailPage /></LazyWrapper>,
       },
       {
         path: 'stats',

@@ -6,6 +6,7 @@ import {
   BarChart2,
   Code2,
   BrainCircuit,
+  Map,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 
@@ -14,6 +15,7 @@ const navItems = [
   { to: '/app/chat', label: 'Чат с ИИ', icon: MessageSquare },
   { to: '/app/tests', label: 'Тесты', icon: ClipboardList },
   { to: '/app/live-coding', label: 'Live Coding', icon: Code2 },
+  { to: '/app/roadmaps', label: 'Роадмапы', icon: Map },
   { to: '/app/stats', label: 'Статистика', icon: BarChart2 },
 ]
 

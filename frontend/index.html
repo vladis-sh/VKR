@@ -14,6 +14,27 @@
       rel="stylesheet"
     />
     <title>PrepAI — Подготовка к собеседованиям</title>
+    <script>
+      // Pre-paint theme application to avoid FOUC.
+      // Must stay in sync with useThemeStore persist key + shape.
+      (function () {
+        try {
+          var raw = localStorage.getItem('theme')
+          var theme = 'system'
+          if (raw) {
+            var parsed = JSON.parse(raw)
+            if (parsed && parsed.state && parsed.state.theme) theme = parsed.state.theme
+          }
+          var isDark =
+            theme === 'dark' ||
+            (theme === 'system' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (isDark) document.documentElement.classList.add('dark')
+        } catch (e) {
+          // localStorage blocked or JSON corrupt — default light theme stays.
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

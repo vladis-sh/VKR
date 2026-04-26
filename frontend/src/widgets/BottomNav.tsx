@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { BookOpen, MessageSquare, ClipboardList, BarChart2, Code2 } from 'lucide-react'
+import { BookOpen, MessageSquare, ClipboardList, BarChart2, Code2, Map } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/app/chat', label: 'Чат', icon: MessageSquare },
   { to: '/app/tests', label: 'Тесты', icon: ClipboardList },
   { to: '/app/live-coding', label: 'Кодинг', icon: Code2 },
+  { to: '/app/roadmaps', label: 'Роадмап', icon: Map },
   { to: '/app/stats', label: 'Статы', icon: BarChart2 },
 ]
 

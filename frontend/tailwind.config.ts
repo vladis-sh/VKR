@@ -67,8 +67,12 @@ const config: Config = {
           to: { height: '0' },
         },
         'fade-in': {
-          from: { opacity: '0', transform: 'translateY(10px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+        'modal-in': {
+          from: { opacity: '0', transform: 'translate(-50%, calc(-50% + 8px))' },
+          to: { opacity: '1', transform: 'translate(-50%, -50%)' },
         },
         'slide-in-right': {
           from: { transform: 'translateX(100%)' },
@@ -87,7 +91,8 @@ const config: Config = {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
-        'fade-in': 'fade-in 0.3s ease-out',
+        'fade-in': 'fade-in 0.2s ease-out',
+        'modal-in': 'modal-in 0.2s ease-out',
         'slide-in-right': 'slide-in-right 0.3s ease-out',
         'pulse-dot': 'pulse-dot 1.4s infinite',
         'gradient-shift': 'gradient-shift 6s ease infinite',

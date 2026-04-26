@@ -20,13 +20,24 @@ import { profileApi } from '@/shared/api/profile.api'
 import { getApiErrorMessage } from '@/shared/lib/apiErrors'
 import { cropAvatarFile } from '@/shared/lib/avatarImage'
 import { toast } from '@/features/theme/useToastStore'
+import { KNOWLEDGE_LEVELS } from '@/shared/constants'
+
+type KnowledgeLevel = (typeof KNOWLEDGE_LEVELS)[number]['value']
 
 const CROP_VIEWPORT_SIZE = 220
 const MIN_CROP_ZOOM = 1
 const MAX_CROP_ZOOM = 3
 
+const KNOWLEDGE_LEVEL_VALUES = KNOWLEDGE_LEVELS.map((lvl) => lvl.value) as [
+  KnowledgeLevel,
+  ...KnowledgeLevel[]
+]
+
 const schema = z.object({
   fullName: z.string().min(2, 'Минимум 2 символа').max(50, 'Максимум 50 символов'),
+  knowledgeLevel: z.enum(KNOWLEDGE_LEVEL_VALUES, {
+    errorMap: () => ({ message: 'Выберите уровень' }),
+  }),
 })
 type FormData = z.infer<typeof schema>
 
@@ -109,12 +120,18 @@ export default function RegisterStep2Page() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const previewObjectUrlRef = useRef<string | null>(null)
   const dragStateRef = useRef<CropDragState | null>(null)
+  // Track which server-side steps succeeded so retry doesn't redo completed work
+  // (e.g. avoid re-posting registerProfile which would 409 "already registered").
+  const profileCreatedRef = useRef(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema) })
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { knowledgeLevel: 'junior' },
+  })
 
   useEffect(() => {
     return () => {
@@ -262,10 +279,22 @@ export default function RegisterStep2Page() {
 
     setIsLoading(true)
     setServerError('')
-    try {
-      await authApi.registerProfile({ fullName: formData.fullName })
 
-      if (avatarFile) {
+    // Step 1: save name. Skip if a previous attempt already succeeded.
+    if (!profileCreatedRef.current) {
+      try {
+        await authApi.registerProfile({ fullName: formData.fullName })
+        profileCreatedRef.current = true
+      } catch (err: unknown) {
+        setServerError(getApiErrorMessage(err, 'Не удалось сохранить имя'))
+        setIsLoading(false)
+        return
+      }
+    }
+
+    // Step 2: avatar is optional — a failure here must not block registration.
+    if (avatarFile) {
+      try {
         const avatarForm = new FormData()
         const preparedAvatar = await cropAvatarFile(avatarFile, {
           zoom: cropZoom,
@@ -275,17 +304,21 @@ export default function RegisterStep2Page() {
         })
         avatarForm.append('file', preparedAvatar)
         await profileApi.uploadAvatar(avatarForm)
+      } catch {
+        toast.error('Не удалось загрузить аватар. Вы сможете добавить его позже в профиле.')
       }
+    }
 
-      const res = await authApi.registerLevel({ knowledgeLevel: 'junior' })
-
+    // Step 3: knowledge level. If this fails the user can retry — step 1 won't re-run.
+    try {
+      const res = await authApi.registerLevel({ knowledgeLevel: formData.knowledgeLevel })
       setStep2({ fullName: formData.fullName, avatarFile: avatarFile ?? undefined })
       setUser(res.data.user)
       reset()
       toast.success('Добро пожаловать в PrepAI!')
       navigate('/app/materials', { replace: true })
     } catch (err: unknown) {
-      setServerError(getApiErrorMessage(err, 'Ошибка при сохранении профиля'))
+      setServerError(getApiErrorMessage(err, 'Не удалось сохранить уровень'))
     } finally {
       setIsLoading(false)
     }
@@ -465,6 +498,32 @@ export default function RegisterStep2Page() {
               error={errors.fullName?.message}
               {...register('fullName')}
             />
+
+            <fieldset className="space-y-2">
+              <legend className="text-sm font-medium text-foreground">Ваш уровень</legend>
+              <div className="grid gap-2">
+                {KNOWLEDGE_LEVELS.map((level) => (
+                  <label
+                    key={level.value}
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/60 has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                  >
+                    <input
+                      type="radio"
+                      value={level.value}
+                      className="mt-1 accent-primary"
+                      {...register('knowledgeLevel')}
+                    />
+                    <span className="flex flex-col">
+                      <span className="text-sm font-medium text-foreground">{level.label}</span>
+                      <span className="text-xs text-muted-foreground">{level.description}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              {errors.knowledgeLevel && (
+                <p className="text-xs text-destructive">{errors.knowledgeLevel.message}</p>
+              )}
+            </fieldset>
 
             {serverError && (
               <div

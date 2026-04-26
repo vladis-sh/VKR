@@ -12,8 +12,13 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     checkAuth()
 
-    // Listen for auth logout event from axios interceptor
-    const handler = () => useAuthStore.getState().setUser(null)
+    // Listen for auth logout event from axios interceptor.
+    // Reset _initialized so a fresh checkAuth can run after re-login.
+    const handler = () => {
+      const store = useAuthStore.getState()
+      store.setUser(null)
+      store.resetInitialized()
+    }
     window.addEventListener('auth:logout', handler)
     return () => window.removeEventListener('auth:logout', handler)
   }, [checkAuth])

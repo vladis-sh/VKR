@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface RegisterData {
   email: string
@@ -15,20 +16,37 @@ interface RegisterState {
   reset: () => void
 }
 
-export const useRegisterStore = create<RegisterState>((set) => ({
-  data: {},
-  currentStep: 1,
+export const useRegisterStore = create<RegisterState>()(
+  persist(
+    (set) => ({
+      data: {},
+      currentStep: 1,
 
-  setStep1: (data) =>
-    set((state) => ({
-      data: { ...state.data, ...data },
-      currentStep: 2,
-    })),
+      setStep1: (data) =>
+        set((state) => ({
+          data: { ...state.data, ...data },
+          currentStep: 2,
+        })),
 
-  setStep2: (data) =>
-    set((state) => ({
-      data: { ...state.data, ...data },
-    })),
+      setStep2: (data) =>
+        set((state) => ({
+          data: { ...state.data, ...data },
+        })),
 
-  reset: () => set({ data: {}, currentStep: 1 }),
-}))
+      reset: () => set({ data: {}, currentStep: 1 }),
+    }),
+    {
+      name: 'prepai.register',
+      storage: createJSONStorage(() => sessionStorage),
+      // avatarFile is a File and cannot be serialized — persist only primitives.
+      partialize: (state) => ({
+        data: {
+          email: state.data.email,
+          password: state.data.password,
+          fullName: state.data.fullName,
+        },
+        currentStep: state.currentStep,
+      }),
+    }
+  )
+)
