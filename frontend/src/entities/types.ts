@@ -4,6 +4,8 @@
 
 export type KnowledgeLevel = 'junior' | 'middle' | 'senior'
 
+export type UserRole = 'user' | 'admin'
+
 export interface User {
   id: string
   email: string
@@ -11,6 +13,7 @@ export interface User {
   avatarUrl?: string | null
   knowledgeLevel: KnowledgeLevel
   isProfileComplete?: boolean
+  role?: UserRole
   createdAt: string
   updatedAt?: string
 }
@@ -27,6 +30,23 @@ export interface Material {
   level: KnowledgeLevel
   tags: string[]
   isFavorite?: boolean
+  isPublished?: boolean
+  deletedAt?: string | null
+  createdAt: string
+  updatedAt?: string
+}
+
+export interface AdminQuestion {
+  id: string
+  topic: string
+  text: string
+  options: string[]
+  correctAnswerIndex: number
+  explanation: string
+  difficulty: KnowledgeLevel
+  sourceType: 'static' | 'ai'
+  isPublished: boolean
+  deletedAt?: string | null
   createdAt: string
   updatedAt?: string
 }

@@ -12,6 +12,9 @@ import {
   CompleteTestSessionDto,
   QueryAiQuestionsDto,
 } from './dto/tests.dto';
+import { CreateQuestionDto } from './dto/create-question.dto';
+import { UpdateQuestionDto } from './dto/update-question.dto';
+import { QueryAdminQuestionsDto } from './dto/query-admin-questions.dto';
 import { TestMode, KnowledgeLevel, QuestionSource } from '@prisma/client';
 
 const TOPIC_SLUGS: Record<string, string> = {
@@ -39,6 +42,11 @@ export class TestsService {
   async getTopics() {
     const topics = await this.prisma.question.groupBy({
       by: ['topic'],
+      where: {
+        sourceType: QuestionSource.static,
+        deletedAt: null,
+        isPublished: true,
+      },
       _count: { id: true },
     });
 
@@ -58,6 +66,8 @@ export class TestsService {
 
     const where: any = {
       sourceType: QuestionSource.static,
+      deletedAt: null,
+      isPublished: true,
     };
 
     if (topic) {
@@ -296,5 +306,103 @@ export class TestsService {
       .toLowerCase()
       .replace(/[^a-z0-9а-яё]+/gi, '-')
       .replace(/^-+|-+$/g, '');
+  }
+
+  // ============================================================
+  // Admin methods
+  // ============================================================
+
+  async adminFindAllQuestions(query: QueryAdminQuestionsDto) {
+    const { topic, difficulty, search, page = 1, limit = 20 } = query;
+    const skip = (page - 1) * limit;
+
+    const where: any = { deletedAt: null };
+
+    if (topic) where.topic = topic;
+    if (difficulty) where.difficulty = difficulty as KnowledgeLevel;
+    if (search) {
+      where.text = { contains: search, mode: 'insensitive' };
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.question.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.question.count({ where }),
+    ]);
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async adminFindOneQuestion(id: string) {
+    const question = await this.prisma.question.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!question) {
+      throw new NotFoundException('Вопрос не найден');
+    }
+    return question;
+  }
+
+  async createQuestion(dto: CreateQuestionDto) {
+    if (dto.correctAnswerIndex >= dto.options.length) {
+      throw new BadRequestException('correctAnswerIndex outside of options range');
+    }
+
+    return this.prisma.question.create({
+      data: {
+        topic: dto.topic,
+        text: dto.text,
+        options: dto.options,
+        correctAnswerIndex: dto.correctAnswerIndex,
+        explanation: dto.explanation,
+        difficulty: dto.difficulty as KnowledgeLevel,
+        sourceType: QuestionSource.static,
+        isPublished: dto.isPublished ?? true,
+      },
+    });
+  }
+
+  async updateQuestion(id: string, dto: UpdateQuestionDto) {
+    const existing = await this.adminFindOneQuestion(id);
+
+    const data: any = {};
+    if (dto.topic !== undefined) data.topic = dto.topic;
+    if (dto.text !== undefined) data.text = dto.text;
+    if (dto.options !== undefined) data.options = dto.options;
+    if (dto.correctAnswerIndex !== undefined) data.correctAnswerIndex = dto.correctAnswerIndex;
+    if (dto.explanation !== undefined) data.explanation = dto.explanation;
+    if (dto.difficulty !== undefined) data.difficulty = dto.difficulty as KnowledgeLevel;
+    if (dto.isPublished !== undefined) data.isPublished = dto.isPublished;
+
+    const finalOptions = data.options ?? existing.options;
+    const finalCorrectIndex = data.correctAnswerIndex ?? existing.correctAnswerIndex;
+    if (finalCorrectIndex >= finalOptions.length) {
+      throw new BadRequestException('correctAnswerIndex outside of options range');
+    }
+
+    return this.prisma.question.update({ where: { id }, data });
+  }
+
+  async softDeleteQuestion(id: string) {
+    await this.adminFindOneQuestion(id);
+
+    await this.prisma.question.update({
+      where: { id },
+      data: { deletedAt: new Date(), isPublished: false },
+    });
+
+    return { message: 'Вопрос удалён' };
   }
 }

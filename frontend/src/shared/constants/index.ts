@@ -15,6 +15,10 @@ export const QUERY_KEYS = {
   PROFILE: ['profile'],
   TEST_HISTORY: (page: number) => ['profile', 'test-history', page],
   NOTIFICATIONS: ['notifications'],
+  ADMIN_MATERIALS: ['admin', 'materials'],
+  ADMIN_MATERIAL: (id: string) => ['admin', 'materials', id],
+  ADMIN_QUESTIONS: ['admin', 'questions'],
+  ADMIN_QUESTION: (id: string) => ['admin', 'questions', id],
 } as const
 
 export const KNOWLEDGE_LEVELS = [

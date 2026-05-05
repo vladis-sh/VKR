@@ -1,4 +1,4 @@
-import { PrismaClient, KnowledgeLevel, QuestionSource } from '@prisma/client';
+import { PrismaClient, KnowledgeLevel, QuestionSource, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -8,6 +8,20 @@ async function main() {
 
   // Create demo users
   const passwordHash = await bcrypt.hash('password123', 10);
+
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@example.com' },
+    update: { role: UserRole.admin },
+    create: {
+      email: 'admin@example.com',
+      passwordHash,
+      fullName: 'Администратор',
+      knowledgeLevel: KnowledgeLevel.senior,
+      isProfileComplete: true,
+      role: UserRole.admin,
+    },
+  });
+  console.log('Admin user:', adminUser.email);
 
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@example.com' },

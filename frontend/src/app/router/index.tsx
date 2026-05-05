@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { PrivateRoute } from './PrivateRoute'
+import { AdminRoute } from './AdminRoute'
 import { AppLayout } from '@/widgets/AppLayout'
 
 // Pages - lazy loaded for better performance
@@ -31,6 +32,10 @@ const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'))
 const EditProfilePage = lazy(() => import('@/pages/profile/EditProfilePage'))
 const ProfileHistoryPage = lazy(() => import('@/pages/profile/ProfileHistoryPage'))
 const NotificationsPage = lazy(() => import('@/pages/profile/NotificationsPage'))
+const AdminMaterialsListPage = lazy(() => import('@/pages/admin/AdminMaterialsListPage'))
+const AdminMaterialFormPage = lazy(() => import('@/pages/admin/AdminMaterialFormPage'))
+const AdminQuestionsListPage = lazy(() => import('@/pages/admin/AdminQuestionsListPage'))
+const AdminQuestionFormPage = lazy(() => import('@/pages/admin/AdminQuestionFormPage'))
 
 function LazyWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -160,6 +165,54 @@ export const router = createBrowserRouter([
       {
         path: 'profile/notifications',
         element: <LazyWrapper><NotificationsPage /></LazyWrapper>,
+      },
+      {
+        path: 'admin/materials',
+        element: (
+          <AdminRoute>
+            <LazyWrapper><AdminMaterialsListPage /></LazyWrapper>
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'admin/materials/new',
+        element: (
+          <AdminRoute>
+            <LazyWrapper><AdminMaterialFormPage /></LazyWrapper>
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'admin/materials/:id/edit',
+        element: (
+          <AdminRoute>
+            <LazyWrapper><AdminMaterialFormPage /></LazyWrapper>
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'admin/questions',
+        element: (
+          <AdminRoute>
+            <LazyWrapper><AdminQuestionsListPage /></LazyWrapper>
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'admin/questions/new',
+        element: (
+          <AdminRoute>
+            <LazyWrapper><AdminQuestionFormPage /></LazyWrapper>
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'admin/questions/:id/edit',
+        element: (
+          <AdminRoute>
+            <LazyWrapper><AdminQuestionFormPage /></LazyWrapper>
+          </AdminRoute>
+        ),
       },
     ],
   },

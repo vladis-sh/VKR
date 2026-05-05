@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -17,7 +19,12 @@ import {
   CompleteTestSessionDto,
   QueryAiQuestionsDto,
 } from './dto/tests.dto';
+import { CreateQuestionDto } from './dto/create-question.dto';
+import { UpdateQuestionDto } from './dto/update-question.dto';
+import { QueryAdminQuestionsDto } from './dto/query-admin-questions.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('Tests')
@@ -26,6 +33,54 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @Controller('tests')
 export class TestsController {
   constructor(private readonly testsService: TestsService) {}
+
+  // ----- Admin endpoints (must be declared before generic ':id' routes) -----
+
+  @Get('questions/admin')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Admin: list all questions including drafts' })
+  async adminListQuestions(@Query() query: QueryAdminQuestionsDto) {
+    return this.testsService.adminFindAllQuestions(query);
+  }
+
+  @Get('questions/admin/:id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Admin: get question by ID' })
+  @ApiParam({ name: 'id' })
+  async adminGetQuestion(@Param('id') id: string) {
+    return this.testsService.adminFindOneQuestion(id);
+  }
+
+  @Post('questions')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Admin: create new question' })
+  async createQuestion(@Body() dto: CreateQuestionDto) {
+    return this.testsService.createQuestion(dto);
+  }
+
+  @Patch('questions/:id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Admin: update question' })
+  @ApiParam({ name: 'id' })
+  async updateQuestion(@Param('id') id: string, @Body() dto: UpdateQuestionDto) {
+    return this.testsService.updateQuestion(id, dto);
+  }
+
+  @Delete('questions/:id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Admin: soft delete question' })
+  @ApiParam({ name: 'id' })
+  async deleteQuestion(@Param('id') id: string) {
+    return this.testsService.softDeleteQuestion(id);
+  }
+
+  // ----- User endpoints -----
 
   @Get('topics')
   @ApiOperation({ summary: 'Get list of all test topics' })

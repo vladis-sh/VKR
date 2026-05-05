@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { QueryMaterialsDto } from './dto/query-materials.dto';
+import { CreateMaterialDto } from './dto/create-material.dto';
+import { UpdateMaterialDto } from './dto/update-material.dto';
 import { KnowledgeLevel } from '@prisma/client';
 
 @Injectable()
@@ -11,7 +13,10 @@ export class MaterialsService {
     const { search, level, page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = {
+      deletedAt: null,
+      isPublished: true,
+    };
 
     if (search) {
       where.OR = [
@@ -63,8 +68,8 @@ export class MaterialsService {
   }
 
   async findOne(id: string, userId: string) {
-    const material = await this.prisma.material.findUnique({
-      where: { id },
+    const material = await this.prisma.material.findFirst({
+      where: { id, deletedAt: null, isPublished: true },
       include: {
         favoritedBy: {
           where: { userId },
@@ -86,7 +91,10 @@ export class MaterialsService {
 
   async getFavorites(userId: string) {
     const favorites = await this.prisma.userFavorite.findMany({
-      where: { userId },
+      where: {
+        userId,
+        material: { deletedAt: null, isPublished: true },
+      },
       include: {
         material: true,
       },
@@ -101,7 +109,9 @@ export class MaterialsService {
   }
 
   async addFavorite(userId: string, materialId: string) {
-    const material = await this.prisma.material.findUnique({ where: { id: materialId } });
+    const material = await this.prisma.material.findFirst({
+      where: { id: materialId, deletedAt: null },
+    });
     if (!material) {
       throw new NotFoundException('Материал не найден');
     }
@@ -129,5 +139,98 @@ export class MaterialsService {
     });
 
     return { message: 'Удалено из избранного' };
+  }
+
+  // ============================================================
+  // Admin methods
+  // ============================================================
+
+  async adminFindAll(query: QueryMaterialsDto) {
+    const { search, level, page = 1, limit = 20 } = query;
+    const skip = (page - 1) * limit;
+
+    const where: any = { deletedAt: null };
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { shortDescription: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (level) {
+      where.level = level as KnowledgeLevel;
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.material.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.material.count({ where }),
+    ]);
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async adminFindOne(id: string) {
+    const material = await this.prisma.material.findFirst({
+      where: { id, deletedAt: null },
+    });
+    if (!material) {
+      throw new NotFoundException('Материал не найден');
+    }
+    return material;
+  }
+
+  async create(dto: CreateMaterialDto) {
+    return this.prisma.material.create({
+      data: {
+        title: dto.title,
+        shortDescription: dto.shortDescription,
+        content: dto.content,
+        tags: dto.tags,
+        level: dto.level as KnowledgeLevel,
+        isPublished: dto.isPublished ?? true,
+      },
+    });
+  }
+
+  async update(id: string, dto: UpdateMaterialDto) {
+    await this.adminFindOne(id);
+
+    const data: any = {};
+    if (dto.title !== undefined) data.title = dto.title;
+    if (dto.shortDescription !== undefined) data.shortDescription = dto.shortDescription;
+    if (dto.content !== undefined) data.content = dto.content;
+    if (dto.tags !== undefined) data.tags = dto.tags;
+    if (dto.level !== undefined) data.level = dto.level as KnowledgeLevel;
+    if (dto.isPublished !== undefined) data.isPublished = dto.isPublished;
+
+    return this.prisma.material.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async softDelete(id: string) {
+    await this.adminFindOne(id);
+
+    await this.prisma.material.update({
+      where: { id },
+      data: { deletedAt: new Date(), isPublished: false },
+    });
+
+    return { message: 'Материал удалён' };
   }
 }

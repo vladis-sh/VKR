@@ -7,8 +7,10 @@ import {
   Code2,
   BrainCircuit,
   Map,
+  Shield,
 } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
+import { useAuthStore } from '@/features/auth/useAuthStore'
 
 const navItems = [
   { to: '/app/materials', label: 'Материалы', icon: BookOpen },
@@ -19,7 +21,14 @@ const navItems = [
   { to: '/app/stats', label: 'Статистика', icon: BarChart2 },
 ]
 
+const adminNavItems = [
+  { to: '/app/admin/materials', label: 'Материалы (admin)', icon: Shield },
+  { to: '/app/admin/questions', label: 'Вопросы (admin)', icon: Shield },
+]
+
 export function Sidebar() {
+  const isAdmin = useAuthStore((s) => s.user?.role === 'admin')
+
   return (
     <aside className="hidden md:flex w-60 flex-col border-r border-border bg-card">
       {/* Logo */}
@@ -49,6 +58,31 @@ export function Sidebar() {
             {label}
           </NavLink>
         ))}
+
+        {isAdmin && (
+          <>
+            <div className="mt-3 px-3 pt-3 border-t border-border text-[10px] uppercase tracking-wide text-muted-foreground">
+              Администрирование
+            </div>
+            {adminNavItems.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-primary text-white'
+                      : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                  )
+                }
+              >
+                <Icon size={17} />
+                {label}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
 
       {/* Footer */}

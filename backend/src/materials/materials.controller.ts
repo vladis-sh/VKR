@@ -1,18 +1,24 @@
 import {
+  Body,
   Controller,
-  Get,
-  Post,
   Delete,
-  Param,
-  Query,
-  UseGuards,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { MaterialsService } from './materials.service';
 import { QueryMaterialsDto } from './dto/query-materials.dto';
+import { CreateMaterialDto } from './dto/create-material.dto';
+import { UpdateMaterialDto } from './dto/update-material.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @ApiTags('Materials')
@@ -22,8 +28,56 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 export class MaterialsController {
   constructor(private readonly materialsService: MaterialsService) {}
 
+  // ----- Admin endpoints -----
+
+  @Get('admin')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Admin: list all materials including drafts' })
+  async adminFindAll(@Query() query: QueryMaterialsDto) {
+    return this.materialsService.adminFindAll(query);
+  }
+
+  @Get('admin/:id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Admin: get material by ID (any state)' })
+  @ApiParam({ name: 'id' })
+  async adminFindOne(@Param('id') id: string) {
+    return this.materialsService.adminFindOne(id);
+  }
+
+  @Post()
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Admin: create new material' })
+  async create(@Body() dto: CreateMaterialDto) {
+    return this.materialsService.create(dto);
+  }
+
+  @Patch(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Admin: update material' })
+  @ApiParam({ name: 'id' })
+  async update(@Param('id') id: string, @Body() dto: UpdateMaterialDto) {
+    return this.materialsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  @ApiOperation({ summary: 'Admin: soft delete material' })
+  @ApiParam({ name: 'id' })
+  async remove(@Param('id') id: string) {
+    return this.materialsService.softDelete(id);
+  }
+
+  // ----- User endpoints -----
+
   @Get()
-  @ApiOperation({ summary: 'Get paginated list of materials' })
+  @ApiOperation({ summary: 'Get paginated list of published materials' })
   @ApiResponse({ status: 200, description: 'List of materials with pagination' })
   async findAll(@CurrentUser('id') userId: string, @Query() query: QueryMaterialsDto) {
     return this.materialsService.findAll(userId, query);
@@ -36,7 +90,7 @@ export class MaterialsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get material by ID' })
+  @ApiOperation({ summary: 'Get published material by ID' })
   @ApiParam({ name: 'id', description: 'Material ID' })
   async findOne(@Param('id') id: string, @CurrentUser('id') userId: string) {
     return this.materialsService.findOne(id, userId);
