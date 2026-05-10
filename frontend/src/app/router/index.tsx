@@ -12,8 +12,6 @@ const LandingPage = lazy(() => import('@/pages/landing/LandingPage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterStep1Page = lazy(() => import('@/pages/auth/RegisterStep1Page'))
 const RegisterStep2Page = lazy(() => import('@/pages/auth/RegisterStep2Page'))
-const MaterialsPage = lazy(() => import('@/pages/materials/MaterialsPage'))
-const FavoritesPage = lazy(() => import('@/pages/materials/FavoritesPage'))
 const ChatPage = lazy(() => import('@/pages/chat/ChatPage'))
 const TestsHubPage = lazy(() => import('@/pages/tests/TestsHubPage'))
 const TopicsPage = lazy(() => import('@/pages/tests/TopicsPage'))
@@ -72,15 +70,7 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/app/materials" replace />,
-      },
-      {
-        path: 'materials',
-        element: <LazyWrapper><MaterialsPage /></LazyWrapper>,
-      },
-      {
-        path: 'materials/favorites',
-        element: <LazyWrapper><FavoritesPage /></LazyWrapper>,
+        element: <Navigate to="/app/roadmaps" replace />,
       },
       {
         path: 'chat',

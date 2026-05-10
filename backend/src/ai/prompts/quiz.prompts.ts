@@ -4,20 +4,29 @@ export const QUIZ_SYSTEM_PROMPT = `Ты генератор вопросов дл
 
 export function buildQuizPrompt(topic: string, count: number, difficulty: string): string {
   const difficultyMap: Record<string, string> = {
-    junior: 'начального (junior) — базовые концепции',
-    middle: 'среднего (middle) — практическое применение',
-    senior: 'продвинутого (senior) — глубокое понимание и edge cases',
+    junior: 'начального уровня (junior): базовые концепции',
+    middle: 'среднего уровня (middle): практическое применение',
+    senior: 'продвинутого уровня (senior): глубокое понимание и edge cases',
   };
 
-  return `Создай ${count} вопросов для собеседования по теме "${topic}" уровня ${difficultyMap[difficulty] || difficultyMap.junior}.
+  return `Создай ${count} вопросов для собеседования по теме "${topic}" уровня ${
+    difficultyMap[difficulty] || difficultyMap.junior
+  }.
 
-Верни JSON массив:
+Верни JSON-массив строго в таком формате:
 [
   {
     "text": "Текст вопроса",
     "options": ["Вариант A", "Вариант B", "Вариант C", "Вариант D"],
     "correctAnswerIndex": 0,
-    "explanation": "Детальное объяснение"
+    "explanation": "Подробное объяснение правильного ответа"
   }
-]`;
+]
+
+Требования:
+- Каждый вопрос должен иметь ровно 4 варианта ответа.
+- correctAnswerIndex должен быть индексом правильного ответа от 0 до 3.
+- Вопросы должны быть технически корректными.
+- Объяснения должны быть информативными, 2-4 предложения.
+- Все тексты должны быть на русском языке.`;
 }

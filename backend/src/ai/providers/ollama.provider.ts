@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { IAiProvider, ChatCompletionOptions, GeneratedQuestion } from './ai-provider.interface';
+import { buildQuizPrompt, QUIZ_SYSTEM_PROMPT } from '../prompts/quiz.prompts';
+import { ChatCompletionOptions, GeneratedQuestion, IAiProvider } from './ai-provider.interface';
 
 @Injectable()
 export class OllamaProvider implements IAiProvider {
@@ -14,9 +15,9 @@ export class OllamaProvider implements IAiProvider {
   }
 
   async chat(options: ChatCompletionOptions): Promise<string> {
-    const messages = options.messages.map((m) => ({
-      role: m.role,
-      content: m.content,
+    const messages = options.messages.map((message) => ({
+      role: message.role,
+      content: message.content,
     }));
 
     if (options.systemPrompt) {
@@ -42,7 +43,7 @@ export class OllamaProvider implements IAiProvider {
         throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
       }
 
-      const data = (await response.json()) as any;
+      const data = (await response.json()) as { message?: { content?: string } };
       return data.message?.content || '';
     } catch (error) {
       this.logger.error('Ollama chat error:', error);
@@ -55,30 +56,7 @@ export class OllamaProvider implements IAiProvider {
     count: number,
     difficulty: string = 'junior',
   ): Promise<GeneratedQuestion[]> {
-    const difficultyMap = {
-      junior: 'начального уровня (junior)',
-      middle: 'среднего уровня (middle)',
-      senior: 'продвинутого уровня (senior)',
-    };
-
-    const prompt = `Сгенерируй ${count} вопросов для технического собеседования по теме "${topic}" ${difficultyMap[difficulty] || difficultyMap.junior}.
-
-Верни ответ ТОЛЬКО в виде JSON массива без дополнительного текста:
-[
-  {
-    "text": "Текст вопроса",
-    "options": ["Вариант A", "Вариант B", "Вариант C", "Вариант D"],
-    "correctAnswerIndex": 0,
-    "explanation": "Подробное объяснение правильного ответа"
-  }
-]
-
-Требования:
-- Каждый вопрос должен иметь ровно 4 варианта ответа
-- correctAnswerIndex — индекс правильного ответа (0-3)
-- Вопросы должны быть технически корректными
-- Объяснения должны быть информативными (2-4 предложения)
-- Вопросы на русском языке`;
+    const prompt = `${QUIZ_SYSTEM_PROMPT}\n\n${buildQuizPrompt(topic, count, difficulty)}`;
 
     try {
       const response = await fetch(`${this.baseUrl}/api/generate`, {
@@ -96,10 +74,9 @@ export class OllamaProvider implements IAiProvider {
         throw new Error(`Ollama API error: ${response.status}`);
       }
 
-      const data = (await response.json()) as any;
+      const data = (await response.json()) as { response?: string };
       const text = data.response || '';
 
-      // Extract JSON from response
       const jsonMatch = text.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
         throw new Error('Could not parse JSON from Ollama response');

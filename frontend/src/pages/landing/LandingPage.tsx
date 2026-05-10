@@ -52,7 +52,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate('/app/materials', { replace: true })
+      navigate('/app/roadmaps', { replace: true })
     }
   }, [isAuthenticated, isLoading, navigate])
 
@@ -60,13 +60,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border/40 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary">
-              <BrainCircuit size={15} className="text-white" />
-            </div>
-            <span className="text-sm font-semibold text-foreground">PrepAI</span>
-          </div>
+        <div className="mx-auto flex max-w-5xl items-center justify-end px-5 py-3">
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" asChild>
               <Link to="/login">Войти</Link>
@@ -93,12 +87,12 @@ export default function LandingPage() {
           <h1 className="text-4xl font-bold tracking-tight text-foreground md:text-5xl lg:text-6xl">
             Пройди собеседование
             <br />
-            <span className="text-primary">с первого раза</span>
+            <span className="text-primary"></span>
           </h1>
 
           <p className="mt-5 text-base text-muted-foreground md:text-lg max-w-2xl mx-auto leading-relaxed">
-            Платформа для подготовки к техническим собеседованиям с ИИ-ассистентом.
-            Изучай материалы, проходи тесты и симулируй реальные интервью.
+            Платформа для подготовки к техническим собеседованиям с ИИ-ассистентом. Изучай
+            материалы, проходи тесты и симулируй реальные интервью.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
@@ -111,15 +105,6 @@ export default function LandingPage() {
             <Button size="lg" variant="outline" asChild>
               <Link to="/login">Войти в аккаунт</Link>
             </Button>
-          </div>
-
-          <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2">
-            {benefits.map((b) => (
-              <span key={b} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <CheckCircle size={13} className="text-green-500 shrink-0" />
-                {b}
-              </span>
-            ))}
           </div>
         </motion.div>
       </section>
@@ -135,7 +120,9 @@ export default function LandingPage() {
               transition={{ delay: 0.1 + i * 0.07 }}
               className="rounded-2xl border border-border bg-card p-5 shadow-sm"
             >
-              <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${f.bg} mb-3`}>
+              <div
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${f.bg} mb-3`}
+              >
                 {f.icon}
               </div>
               <h3 className="text-sm font-semibold text-foreground mb-1">{f.title}</h3>
@@ -148,12 +135,10 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="border-t border-border bg-card">
         <div className="mx-auto max-w-5xl px-5 py-12 text-center">
-          <h2 className="text-xl font-bold text-foreground mb-3">
-            Готов к следующему шагу?
+          <h2 className="text-xl font-bold text-foreground mb-6">
+            Зарегистрируйся чтобы начать подготовку
           </h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            Зарегистрируйся и начни подготовку прямо сейчас — бесплатно.
-          </p>
+
           <Button size="lg" asChild>
             <Link to="/register">
               Зарегистрироваться
@@ -166,7 +151,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border">
         <div className="mx-auto max-w-5xl px-5 py-5 text-center text-xs text-muted-foreground">
-          © 2025 PrepAI — Платформа подготовки к IT-собеседованиям
+          © 2025 Платформа подготовки к IT-собеседованиям
         </div>
       </footer>
     </div>

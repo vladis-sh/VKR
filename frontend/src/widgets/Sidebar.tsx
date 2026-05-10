@@ -1,11 +1,9 @@
 import { NavLink } from 'react-router-dom'
 import {
-  BookOpen,
   MessageSquare,
   ClipboardList,
   BarChart2,
   Code2,
-  BrainCircuit,
   Map,
   Shield,
 } from 'lucide-react'
@@ -13,11 +11,10 @@ import { cn } from '@/shared/lib/cn'
 import { useAuthStore } from '@/features/auth/useAuthStore'
 
 const navItems = [
-  { to: '/app/materials', label: 'Материалы', icon: BookOpen },
+  { to: '/app/roadmaps', label: 'Роадмапы', icon: Map },
   { to: '/app/chat', label: 'Чат с ИИ', icon: MessageSquare },
   { to: '/app/tests', label: 'Тесты', icon: ClipboardList },
   { to: '/app/live-coding', label: 'Live Coding', icon: Code2 },
-  { to: '/app/roadmaps', label: 'Роадмапы', icon: Map },
   { to: '/app/stats', label: 'Статистика', icon: BarChart2 },
 ]
 
@@ -31,12 +28,11 @@ export function Sidebar() {
 
   return (
     <aside className="hidden md:flex w-60 flex-col border-r border-border bg-card">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-border">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-          <BrainCircuit size={18} className="text-white" />
-        </div>
-        <span className="text-base font-semibold text-foreground tracking-tight">PrepAI</span>
+      {/* Header */}
+      <div className="flex items-center px-5 py-5 border-b border-border">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Меню
+        </span>
       </div>
 
       {/* Navigation */}
@@ -85,10 +81,6 @@ export function Sidebar() {
         )}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-border">
-        <p className="text-xs text-muted-foreground text-center">PrepAI v1.0</p>
-      </div>
     </aside>
   )
 }

@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { BrainCircuit } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
@@ -84,13 +83,6 @@ export default function RegisterStep1Page() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm"
       >
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <BrainCircuit size={20} className="text-white" />
-          </div>
-          <span className="text-lg font-bold text-foreground">PrepAI</span>
-        </Link>
-
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h1 className="text-xl font-bold text-foreground mb-5">Создать аккаунт</h1>
 

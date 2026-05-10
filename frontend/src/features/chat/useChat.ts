@@ -1,9 +1,42 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { AxiosError } from 'axios'
 import { chatApi } from '@/shared/api/chat.api'
 import { QUERY_KEYS } from '@/shared/constants'
 import { toast } from '@/features/theme/useToastStore'
 import type { ChatMessage } from '@/entities/types'
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+interface BackendError {
+  success?: false
+  error?: { code?: number; message?: string }
+}
+
+/** Map backend / network errors to a short user-facing string. */
+function describeAssistantError(err: unknown): string {
+  if (err instanceof AxiosError) {
+    const status = err.response?.status
+    const data = err.response?.data as BackendError | undefined
+    const backendMsg = data?.error?.message
+
+    if (status === 429) {
+      return 'Сейчас превышен лимит запросов к ассистенту. Попробуйте позже.'
+    }
+    if (status === 502 || status === 503 || status === 504) {
+      return 'Не удалось получить ответ ассистента. Попробуйте ещё раз.'
+    }
+    if (status === 400 && backendMsg) {
+      return backendMsg
+    }
+    if (!err.response) {
+      return 'Нет связи с сервером. Проверьте подключение и попробуйте ещё раз.'
+    }
+  }
+  return 'Не удалось получить ответ ассистента. Попробуйте ещё раз.'
+}
+
+// ── Queries ────────────────────────────────────────────────────────────────────
 
 export function useChatSessions() {
   return useQuery({
@@ -51,57 +84,93 @@ export function useDeleteChatSession() {
   })
 }
 
+// ── Send message hook ──────────────────────────────────────────────────────────
+
+export interface PendingMessage extends ChatMessage {
+  /** True when the request for this message has failed. UI marks it visually. */
+  failed?: boolean
+}
+
 export function useSendMessage(sessionId: string) {
   const queryClient = useQueryClient()
-  const [optimisticMessages, setOptimisticMessages] = useState<ChatMessage[]>([])
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([])
   const [isTyping, setIsTyping] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: async (content: string) => {
-      // Optimistically add user message
+      // Optimistically render the user message immediately.
       const tempId = `temp-${Date.now()}`
-      const userMessage: ChatMessage = {
+      const userMessage: PendingMessage = {
         id: tempId,
         sessionId,
         role: 'user',
         content,
         createdAt: new Date().toISOString(),
       }
-      setOptimisticMessages((prev) => [...prev, userMessage])
+      setPendingMessages((prev) => [
+        // Drop any previous failed messages with same content to avoid stacking duplicates.
+        ...prev.filter((m) => !(m.failed && m.content === content)),
+        userMessage,
+      ])
       setIsTyping(true)
+      setError(null)
 
       try {
         const response = await chatApi.sendMessage(sessionId, content)
-        return {
-          userMessage,
-          assistantMessage: response.data,
-        }
+        return { tempId, assistantMessage: response.data, userMessage }
       } finally {
         setIsTyping(false)
       }
     },
-    onSuccess: ({ userMessage, assistantMessage }) => {
-      setOptimisticMessages([])
-      queryClient.setQueryData(QUERY_KEYS.CHAT_SESSION(sessionId), (old: { messages: ChatMessage[] } | undefined) => {
-        if (!old) return old
-        return {
-          ...old,
-          messages: [...old.messages, userMessage, assistantMessage],
-        }
-      })
+    onSuccess: ({ tempId, userMessage, assistantMessage }) => {
+      // Remove the optimistic copy and write the confirmed pair into the cache.
+      setPendingMessages((prev) => prev.filter((m) => m.id !== tempId))
+      queryClient.setQueryData(
+        QUERY_KEYS.CHAT_SESSION(sessionId),
+        (old: { messages: ChatMessage[] } | undefined) => {
+          if (!old) return old
+          return {
+            ...old,
+            messages: [
+              ...old.messages,
+              { ...userMessage, id: `${tempId}-confirmed` },
+              assistantMessage,
+            ],
+          }
+        },
+      )
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CHAT_SESSION(sessionId) })
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CHAT_SESSIONS })
     },
-    onError: () => {
-      setOptimisticMessages([])
-      toast.error('Не удалось отправить сообщение')
+    onError: (err) => {
+      // Keep the optimistic user message on screen, mark it as failed.
+      setPendingMessages((prev) =>
+        prev.map((m, i, arr) =>
+          i === arr.length - 1 ? { ...m, failed: true } : m,
+        ),
+      )
+      const message = describeAssistantError(err)
+      setError(message)
+      toast.error(message)
     },
   })
 
   return {
-    sendMessage: mutation.mutate,
+    sendMessage: (content: string) => {
+      const trimmed = content.trim()
+      if (!trimmed || mutation.isPending) return
+      mutation.mutate(trimmed)
+    },
+    retry: (content: string) => {
+      if (mutation.isPending) return
+      mutation.mutate(content.trim())
+    },
+    clearError: () => setError(null),
     isLoading: mutation.isPending,
     isTyping,
-    optimisticMessages,
+    error,
+    /** Backwards-compatible alias used by ChatPage. */
+    optimisticMessages: pendingMessages,
   }
 }

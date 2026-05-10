@@ -315,8 +315,8 @@ export default function RegisterStep2Page() {
       setStep2({ fullName: formData.fullName, avatarFile: avatarFile ?? undefined })
       setUser(res.data.user)
       reset()
-      toast.success('Добро пожаловать в PrepAI!')
-      navigate('/app/materials', { replace: true })
+      toast.success('Добро пожаловать!')
+      navigate('/app/roadmaps', { replace: true })
     } catch (err: unknown) {
       setServerError(getApiErrorMessage(err, 'Не удалось сохранить уровень'))
     } finally {

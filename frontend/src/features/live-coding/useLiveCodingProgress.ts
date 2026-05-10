@@ -8,7 +8,7 @@ interface LiveCodingProgress {
   submittedAt: Record<string, string>
 }
 
-const STORAGE_KEY = 'prepai.live-coding.progress'
+const STORAGE_KEY = 'app.live-coding.progress'
 
 const emptyProgress: LiveCodingProgress = {
   solved: [],

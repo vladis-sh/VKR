@@ -1,6 +1,6 @@
 {
-  "name": "PrepAI — Подготовка к собеседованиям",
-  "short_name": "PrepAI",
+  "name": "Подготовка к собеседованиям",
+  "short_name": "Interview Prep",
   "description": "Подготовка к собеседованиям с ИИ-ассистентом",
   "start_url": "/",
   "display": "standalone",

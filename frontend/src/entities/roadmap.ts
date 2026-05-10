@@ -736,7 +736,7 @@ const frontendRoadmap: Roadmap = {
         n(
           'zustand',
           'Zustand',
-          'Минималистичный глобальный стор. Используется в PrepAI.',
+          'Минималистичный глобальный стор. Используется в этом приложении.',
           'required',
           [
             r('Zustand на GitHub', 'https://github.com/pmndrs/zustand', 'GitHub', 'en'),

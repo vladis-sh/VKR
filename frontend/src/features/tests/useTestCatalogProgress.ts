@@ -20,7 +20,7 @@ interface TestCatalogProgress {
   questions: Record<string, QuestionProgress>
 }
 
-const STORAGE_KEY = 'prepai.tests.catalog-progress'
+const STORAGE_KEY = 'app.tests.catalog-progress'
 
 const emptyProgress: TestCatalogProgress = {
   questions: {},

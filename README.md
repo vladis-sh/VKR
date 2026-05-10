@@ -1,4 +1,4 @@
-# PrepAI — Платформа подготовки к IT-собеседованиям
+# Платформа подготовки к IT-собеседованиям
 
 Полноценное веб-приложение для подготовки к техническим интервью с ИИ-ассистентом.
 
@@ -10,8 +10,22 @@
 |------|-----------|
 | **Frontend** | React 18, TypeScript, Vite, React Router v6, Tailwind CSS, shadcn/ui, Zustand, TanStack Query, React Hook Form + Zod, Framer Motion, Recharts |
 | **Backend** | NestJS, TypeScript, Prisma ORM, PostgreSQL, JWT (httpOnly cookies), Passport, Multer, Swagger |
-| **ИИ** | Абстракция провайдера: Mock (встроенный) или Ollama (локальный LLM) |
+| **ИИ** | Абстракция провайдера: Gemini, Mock (встроенный) или Ollama (локальный LLM) |
 | **DevOps** | Docker, Docker Compose, Nginx |
+
+---
+
+## Gemini API
+
+Приложение поддерживает `AI_PROVIDER=gemini` на backend. Для бесплатного старта создайте ключ в Google AI Studio, добавьте его только в backend/root `.env` как `GEMINI_API_KEY`, затем выставьте:
+
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_google_ai_studio_key
+GEMINI_MODEL=gemini-2.5-flash-lite
+```
+
+Для Docker Compose эти переменные прокидываются в `backend` автоматически. Ключ нельзя добавлять во frontend-переменные `VITE_*`, иначе он попадёт в браузер.
 
 ---
 
@@ -135,12 +149,14 @@ npm run dev
 | Переменная | Описание | Пример |
 |-----------|----------|--------|
 | `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/prepai` |
-| `JWT_SECRET` | Секрет для access-токенов (мин. 32 символа) | |
-| `JWT_REFRESH_SECRET` | Секрет для refresh-токенов | |
+| `JWT_ACCESS_SECRET` | Секрет для access-токенов (мин. 32 символа) | |
+| `JWT_REFRESH_SECRET` | Секрет для refresh-токенов (мин. 32 символа) | |
 | `FRONTEND_URL` | URL фронтенда для CORS | `http://localhost:5173` |
-| `AI_PROVIDER` | Провайдер ИИ: `mock` или `ollama` | `mock` |
-| `OLLAMA_URL` | URL Ollama API (если AI_PROVIDER=ollama) | `http://localhost:11434` |
+| `AI_PROVIDER` | Провайдер ИИ: `mock`, `ollama` или `gemini` | `mock` |
+| `OLLAMA_BASE_URL` | URL Ollama API (если AI_PROVIDER=ollama) | `http://localhost:11434` |
 | `OLLAMA_MODEL` | Модель Ollama | `llama3` |
+| `GEMINI_API_KEY` | Ключ Gemini API из Google AI Studio (только backend) | |
+| `GEMINI_MODEL` | Модель Gemini | `gemini-2.5-flash-lite` |
 
 ### Frontend (`frontend/.env`)
 
@@ -174,6 +190,8 @@ npm run dev
 **Mock-режим** (`AI_PROVIDER=mock`): имитирует задержку 500-1500мс, возвращает реалистичные ответы без API-ключей.
 
 **Ollama** (`AI_PROVIDER=ollama`): подключается к локальному Ollama. Установите [Ollama](https://ollama.ai) и запустите `ollama pull llama3`.
+
+**Gemini** (`AI_PROVIDER=gemini`): использует Google Gemini API через backend. Нужен `GEMINI_API_KEY`; для free tier лучше начать с `GEMINI_MODEL=gemini-2.5-flash-lite`.
 
 ---
 

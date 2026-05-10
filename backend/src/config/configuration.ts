@@ -1,9 +1,7 @@
 function requireSecret(name: string): string {
   const value = process.env[name];
   if (!value || value.length < 32) {
-    throw new Error(
-      `${name} must be set in environment and be at least 32 characters long`,
-    );
+    throw new Error(`${name} must be set in environment and be at least 32 characters long`);
   }
   return value;
 }
@@ -30,9 +28,11 @@ export default () => ({
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   ai: {
-    provider: process.env.AI_PROVIDER || 'mock',
+    provider: (process.env.AI_PROVIDER || 'mock').trim().toLowerCase(),
     ollamaBaseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
     ollamaModel: process.env.OLLAMA_MODEL || 'llama3',
+    geminiApiKey: (process.env.GEMINI_API_KEY || '').trim(),
+    geminiModel: (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite').trim(),
   },
   uploads: {
     avatarsPath: './uploads/avatars',

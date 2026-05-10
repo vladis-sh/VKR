@@ -1,21 +1,21 @@
 import {
-  Injectable,
-  ForbiddenException,
-  NotFoundException,
   BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { KnowledgeLevel, QuestionSource, TestMode } from '@prisma/client';
 import { AiService } from '../ai/ai.service';
-import {
-  QueryQuestionsDto,
-  CreateTestSessionDto,
-  CompleteTestSessionDto,
-  QueryAiQuestionsDto,
-} from './dto/tests.dto';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuestionDto } from './dto/create-question.dto';
-import { UpdateQuestionDto } from './dto/update-question.dto';
 import { QueryAdminQuestionsDto } from './dto/query-admin-questions.dto';
-import { TestMode, KnowledgeLevel, QuestionSource } from '@prisma/client';
+import {
+  CompleteTestSessionDto,
+  CreateTestSessionDto,
+  QueryAiQuestionsDto,
+  QueryQuestionsDto,
+} from './dto/tests.dto';
+import { UpdateQuestionDto } from './dto/update-question.dto';
 
 const TOPIC_SLUGS: Record<string, string> = {
   'HTML/CSS': 'html-css',
@@ -130,9 +130,7 @@ export class TestsService {
 
     const missingQuestionIds = questionIds.filter((id) => !questionMap.has(id));
     if (missingQuestionIds.length > 0) {
-      throw new BadRequestException(
-        `Unknown question ids: ${missingQuestionIds.join(', ')}`,
-      );
+      throw new BadRequestException(`Unknown question ids: ${missingQuestionIds.join(', ')}`);
     }
 
     let correctCount = 0;
@@ -179,15 +177,13 @@ export class TestsService {
       });
     });
 
-    const result = this.mapSessionResult({
+    return this.mapSessionResult({
       ...updatedSession,
       answerHistory: answerHistoryData.map((answer) => ({
         ...answer,
         question: questionMap.get(answer.questionId),
       })),
     });
-
-    return result;
   }
 
   async getTestSession(userId: string, sessionId: string) {
@@ -308,10 +304,6 @@ export class TestsService {
       .replace(/^-+|-+$/g, '');
   }
 
-  // ============================================================
-  // Admin methods
-  // ============================================================
-
   async adminFindAllQuestions(query: QueryAdminQuestionsDto) {
     const { topic, difficulty, search, page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
@@ -381,9 +373,13 @@ export class TestsService {
     if (dto.topic !== undefined) data.topic = dto.topic;
     if (dto.text !== undefined) data.text = dto.text;
     if (dto.options !== undefined) data.options = dto.options;
-    if (dto.correctAnswerIndex !== undefined) data.correctAnswerIndex = dto.correctAnswerIndex;
+    if (dto.correctAnswerIndex !== undefined) {
+      data.correctAnswerIndex = dto.correctAnswerIndex;
+    }
     if (dto.explanation !== undefined) data.explanation = dto.explanation;
-    if (dto.difficulty !== undefined) data.difficulty = dto.difficulty as KnowledgeLevel;
+    if (dto.difficulty !== undefined) {
+      data.difficulty = dto.difficulty as KnowledgeLevel;
+    }
     if (dto.isPublished !== undefined) data.isPublished = dto.isPublished;
 
     const finalOptions = data.options ?? existing.options;

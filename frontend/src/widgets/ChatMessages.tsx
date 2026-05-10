@@ -1,15 +1,16 @@
-import { useEffect, useRef } from 'react'
-import { Copy, Check, Bot, User } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Copy, Check, Bot, User, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/shared/lib/cn'
 import { toast } from '@/features/theme/useToastStore'
 import type { ChatMessage } from '@/entities/types'
+import type { PendingMessage } from '@/features/chat/useChat'
 
 interface ChatMessagesProps {
   messages: ChatMessage[]
-  optimisticMessages?: ChatMessage[]
+  optimisticMessages?: PendingMessage[]
   isTyping?: boolean
+  errorMessage?: string | null
 }
 
 function TypingIndicator() {
@@ -55,7 +56,7 @@ function CopyButton({ content }: { content: string }) {
   )
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message }: { message: PendingMessage }) {
   const isUser = message.role === 'user'
 
   return (
@@ -85,10 +86,17 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             'rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
             isUser
               ? 'bg-primary text-white rounded-br-sm'
-              : 'bg-secondary text-foreground rounded-bl-sm'
+              : 'bg-secondary text-foreground rounded-bl-sm',
+            message.failed && 'opacity-70 ring-1 ring-destructive/40'
           )}
         >
           <p className="whitespace-pre-wrap">{message.content}</p>
+          {message.failed && (
+            <p className="mt-1 flex items-center gap-1 text-[11px] text-destructive">
+              <AlertCircle size={11} />
+              Не отправлено
+            </p>
+          )}
         </div>
         {!isUser && <CopyButton content={message.content} />}
       </div>
@@ -96,13 +104,21 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   )
 }
 
-export function ChatMessages({ messages, optimisticMessages = [], isTyping }: ChatMessagesProps) {
+export function ChatMessages({
+  messages,
+  optimisticMessages = [],
+  isTyping,
+  errorMessage,
+}: ChatMessagesProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
-  const allMessages = [...messages, ...optimisticMessages]
+
+  // System messages are an internal concept — never render them.
+  const visible = messages.filter((m) => m.role !== 'system')
+  const allMessages: PendingMessage[] = [...visible, ...optimisticMessages]
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [allMessages.length, isTyping])
+  }, [allMessages.length, isTyping, errorMessage])
 
   if (allMessages.length === 0 && !isTyping) {
     return (
@@ -128,6 +144,12 @@ export function ChatMessages({ messages, optimisticMessages = [], isTyping }: Ch
         ))}
       </AnimatePresence>
       {isTyping && <TypingIndicator />}
+      {errorMessage && !isTyping && (
+        <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+          <AlertCircle size={14} />
+          <span>{errorMessage}</span>
+        </div>
+      )}
       <div ref={bottomRef} />
     </div>
   )

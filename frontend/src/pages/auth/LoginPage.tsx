@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { BrainCircuit } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
@@ -25,7 +24,7 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState('')
 
   useEffect(() => {
-    if (isAuthenticated) navigate('/app/materials', { replace: true })
+    if (isAuthenticated) navigate('/app/roadmaps', { replace: true })
   }, [isAuthenticated, navigate])
 
   const {
@@ -41,7 +40,7 @@ export default function LoginPage() {
       const res = await authApi.login(data)
       setUser(res.data.user)
       toast.success('Добро пожаловать!')
-      navigate('/app/materials', { replace: true })
+      navigate('/app/roadmaps', { replace: true })
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string | string[] } } }
       const raw = e?.response?.data?.message
@@ -59,14 +58,6 @@ export default function LoginPage() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm"
       >
-        {/* Logo */}
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <BrainCircuit size={20} className="text-white" />
-          </div>
-          <span className="text-lg font-bold text-foreground">PrepAI</span>
-        </Link>
-
         {/* Card */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
           <h1 className="text-xl font-bold text-foreground mb-1">Войти</h1>

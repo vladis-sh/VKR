@@ -4,7 +4,7 @@ interface RoadmapProgress {
   completedByRoadmap: Record<string, string[]>
 }
 
-const STORAGE_KEY = 'prepai.roadmap.progress'
+const STORAGE_KEY = 'app.roadmap.progress'
 
 const emptyProgress: RoadmapProgress = {
   completedByRoadmap: {},

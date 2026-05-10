@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Send, Plus, Trash2, Menu, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -122,19 +122,41 @@ function ChatInput({
   disabled: boolean
 }) {
   const [value, setValue] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const resetHeight = () => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+  }
+
+  const autoGrow = () => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 128)}px`
+  }
 
   const submit = () => {
     const trimmed = value.trim()
-    if (!trimmed || isLoading) return
+    if (!trimmed || isLoading || disabled) return
     onSend(trimmed)
     setValue('')
+    // setValue('') doesn't fire onInput, so reset textarea height manually.
+    resetHeight()
   }
 
   const handleKey = (e: React.KeyboardEvent) => {
+    // Enter sends, Shift+Enter inserts a new line.
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       submit()
     }
+  }
+
+  const sendQuick = (phrase: string) => {
+    if (isLoading || disabled) return
+    onSend(phrase)
   }
 
   return (
@@ -145,7 +167,7 @@ function ChatInput({
           {QUICK_PHRASES.map((phrase) => (
             <button
               key={phrase}
-              onClick={() => onSend(phrase)}
+              onClick={() => sendQuick(phrase)}
               disabled={isLoading}
               className="shrink-0 rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
             >
@@ -158,24 +180,20 @@ function ChatInput({
       {/* Input row */}
       <div className="flex items-end gap-2">
         <textarea
+          ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKey}
+          onInput={autoGrow}
           placeholder={disabled ? 'Выберите или создайте чат' : 'Напишите сообщение...'}
           disabled={disabled || isLoading}
           rows={1}
           className="flex-1 resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 max-h-32 min-h-[40px]"
-          style={{ height: 'auto' }}
-          onInput={(e) => {
-            const el = e.currentTarget
-            el.style.height = 'auto'
-            el.style.height = `${Math.min(el.scrollHeight, 128)}px`
-          }}
         />
         <Button
           size="icon"
           onClick={submit}
-          disabled={!value.trim() || disabled}
+          disabled={!value.trim() || disabled || isLoading}
           loading={isLoading}
           aria-label="Отправить"
           className="shrink-0 h-10 w-10"
@@ -200,9 +218,13 @@ export default function ChatPage() {
   const createSession = useCreateChatSession()
   const deleteSession = useDeleteChatSession()
 
-  const { sendMessage, isLoading: isSending, isTyping, optimisticMessages } = useSendMessage(
-    activeSession?.id ?? ''
-  )
+  const {
+    sendMessage,
+    isLoading: isSending,
+    isTyping,
+    optimisticMessages,
+    error: sendError,
+  } = useSendMessage(activeSession?.id ?? '')
 
   const handleCreateSession = async (role: AssistantRole) => {
     const roleLabel = ASSISTANT_ROLES.find((r) => r.value === role)?.label ?? role
@@ -307,6 +329,7 @@ export default function ChatPage() {
               messages={sessionDetail?.messages ?? []}
               optimisticMessages={optimisticMessages}
               isTyping={isTyping}
+              errorMessage={sendError}
             />
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">

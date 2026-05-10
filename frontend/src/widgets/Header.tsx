@@ -6,8 +6,7 @@ import { useAuthStore } from '@/features/auth/useAuthStore'
 import { cn } from '@/shared/lib/cn'
 
 const routeTitles: Record<string, string> = {
-  '/app/materials': 'Материалы',
-  '/app/materials/favorites': 'Избранное',
+  '/app/roadmaps': 'Роадмапы',
   '/app/chat': 'Чат с ИИ',
   '/app/tests': 'Тесты',
   '/app/tests/topics': 'Выберите тему',
@@ -29,7 +28,7 @@ export function Header() {
 
   const title = Object.entries(routeTitles).find(([key]) =>
     pathname.startsWith(key) && (key === pathname || pathname[key.length] === '/')
-  )?.[1] ?? routeTitles[pathname] ?? 'PrepAI'
+  )?.[1] ?? routeTitles[pathname] ?? ''
 
   const displayTitle = (() => {
     for (const [key, val] of Object.entries(routeTitles)) {

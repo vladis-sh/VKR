@@ -1,8 +1,15 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { AiService } from '../ai/ai.service';
-import { CreateSessionDto, SendMessageDto } from './dto/create-session.dto';
+import {
+  BadGatewayException,
+  ForbiddenException,
+  HttpException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AssistantRole, MessageRole } from '@prisma/client';
+import { AiService } from '../ai/ai.service';
+import { checkAssistantTopic, OFF_TOPIC_REPLY } from '../ai/topic-guard';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateSessionDto, SendMessageDto } from './dto/create-session.dto';
 
 @Injectable()
 export class ChatService {
@@ -37,12 +44,17 @@ export class ChatService {
   }
 
   async createSession(userId: string, dto: CreateSessionDto) {
+    // The DB enum value `hr` is reused as an interview simulator.
     const roleGreetings: Record<string, string> = {
-      hr: 'Привет! Я твой HR-интервьюер. Давай начнём с небольшого знакомства: расскажи мне о себе и своём опыте в разработке.',
+      hr:
+        'Привет! Я твой технический интервьюер. Начнём с вопроса по JavaScript: ' +
+        'расскажи, что такое замыкание, и приведи короткий пример.',
       technical:
-        'Привет! Я твой технический интервьюер. Готов проверить твои знания по фронтенд-разработке. Начнём с JavaScript: расскажи, что ты знаешь о замыканиях?',
+        'Привет! Я технический ассистент. Готов разобрать любую тему по программированию, ' +
+        'frontend, backend, базам данных или архитектуре. С чего начнём?',
       algorithms:
-        'Привет! Я специализируюсь на алгоритмах и структурах данных. Готов к задачам? Начнём с классики: расскажи, что такое Big O нотация.',
+        'Привет! Я ассистент по алгоритмам и структурам данных. Могу объяснить тему, дать ' +
+        'задачу или проверить твоё решение. Что выберем?',
     };
 
     const session = await this.prisma.chatSession.create({
@@ -87,7 +99,9 @@ export class ChatService {
   }
 
   async deleteSession(userId: string, sessionId: string) {
-    const session = await this.prisma.chatSession.findUnique({ where: { id: sessionId } });
+    const session = await this.prisma.chatSession.findUnique({
+      where: { id: sessionId },
+    });
     if (!session) throw new NotFoundException('Session not found');
     if (session.userId !== userId) throw new ForbiddenException('No access');
 
@@ -109,6 +123,7 @@ export class ChatService {
     if (!session) throw new NotFoundException('Session not found');
     if (session.userId !== userId) throw new ForbiddenException('No access');
 
+    // Persist the user's message first so it is visible even if the LLM call fails.
     await this.prisma.chatMessage.create({
       data: {
         sessionId,
@@ -117,14 +132,37 @@ export class ChatService {
       },
     });
 
-    const messages = session.messages.map((message) => ({
-      role: message.role as 'user' | 'assistant' | 'system',
-      content: message.content,
-    }));
+    const topicCheck = checkAssistantTopic(dto.content, {
+      hasHistory: session.messages.length > 1,
+    });
 
+    if (!topicCheck.allowed) {
+      const refusal = await this.prisma.chatMessage.create({
+        data: {
+          sessionId,
+          role: MessageRole.assistant,
+          content: OFF_TOPIC_REPLY,
+        },
+      });
+      await this.touchSession(sessionId);
+      return refusal;
+    }
+
+    const messages = session.messages
+      .filter((message) => message.role !== MessageRole.system)
+      .map((message) => ({
+        role: message.role as 'user' | 'assistant',
+        content: message.content,
+      }));
     messages.push({ role: 'user', content: dto.content });
 
-    const aiResponse = await this.aiService.chatWithRole(session.assistantRole, messages);
+    let aiResponse: string;
+    try {
+      aiResponse = await this.aiService.chatWithRole(session.assistantRole, messages);
+    } catch (err) {
+      if (err instanceof HttpException) throw err;
+      throw new BadGatewayException('Не удалось получить ответ ассистента. Попробуйте ещё раз.');
+    }
 
     const assistantMessage = await this.prisma.chatMessage.create({
       data: {
@@ -134,11 +172,14 @@ export class ChatService {
       },
     });
 
+    await this.touchSession(sessionId);
+    return assistantMessage;
+  }
+
+  private async touchSession(sessionId: string) {
     await this.prisma.chatSession.update({
       where: { id: sessionId },
       data: { updatedAt: new Date() },
     });
-
-    return assistantMessage;
   }
 }

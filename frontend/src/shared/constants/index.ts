@@ -27,34 +27,36 @@ export const KNOWLEDGE_LEVELS = [
   { value: 'senior', label: 'Senior', description: 'Опытный разработчик (3+ лет)' },
 ] as const
 
+// NOTE: the DB enum value `hr` is reused as "interview simulator" — a purely
+// technical mock-interview mode. See backend/src/ai/prompts/chat.prompts.ts.
 export const ASSISTANT_ROLES = [
   {
-    value: 'hr',
-    label: 'HR-интервью',
-    description: 'Вопросы о мотивации, опыте и soft skills',
-    icon: '👔',
-  },
-  {
     value: 'technical',
-    label: 'Техническое интервью',
-    description: 'JavaScript, TypeScript, React и технические вопросы',
+    label: 'Технический ассистент',
+    description: 'Объяснения по JavaScript, TypeScript, React, backend и архитектуре',
     icon: '💻',
   },
   {
     value: 'algorithms',
     label: 'Алгоритмы',
-    description: 'Задачи на структуры данных и алгоритмы',
+    description: 'Задачи на структуры данных, алгоритмы и анализ сложности',
     icon: '🧮',
+  },
+  {
+    value: 'hr',
+    label: 'Симулятор интервью',
+    description: 'Имитация технического собеседования с обратной связью',
+    icon: '🎯',
   },
 ] as const
 
 export const QUICK_PHRASES = [
-  'Расскажи о себе',
-  'Какой твой опыт?',
-  'Объясни паттерн',
   'Что такое замыкание?',
-  'Как работает EventLoop?',
+  'Как работает Event Loop?',
   'SOLID принципы',
+  'Объясни сложность O(n log n)',
+  'REST vs GraphQL',
+  'Индексы в базах данных',
 ]
 
 export const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']

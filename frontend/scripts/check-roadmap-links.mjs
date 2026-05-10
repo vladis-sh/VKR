@@ -36,7 +36,7 @@ async function checkOne(item) {
       method: 'HEAD',
       redirect: 'follow',
       signal: ctrl.signal,
-      headers: { 'User-Agent': 'prepai-link-checker/1.0' },
+      headers: { 'User-Agent': 'roadmap-link-checker/1.0' },
     })
     // Некоторые сайты не поддерживают HEAD — пробуем GET без тела
     if (res.status === 405 || res.status === 403 || res.status >= 500) {
@@ -44,7 +44,7 @@ async function checkOne(item) {
         method: 'GET',
         redirect: 'follow',
         signal: ctrl.signal,
-        headers: { 'User-Agent': 'prepai-link-checker/1.0' },
+        headers: { 'User-Agent': 'roadmap-link-checker/1.0' },
       })
     }
     return { ...item, status: res.status, finalUrl: res.url }

@@ -1,5 +1,6 @@
+import { Transform } from 'class-transformer';
+import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsIn, MaxLength } from 'class-validator';
 
 export class CreateSessionDto {
   @ApiPropertyOptional({ example: 'JavaScript Interview' })
@@ -15,7 +16,10 @@ export class CreateSessionDto {
 
 export class SendMessageDto {
   @ApiProperty({ example: 'Расскажи о замыканиях в JavaScript' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
+  @IsNotEmpty({ message: 'Сообщение не может быть пустым' })
+  @MinLength(1)
   @MaxLength(4000)
   content: string;
 }

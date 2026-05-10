@@ -36,7 +36,7 @@ export const useRegisterStore = create<RegisterState>()(
       reset: () => set({ data: {}, currentStep: 1 }),
     }),
     {
-      name: 'prepai.register',
+      name: 'app.register',
       storage: createJSONStorage(() => sessionStorage),
       // avatarFile is a File and cannot be serialized — persist only primitives.
       partialize: (state) => ({
