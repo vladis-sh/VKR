@@ -6,7 +6,7 @@
 |------|-----------|
 | **Frontend** | React 18, TypeScript, Vite, React Router v6, Tailwind CSS, shadcn/ui, Zustand, TanStack Query, React Hook Form + Zod, Framer Motion, Recharts |
 | **Backend** | NestJS, TypeScript, Prisma ORM, PostgreSQL, JWT (httpOnly cookies), Passport, Multer, Swagger |
-| **ИИ** | Абстракция провайдера: Gemini, Mock (встроенный) или Ollama (локальный LLM) |
+| **ИИ** | Внешний провайдер ( Пока что используется Gemini в качестве бесплатной альтернативы )|
 | **DevOps** | Docker, Docker Compose |
 
 ---
