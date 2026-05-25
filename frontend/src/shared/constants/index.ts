@@ -19,6 +19,14 @@ export const QUERY_KEYS = {
   ADMIN_MATERIAL: (id: string) => ['admin', 'materials', id],
   ADMIN_QUESTIONS: ['admin', 'questions'],
   ADMIN_QUESTION: (id: string) => ['admin', 'questions', id],
+  ROADMAPS: ['roadmaps'],
+  ROADMAP: (slug: string) => ['roadmaps', slug],
+  LIVE_CODING_TASKS: ['live-coding'],
+  LIVE_CODING_TASK: (slug: string) => ['live-coding', slug],
+  TEST_CATALOG_THEMES: ['test-catalog', 'themes'],
+  TEST_CATALOG_THEME: (slug: string) => ['test-catalog', 'themes', slug],
+  ADMIN_CONTENT_ENTRIES: ['admin', 'content', 'entries'],
+  ADMIN_CONTENT_ENTRY: (id: string) => ['admin', 'content', 'entries', id],
 } as const
 
 export const KNOWLEDGE_LEVELS = [

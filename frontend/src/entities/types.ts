@@ -51,6 +51,23 @@ export interface AdminQuestion {
   updatedAt?: string
 }
 
+export type ContentEntryType = 'roadmap' | 'live_coding_task' | 'test_catalog_theme'
+export type ContentOrigin = 'manual' | 'seed' | 'parser'
+
+export interface ContentEntry {
+  id: string
+  type: ContentEntryType
+  slug: string
+  title: string
+  payload: Record<string, unknown>
+  origin: ContentOrigin
+  sourceUrl?: string | null
+  isPublished: boolean
+  deletedAt?: string | null
+  createdAt: string
+  updatedAt?: string
+}
+
 export interface MaterialsPagination {
   total: number
   page: number

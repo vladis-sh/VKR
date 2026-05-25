@@ -16,10 +16,12 @@ import {
 import {
   getThemeQuestionCount,
   getThemeSubtopics,
-  TEST_CATALOG_THEMES,
   type TestTheme,
 } from '@/entities/testCatalog'
+import { useTestCatalogThemes } from '@/features/tests/useTestCatalog'
 import { useTestCatalogProgress } from '@/features/tests/useTestCatalogProgress'
+import { EmptyState } from '@/shared/ui/EmptyState'
+import { Skeleton } from '@/shared/ui/Skeleton'
 import { cn } from '@/shared/lib/cn'
 
 const themeIcons: Record<string, React.ReactNode> = {
@@ -137,6 +139,8 @@ function ThemeCard({ theme, index }: { theme: TestTheme; index: number }) {
 }
 
 export default function TestsHubPage() {
+  const { data: themes = [], isLoading } = useTestCatalogThemes()
+
   return (
     <div className="space-y-6">
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
@@ -161,11 +165,24 @@ export default function TestsHubPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {TEST_CATALOG_THEMES.map((theme, index) => (
-          <ThemeCard key={theme.id} theme={theme} index={index} />
-        ))}
-      </section>
+      {isLoading ? (
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Skeleton key={index} className="h-72 rounded-lg" />
+          ))}
+        </section>
+      ) : themes.length === 0 ? (
+        <EmptyState
+          title="Каталог тестов пока недоступен"
+          description="Мы не нашли опубликованные темы. Попробуйте обновить страницу чуть позже."
+        />
+      ) : (
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {themes.map((theme, index) => (
+            <ThemeCard key={theme.id} theme={theme} index={index} />
+          ))}
+        </section>
+      )}
 
       <section className="space-y-3">
         <div className="flex items-center gap-2">

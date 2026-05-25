@@ -1,7 +1,49 @@
-import { PrismaClient, KnowledgeLevel, QuestionSource, UserRole } from '@prisma/client';
+import {
+  ContentEntryType,
+  ContentOrigin,
+  Prisma,
+  PrismaClient,
+  KnowledgeLevel,
+  QuestionSource,
+  UserRole,
+} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { LIVE_CODING_TASKS } from './legacy-content/liveCoding';
+import { ROADMAPS } from './legacy-content/roadmap';
+import { TEST_CATALOG_THEMES } from './legacy-content/testCatalog';
 
 const prisma = new PrismaClient();
+
+async function seedContentEntry(
+  type: ContentEntryType,
+  slug: string,
+  title: string,
+  payload: Prisma.InputJsonValue,
+) {
+  await prisma.contentEntry.upsert({
+    where: {
+      type_slug: {
+        type,
+        slug,
+      },
+    },
+    update: {
+      title,
+      payload,
+      origin: ContentOrigin.seed,
+      isPublished: true,
+      deletedAt: null,
+    },
+    create: {
+      type,
+      slug,
+      title,
+      payload,
+      origin: ContentOrigin.seed,
+      isPublished: true,
+    },
+  });
+}
 
 async function main() {
   console.log('Starting seed...');
@@ -4237,6 +4279,37 @@ TTFB (Time to First Byte) — время до первого байта от с�
   }
 
   console.log(`Created ${questionsData.length} questions`);
+
+  for (const roadmap of ROADMAPS) {
+    await seedContentEntry(
+      ContentEntryType.roadmap,
+      roadmap.slug,
+      roadmap.title,
+      roadmap as unknown as Prisma.InputJsonValue,
+    );
+  }
+
+  for (const task of LIVE_CODING_TASKS) {
+    await seedContentEntry(
+      ContentEntryType.live_coding_task,
+      task.slug,
+      task.title,
+      task as unknown as Prisma.InputJsonValue,
+    );
+  }
+
+  for (const theme of TEST_CATALOG_THEMES) {
+    await seedContentEntry(
+      ContentEntryType.test_catalog_theme,
+      theme.slug,
+      theme.title,
+      theme as unknown as Prisma.InputJsonValue,
+    );
+  }
+
+  console.log(
+    `Seeded content entries: ${ROADMAPS.length} roadmaps, ${LIVE_CODING_TASKS.length} live coding tasks, ${TEST_CATALOG_THEMES.length} test themes`,
+  );
 
   // Create sample test sessions for leaderboard
   const testSession1 = await prisma.testSession.create({

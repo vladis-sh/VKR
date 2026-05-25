@@ -34,6 +34,8 @@ const AdminMaterialsListPage = lazy(() => import('@/pages/admin/AdminMaterialsLi
 const AdminMaterialFormPage = lazy(() => import('@/pages/admin/AdminMaterialFormPage'))
 const AdminQuestionsListPage = lazy(() => import('@/pages/admin/AdminQuestionsListPage'))
 const AdminQuestionFormPage = lazy(() => import('@/pages/admin/AdminQuestionFormPage'))
+const AdminContentListPage = lazy(() => import('@/pages/admin/AdminContentListPage'))
+const AdminContentFormPage = lazy(() => import('@/pages/admin/AdminContentFormPage'))
 
 function LazyWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -254,6 +256,36 @@ export const router = createBrowserRouter([
           <LazyWrapper>
             <NotificationsPage />
           </LazyWrapper>
+        ),
+      },
+      {
+        path: 'admin/content',
+        element: (
+          <AdminRoute>
+            <LazyWrapper>
+              <AdminContentListPage />
+            </LazyWrapper>
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'admin/content/new',
+        element: (
+          <AdminRoute>
+            <LazyWrapper>
+              <AdminContentFormPage />
+            </LazyWrapper>
+          </AdminRoute>
+        ),
+      },
+      {
+        path: 'admin/content/:id/edit',
+        element: (
+          <AdminRoute>
+            <LazyWrapper>
+              <AdminContentFormPage />
+            </LazyWrapper>
+          </AdminRoute>
         ),
       },
       {

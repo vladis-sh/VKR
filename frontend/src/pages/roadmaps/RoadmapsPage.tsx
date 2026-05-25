@@ -1,10 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Map, ArrowRight, Target, Layers } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { ROADMAPS, getRoadmapNodeCount, getRoadmapRequiredCount } from '@/entities/roadmap'
+import type { Roadmap } from '@/entities/roadmap'
+import { getRoadmapNodeCount, getRoadmapRequiredCount } from '@/entities/roadmap'
 import { useRoadmapProgress } from '@/features/roadmap/useRoadmapProgress'
+import { useRoadmaps } from '@/features/roadmap/useRoadmaps'
+import { EmptyState } from '@/shared/ui/EmptyState'
+import { Skeleton } from '@/shared/ui/Skeleton'
 
-function RoadmapCard({ roadmap }: { roadmap: (typeof ROADMAPS)[number] }) {
+function RoadmapCard({ roadmap }: { roadmap: Roadmap }) {
   const { completed } = useRoadmapProgress(roadmap.slug)
   const total = getRoadmapNodeCount(roadmap)
   const required = getRoadmapRequiredCount(roadmap)
@@ -61,6 +65,8 @@ function RoadmapCard({ roadmap }: { roadmap: (typeof ROADMAPS)[number] }) {
 }
 
 export default function RoadmapsPage() {
+  const { data: roadmaps = [], isLoading } = useRoadmaps()
+
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-6 md:px-6">
       <motion.div
@@ -81,11 +87,24 @@ export default function RoadmapsPage() {
         </div>
       </motion.div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {ROADMAPS.map((roadmap) => (
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <Skeleton key={index} className="h-80 rounded-2xl" />
+          ))}
+        </div>
+      ) : roadmaps.length === 0 ? (
+        <EmptyState
+          title="Планы подготовки пока недоступны"
+          description="Мы не нашли опубликованные маршруты. Попробуйте обновить страницу чуть позже."
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {roadmaps.map((roadmap) => (
           <RoadmapCard key={roadmap.slug} roadmap={roadmap} />
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

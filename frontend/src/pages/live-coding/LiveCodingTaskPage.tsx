@@ -19,7 +19,6 @@ import {
 import {
   DIFFICULTY_LABELS,
   LANGUAGE_LABELS,
-  LIVE_CODING_TASKS,
   type LiveCodingLanguage,
   type LiveCodingTask,
 } from '@/entities/liveCoding'
@@ -28,8 +27,10 @@ import {
   type CodeRunResult,
 } from '@/features/live-coding/codeRunner'
 import { useLiveCodingProgress } from '@/features/live-coding/useLiveCodingProgress'
+import { useLiveCodingTask } from '@/features/live-coding/useLiveCodingTasks'
 import { Button } from '@/shared/ui/Button'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { FullPageSpinner } from '@/shared/ui/Spinner'
 import { cn } from '@/shared/lib/cn'
 import { toast } from '@/features/theme/useToastStore'
 
@@ -333,7 +334,7 @@ function ResultPanel({ result }: { result: CodeRunResult | null }) {
 export default function LiveCodingTaskPage() {
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
-  const task = LIVE_CODING_TASKS.find((item) => item.slug === slug)
+  const { data: task, isLoading } = useLiveCodingTask(slug)
   const {
     progress,
     isSolved,
@@ -345,12 +346,17 @@ export default function LiveCodingTaskPage() {
   } = useLiveCodingProgress()
   const [leftTab, setLeftTab] = useState<LeftTab>('description')
   const [consoleTab, setConsoleTab] = useState<ConsoleTab>('tests')
-  const [language, setLanguage] = useState<LiveCodingLanguage>(
-    task?.languages[0] ?? 'javascript'
-  )
-  const [code, setCode] = useState(task?.starterCode[language] ?? '')
+  const [language, setLanguage] = useState<LiveCodingLanguage>('javascript')
+  const [code, setCode] = useState('')
   const [runResult, setRunResult] = useState<CodeRunResult | null>(null)
   const [isRunning, setIsRunning] = useState(false)
+
+  useEffect(() => {
+    if (!task) return
+    if (!task.languages.includes(language)) {
+      setLanguage(task.languages[0] ?? 'javascript')
+    }
+  }, [language, task])
 
   useEffect(() => {
     if (!task) return
@@ -358,6 +364,8 @@ export default function LiveCodingTaskPage() {
     setCode(savedCode ?? task.starterCode[language])
     setRunResult(null)
   }, [getSavedCode, language, task])
+
+  if (isLoading) return <FullPageSpinner />
 
   if (!task) {
     return (

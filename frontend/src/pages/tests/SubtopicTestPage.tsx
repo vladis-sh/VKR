@@ -11,18 +11,19 @@ import {
 } from 'lucide-react'
 import {
   getSubtopicBySlug,
-  getThemeBySlug,
   type CatalogDifficulty,
   type CatalogQuestion,
   type TestTheme,
 } from '@/entities/testCatalog'
+import { useTestCatalogTheme } from '@/features/tests/useTestCatalog'
 import { useTestCatalogProgress } from '@/features/tests/useTestCatalogProgress'
 import { Button } from '@/shared/ui/Button'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { FullPageSpinner } from '@/shared/ui/Spinner'
 import { cn } from '@/shared/lib/cn'
 
 const difficultyLabel: Record<CatalogDifficulty, string> = {
-  easy: 'Лёгкий',
+  easy: '˸гкий',
   medium: 'Средний',
   hard: 'Сложный',
 }
@@ -136,7 +137,7 @@ export default function SubtopicTestPage() {
     subtopicSlug: string
   }>()
   const navigate = useNavigate()
-  const theme = getThemeBySlug(themeSlug)
+  const { data: theme, isLoading } = useTestCatalogTheme(themeSlug)
   const subtopic = getSubtopicBySlug(theme, subtopicSlug)
   const {
     setAnswer,
@@ -152,6 +153,8 @@ export default function SubtopicTestPage() {
   const questionProgress = question ? getQuestionProgress(question.id) : undefined
   const selectedIndex = questionProgress?.selectedIndex
   const stats = subtopic ? getSubtopicStats(subtopic) : undefined
+
+  if (isLoading) return <FullPageSpinner />
 
   if (!theme || !subtopic || !question || !stats) {
     return (

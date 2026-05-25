@@ -14,12 +14,14 @@ import {
 import {
   DIFFICULTY_LABELS,
   LANGUAGE_LABELS,
-  LIVE_CODING_TASKS,
   type LiveCodingDifficulty,
   type LiveCodingLanguage,
   type LiveCodingTask,
 } from '@/entities/liveCoding'
 import { useLiveCodingProgress } from '@/features/live-coding/useLiveCodingProgress'
+import { useLiveCodingTasks } from '@/features/live-coding/useLiveCodingTasks'
+import { EmptyState } from '@/shared/ui/EmptyState'
+import { Skeleton } from '@/shared/ui/Skeleton'
 import { cn } from '@/shared/lib/cn'
 
 const difficulties: Array<LiveCodingDifficulty | 'all'> = ['all', 'easy', 'medium', 'hard']
@@ -209,6 +211,7 @@ function CategorySection({
 }
 
 export default function LiveCodingPage() {
+  const { data: tasks = [], isLoading } = useLiveCodingTasks()
   const [search, setSearch] = useState('')
   const [difficulty, setDifficulty] = useState<LiveCodingDifficulty | 'all'>('all')
   const [company, setCompany] = useState('all')
@@ -217,14 +220,14 @@ export default function LiveCodingPage() {
   const { progress, isSolved, isFavorite, toggleFavorite } = useLiveCodingProgress()
 
   const companies = useMemo(
-    () => Array.from(new Set(LIVE_CODING_TASKS.flatMap((task) => task.companies))).sort(),
-    []
+    () => Array.from(new Set(tasks.flatMap((task) => task.companies))).sort(),
+    [tasks]
   )
 
   const filteredTasks = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
 
-    return LIVE_CODING_TASKS.filter((task) => {
+    return tasks.filter((task) => {
       const matchesSearch =
         !normalizedSearch ||
         task.title.toLowerCase().includes(normalizedSearch) ||
@@ -243,7 +246,7 @@ export default function LiveCodingPage() {
         matchesFavorite
       )
     })
-  }, [company, difficulty, language, onlyFavorites, search, isFavorite])
+  }, [company, difficulty, language, onlyFavorites, search, isFavorite, tasks])
 
   const groupedTasks = useMemo(() => {
     const map = new Map<string, LiveCodingTask[]>()
@@ -254,13 +257,13 @@ export default function LiveCodingPage() {
     return Array.from(map.entries())
   }, [filteredTasks])
 
-  const freeTasks = LIVE_CODING_TASKS.filter((task) => !task.isPremium)
+  const freeTasks = tasks.filter((task) => !task.isPremium)
   const solvedFree = freeTasks.filter((task) => progress.solved.includes(task.id))
   const progressPercent =
     freeTasks.length > 0 ? Math.round((solvedFree.length / freeTasks.length) * 100) : 0
 
   const difficultyCounts = (['easy', 'medium', 'hard'] as const).map((item) => {
-    const tasksInDifficulty = LIVE_CODING_TASKS.filter(
+    const tasksInDifficulty = tasks.filter(
       (task) => task.difficulty === item && !task.isPremium
     )
     return {
@@ -283,6 +286,18 @@ export default function LiveCodingPage() {
     setCompany('all')
     setLanguage('all')
     setOnlyFavorites(false)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-24 rounded-lg" />
+        <Skeleton className="h-16 rounded-lg" />
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={index} className="h-28 rounded-lg" />
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -438,7 +453,12 @@ export default function LiveCodingPage() {
 
       {/* Grouped task list */}
       <section className="space-y-3">
-        {groupedTasks.length === 0 ? (
+        {tasks.length === 0 ? (
+          <EmptyState
+            title="Задачи пока недоступны"
+            description="Мы не нашли опубликованные задания. Попробуйте обновить страницу чуть позже."
+          />
+        ) : groupedTasks.length === 0 ? (
           <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
             <p className="text-sm font-semibold text-foreground">Задачи не найдены</p>
             <p className="mt-1 text-sm text-muted-foreground">

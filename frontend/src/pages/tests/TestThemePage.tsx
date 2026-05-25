@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -11,20 +11,21 @@ import {
   Layers3,
 } from 'lucide-react'
 import {
-  getThemeBySlug,
   getThemeQuestionCount,
   getThemeSubtopics,
   type CatalogDifficulty,
   type TestSection,
   type TestSubtopic,
 } from '@/entities/testCatalog'
+import { useTestCatalogTheme } from '@/features/tests/useTestCatalog'
 import { useTestCatalogProgress } from '@/features/tests/useTestCatalogProgress'
 import { Button } from '@/shared/ui/Button'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { FullPageSpinner } from '@/shared/ui/Spinner'
 import { cn } from '@/shared/lib/cn'
 
 const difficultyLabel: Record<CatalogDifficulty, string> = {
-  easy: 'Лёгкий',
+  easy: '˸гкий',
   medium: 'Средний',
   hard: 'Сложный',
 }
@@ -129,12 +130,18 @@ function SectionBlock({
 export default function TestThemePage() {
   const { themeSlug } = useParams<{ themeSlug: string }>()
   const navigate = useNavigate()
-  const theme = getThemeBySlug(themeSlug)
+  const { data: theme, isLoading } = useTestCatalogTheme(themeSlug)
   const { getThemeStats, getSubtopicStats } = useTestCatalogProgress()
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    () => new Set(theme?.sections.map((section) => section.id) ?? [])
+    () => new Set()
   )
+
+  useEffect(() => {
+    if (theme) {
+      setExpandedSections(new Set(theme.sections.map((section) => section.id)))
+    }
+  }, [theme])
 
   const allExpanded = theme ? expandedSections.size === theme.sections.length : false
   const firstAvailableSubtopic = theme ? getThemeSubtopics(theme)[0] : undefined
@@ -152,6 +159,8 @@ export default function TestThemePage() {
       })),
     }))
   }, [getSubtopicStats, theme])
+
+  if (isLoading) return <FullPageSpinner />
 
   if (!theme || !stats) {
     return (

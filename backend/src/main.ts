@@ -80,6 +80,10 @@ async function bootstrap() {
       .addTag('Stats', 'Statistics and leaderboard')
       .addTag('Profile', 'User profile management')
       .addTag('Notifications', 'Notification settings')
+      .addTag('Roadmaps', 'Database-backed learning roadmaps')
+      .addTag('Live Coding', 'Database-backed coding tasks')
+      .addTag('Test Catalog', 'Database-backed test catalog')
+      .addTag('Content Admin', 'Content management and import review')
       .build();
 
     const document = SwaggerModule.createDocument(app, config);
