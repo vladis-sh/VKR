@@ -1,20 +1,13 @@
 import { NavLink } from 'react-router-dom'
-import {
-  MessageSquare,
-  ClipboardList,
-  BarChart2,
-  Code2,
-  Map,
-  Shield,
-} from 'lucide-react'
+import { MessageSquare, ClipboardList, BarChart2, Map, Shield } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { useAuthStore } from '@/features/auth/useAuthStore'
 
 const navItems = [
-  { to: '/app/roadmaps', label: 'Роадмапы', icon: Map },
+  { to: '/app/roadmaps', label: 'План подготовки', icon: Map },
   { to: '/app/chat', label: 'Чат с ИИ', icon: MessageSquare },
   { to: '/app/tests', label: 'Тесты', icon: ClipboardList },
-  { to: '/app/live-coding', label: 'Live Coding', icon: Code2 },
+  // { to: '/app/live-coding', label: 'Live Coding', icon: Code2 },
   { to: '/app/stats', label: 'Статистика', icon: BarChart2 },
 ]
 
@@ -80,7 +73,6 @@ export function Sidebar() {
           </>
         )}
       </nav>
-
     </aside>
   )
 }

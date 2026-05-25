@@ -1,15 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import {
-  ArrowLeft,
-  Check,
-  RotateCcw,
-  Target,
-  Map,
-  ExternalLink,
-  BookOpen,
-} from 'lucide-react'
+import { ArrowLeft, Check, RotateCcw, Target, Map, ExternalLink, BookOpen } from 'lucide-react'
 import {
   KIND_LABELS,
   type RoadmapNode,
@@ -26,10 +18,8 @@ import { cn } from '@/shared/lib/cn'
 
 const kindCardClasses: Record<RoadmapNodeKind, string> = {
   required: 'border-border bg-card hover:border-primary/60 hover:shadow-md',
-  alternative:
-    'border-amber-500/30 bg-amber-50/60 hover:border-amber-500/60 dark:bg-amber-950/10',
-  optional:
-    'border-dashed border-border/70 bg-card/60 hover:border-primary/40',
+  alternative: 'border-amber-500/30 bg-amber-50/60 hover:border-amber-500/60 dark:bg-amber-950/10',
+  optional: 'border-dashed border-border/70 bg-card/60 hover:border-primary/40',
 }
 
 const kindBadgeClasses: Record<RoadmapNodeKind, string> = {
@@ -110,11 +100,7 @@ function NodeCard({
         <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary">
           <BookOpen size={12} />
           {resourceCount}{' '}
-          {resourceCount === 1
-            ? 'материал'
-            : resourceCount < 5
-              ? 'материала'
-              : 'материалов'}
+          {resourceCount === 1 ? 'материал' : resourceCount < 5 ? 'материала' : 'материалов'}
         </span>
       )}
     </div>
@@ -155,9 +141,7 @@ function NodeDetailModal({
               {KIND_LABELS[node.kind]}
             </span>
             <h2 className="text-xl font-semibold text-foreground">{node.title}</h2>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {node.summary}
-            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{node.summary}</p>
           </div>
 
           <div>
@@ -168,7 +152,8 @@ function NodeDetailModal({
 
             {resources.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-xs text-muted-foreground">
-                Материалы для этой темы скоро появятся. Пока разбирай её по официальной документации.
+                Материалы для этой темы скоро появятся. Пока разбирай её по официальной
+                документации.
               </div>
             ) : (
               <ul className="space-y-2">
@@ -261,9 +246,7 @@ function StageBlock({
           <div
             className={cn(
               'w-px flex-1 bg-gradient-to-b transition-colors',
-              stageDone
-                ? 'from-emerald-500/60 to-border'
-                : 'from-primary/30 to-border'
+              stageDone ? 'from-emerald-500/60 to-border' : 'from-primary/30 to-border'
             )}
           />
         )}
@@ -279,9 +262,7 @@ function StageBlock({
       >
         <div className="mb-4">
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            <h3 className="text-xl font-semibold text-foreground md:text-2xl">
-              {stage.title}
-            </h3>
+            <h3 className="text-xl font-semibold text-foreground md:text-2xl">{stage.title}</h3>
             <span className="text-xs text-muted-foreground">
               {doneCount} / {stage.nodes.length}
             </span>
@@ -343,7 +324,7 @@ export default function RoadmapDetailPage() {
           to="/app/roadmaps"
           className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
-          <ArrowLeft size={15} />К списку роадмапов
+          <ArrowLeft size={15} />К списку планов подготовки
         </Link>
 
         <div
@@ -416,8 +397,8 @@ export default function RoadmapDetailPage() {
       </div>
 
       <p className="mb-4 text-xs text-muted-foreground">
-        Нажми на карточку — увидишь описание темы и ссылки на статьи. Галочка
-        справа быстро отмечает тему пройденной.
+        Нажми на карточку — увидишь описание темы и ссылки на статьи. Галочка справа быстро отмечает
+        тему пройденной.
       </p>
 
       {/* Timeline */}

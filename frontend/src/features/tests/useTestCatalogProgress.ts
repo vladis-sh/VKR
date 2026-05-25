@@ -6,13 +6,11 @@ import {
   type TestTheme,
 } from '@/entities/testCatalog'
 
-export type QuestionProgressMark = 'know' | 'repeat' | 'hard'
 export type TestProgressStatus = 'not-started' | 'in-progress' | 'completed'
 
 interface QuestionProgress {
   selectedIndex?: number
   checked?: boolean
-  mark?: QuestionProgressMark
   updatedAt?: string
 }
 
@@ -45,32 +43,16 @@ function writeProgress(progress: TestCatalogProgress) {
 
 function getQuestionsStats(questions: CatalogQuestion[], progress: TestCatalogProgress) {
   const total = questions.length
-  const touched = questions.filter((question) => {
-    const questionProgress = progress.questions[question.id]
-    return Boolean(questionProgress?.checked || questionProgress?.mark)
-  }).length
-  const marked = questions.filter((question) => Boolean(progress.questions[question.id]?.mark))
-    .length
-  const know = questions.filter((question) => progress.questions[question.id]?.mark === 'know')
-    .length
-  const repeat = questions.filter(
-    (question) => progress.questions[question.id]?.mark === 'repeat'
-  ).length
-  const hard = questions.filter((question) => progress.questions[question.id]?.mark === 'hard')
-    .length
+  const checked = questions.filter((question) => progress.questions[question.id]?.checked).length
 
   const status: TestProgressStatus =
-    marked >= total && total > 0 ? 'completed' : touched > 0 ? 'in-progress' : 'not-started'
+    checked >= total && total > 0 ? 'completed' : checked > 0 ? 'in-progress' : 'not-started'
 
   return {
     total,
-    touched,
-    marked,
-    know,
-    repeat,
-    hard,
+    checked,
     status,
-    progressPercent: total > 0 ? Math.round((marked / total) * 100) : 0,
+    progressPercent: total > 0 ? Math.round((checked / total) * 100) : 0,
   }
 }
 
@@ -130,20 +112,43 @@ export function useTestCatalogProgress() {
     [commit]
   )
 
-  const markQuestion = useCallback(
-    (questionId: string, mark: QuestionProgressMark) => {
-      commit((current) => ({
-        ...current,
-        questions: {
-          ...current.questions,
-          [questionId]: {
-            ...current.questions[questionId],
+  const completeSubtopicProgress = useCallback(
+    (subtopic: TestSubtopic) => {
+      commit((current) => {
+        const questions = { ...current.questions }
+        const updatedAt = new Date().toISOString()
+
+        subtopic.questions.forEach((question) => {
+          questions[question.id] = {
+            ...questions[question.id],
             checked: true,
-            mark,
-            updatedAt: new Date().toISOString(),
-          },
-        },
-      }))
+            updatedAt,
+          }
+        })
+
+        return {
+          ...current,
+          questions,
+        }
+      })
+    },
+    [commit]
+  )
+
+  const resetSubtopicProgress = useCallback(
+    (subtopic: TestSubtopic) => {
+      commit((current) => {
+        const questions = { ...current.questions }
+
+        subtopic.questions.forEach((question) => {
+          delete questions[question.id]
+        })
+
+        return {
+          ...current,
+          questions,
+        }
+      })
     },
     [commit]
   )
@@ -181,18 +186,20 @@ export function useTestCatalogProgress() {
       progress,
       setAnswer,
       checkQuestion,
-      markQuestion,
+      completeSubtopicProgress,
+      resetSubtopicProgress,
       getQuestionProgress,
       getSubtopicStats,
       getThemeStats,
     }),
     [
       checkQuestion,
+      completeSubtopicProgress,
       getQuestionProgress,
       getSubtopicStats,
       getThemeStats,
-      markQuestion,
       progress,
+      resetSubtopicProgress,
       setAnswer,
     ]
   )

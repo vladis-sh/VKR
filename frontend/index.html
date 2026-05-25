@@ -1,43 +1,44 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#3b82f6" />
-    <meta name="description" content="Подготовка к собеседованиям с ИИ-ассистентом" />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <title>Подготовка к собеседованиям</title>
-    <script>
-      // Pre-paint theme application to avoid FOUC.
-      // Must stay in sync with useThemeStore persist key + shape.
-      (function () {
-        try {
-          var raw = localStorage.getItem('theme')
-          var theme = 'system'
-          if (raw) {
-            var parsed = JSON.parse(raw)
-            if (parsed && parsed.state && parsed.state.theme) theme = parsed.state.theme
-          }
-          var isDark =
-            theme === 'dark' ||
-            (theme === 'system' &&
-              window.matchMedia('(prefers-color-scheme: dark)').matches)
-          if (isDark) document.documentElement.classList.add('dark')
-        } catch (e) {
-          // localStorage blocked or JSON corrupt — default light theme stays.
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/icons/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3b82f6" />
+  <meta name="description" content="Подготовка к собеседованиям с ИИ-ассистентом" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <title>Подготовка к собеседованиям</title>
+  <script>
+    // Pre-paint theme application to avoid FOUC.
+    // Must stay in sync with useThemeStore persist key + shape.
+    (function () {
+      try {
+        var raw = localStorage.getItem('theme')
+        var theme = 'system'
+        if (raw) {
+          var parsed = JSON.parse(raw)
+          if (parsed && parsed.state && parsed.state.theme) theme = parsed.state.theme
         }
-      })()
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+        var isDark =
+          theme === 'dark' ||
+          (theme === 'system' &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches)
+        if (isDark) document.documentElement.classList.add('dark')
+      } catch (e) {
+        // localStorage blocked or JSON corrupt — default light theme stays.
+      }
+    })()
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

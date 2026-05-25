@@ -1,11 +1,7 @@
 import { Link } from 'react-router-dom'
 import { Map, ArrowRight, Target, Layers } from 'lucide-react'
 import { motion } from 'framer-motion'
-import {
-  ROADMAPS,
-  getRoadmapNodeCount,
-  getRoadmapRequiredCount,
-} from '@/entities/roadmap'
+import { ROADMAPS, getRoadmapNodeCount, getRoadmapRequiredCount } from '@/entities/roadmap'
 import { useRoadmapProgress } from '@/features/roadmap/useRoadmapProgress'
 
 function RoadmapCard({ roadmap }: { roadmap: (typeof ROADMAPS)[number] }) {
@@ -20,9 +16,7 @@ function RoadmapCard({ roadmap }: { roadmap: (typeof ROADMAPS)[number] }) {
       to={`/app/roadmaps/${roadmap.slug}`}
       className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
     >
-      <div
-        className={`relative h-32 bg-gradient-to-br ${roadmap.accent} p-5`}
-      >
+      <div className={`relative h-32 bg-gradient-to-br ${roadmap.accent} p-5`}>
         <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 backdrop-blur">
           <Map size={20} className="text-primary" />
         </div>
@@ -58,11 +52,8 @@ function RoadmapCard({ roadmap }: { roadmap: (typeof ROADMAPS)[number] }) {
         </div>
 
         <div className="flex items-center justify-between pt-1 text-sm font-medium text-primary">
-          <span>Открыть роадмап</span>
-          <ArrowRight
-            size={16}
-            className="transition-transform group-hover:translate-x-1"
-          />
+          <span>Открыть план подготовки</span>
+          <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
         </div>
       </div>
     </Link>
@@ -82,9 +73,7 @@ export default function RoadmapsPage() {
             <Map size={20} className="text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-foreground md:text-3xl">
-              Роадмапы
-            </h1>
+            <h1 className="text-2xl font-semibold text-foreground md:text-3xl">Планы подготовки</h1>
             <p className="text-sm text-muted-foreground">
               Структурированные пути обучения. Отмечайте темы, которые уже разобрали.
             </p>
@@ -97,7 +86,6 @@ export default function RoadmapsPage() {
           <RoadmapCard key={roadmap.slug} roadmap={roadmap} />
         ))}
       </div>
-
     </div>
   )
 }

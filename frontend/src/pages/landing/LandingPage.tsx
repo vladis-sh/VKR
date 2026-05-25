@@ -7,7 +7,6 @@ import {
   ClipboardList,
   BarChart2,
   ArrowRight,
-  CheckCircle,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/Button'
 import { useAuthStore } from '@/features/auth/useAuthStore'
@@ -37,13 +36,6 @@ const features = [
     desc: 'Отслеживайте свои результаты, сравнивайте с другими в лидерборде',
     bg: 'bg-amber-50 dark:bg-amber-900/20',
   },
-]
-
-const benefits = [
-  'Подготовка к Junior, Middle и Senior позициям',
-  'Реальные вопросы с объяснениями',
-  'Персонализированные рекомендации',
-  'История всех попыток и разбор ошибок',
 ]
 
 export default function LandingPage() {

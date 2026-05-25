@@ -46,19 +46,35 @@ function LazyWrapper({ children }: { children: React.ReactNode }) {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <LazyWrapper><LandingPage /></LazyWrapper>,
+    element: (
+      <LazyWrapper>
+        <LandingPage />
+      </LazyWrapper>
+    ),
   },
   {
     path: '/login',
-    element: <LazyWrapper><LoginPage /></LazyWrapper>,
+    element: (
+      <LazyWrapper>
+        <LoginPage />
+      </LazyWrapper>
+    ),
   },
   {
     path: '/register',
-    element: <LazyWrapper><RegisterStep1Page /></LazyWrapper>,
+    element: (
+      <LazyWrapper>
+        <RegisterStep1Page />
+      </LazyWrapper>
+    ),
   },
   {
     path: '/register/profile',
-    element: <LazyWrapper><RegisterStep2Page /></LazyWrapper>,
+    element: (
+      <LazyWrapper>
+        <RegisterStep2Page />
+      </LazyWrapper>
+    ),
   },
   {
     path: '/app',
@@ -74,93 +90,179 @@ export const router = createBrowserRouter([
       },
       {
         path: 'chat',
-        element: <LazyWrapper><ChatPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <ChatPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests',
-        element: <LazyWrapper><TestsHubPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <TestsHubPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests/topics',
-        element: <LazyWrapper><TopicsPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <TopicsPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests/theme/:themeSlug',
-        element: <LazyWrapper><TestThemePage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <TestThemePage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests/theme/:themeSlug/:subtopicSlug',
-        element: <LazyWrapper><SubtopicTestPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <SubtopicTestPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests/topic/:slug',
-        element: <LazyWrapper><TestSessionPage mode="topic" /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <TestSessionPage mode="topic" />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests/time-attack',
-        element: <LazyWrapper><TestSessionPage mode="time-attack" /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <TestSessionPage mode="time-attack" />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests/one-mistake',
-        element: <LazyWrapper><TestSessionPage mode="one-mistake" /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <TestSessionPage mode="one-mistake" />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests/ai',
-        element: <LazyWrapper><TestSessionPage mode="ai" /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <TestSessionPage mode="ai" />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests/results/:sessionId',
-        element: <LazyWrapper><TestResultsPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <TestResultsPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'tests/history/:sessionId',
-        element: <LazyWrapper><TestHistoryPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <TestHistoryPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'live-coding',
-        element: <LazyWrapper><LiveCodingPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <LiveCodingPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'live-coding/:slug',
-        element: <LazyWrapper><LiveCodingTaskPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <LiveCodingTaskPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'roadmaps',
-        element: <LazyWrapper><RoadmapsPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <RoadmapsPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'roadmaps/:slug',
-        element: <LazyWrapper><RoadmapDetailPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <RoadmapDetailPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'stats',
-        element: <LazyWrapper><StatsPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <StatsPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'leaderboard',
-        element: <LazyWrapper><LeaderboardPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <LeaderboardPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'profile',
-        element: <LazyWrapper><ProfilePage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <ProfilePage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'profile/edit',
-        element: <LazyWrapper><EditProfilePage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <EditProfilePage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'profile/history',
-        element: <LazyWrapper><ProfileHistoryPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <ProfileHistoryPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'profile/notifications',
-        element: <LazyWrapper><NotificationsPage /></LazyWrapper>,
+        element: (
+          <LazyWrapper>
+            <NotificationsPage />
+          </LazyWrapper>
+        ),
       },
       {
         path: 'admin/materials',
         element: (
           <AdminRoute>
-            <LazyWrapper><AdminMaterialsListPage /></LazyWrapper>
+            <LazyWrapper>
+              <AdminMaterialsListPage />
+            </LazyWrapper>
           </AdminRoute>
         ),
       },
@@ -168,7 +270,9 @@ export const router = createBrowserRouter([
         path: 'admin/materials/new',
         element: (
           <AdminRoute>
-            <LazyWrapper><AdminMaterialFormPage /></LazyWrapper>
+            <LazyWrapper>
+              <AdminMaterialFormPage />
+            </LazyWrapper>
           </AdminRoute>
         ),
       },
@@ -176,7 +280,9 @@ export const router = createBrowserRouter([
         path: 'admin/materials/:id/edit',
         element: (
           <AdminRoute>
-            <LazyWrapper><AdminMaterialFormPage /></LazyWrapper>
+            <LazyWrapper>
+              <AdminMaterialFormPage />
+            </LazyWrapper>
           </AdminRoute>
         ),
       },
@@ -184,7 +290,9 @@ export const router = createBrowserRouter([
         path: 'admin/questions',
         element: (
           <AdminRoute>
-            <LazyWrapper><AdminQuestionsListPage /></LazyWrapper>
+            <LazyWrapper>
+              <AdminQuestionsListPage />
+            </LazyWrapper>
           </AdminRoute>
         ),
       },
@@ -192,7 +300,9 @@ export const router = createBrowserRouter([
         path: 'admin/questions/new',
         element: (
           <AdminRoute>
-            <LazyWrapper><AdminQuestionFormPage /></LazyWrapper>
+            <LazyWrapper>
+              <AdminQuestionFormPage />
+            </LazyWrapper>
           </AdminRoute>
         ),
       },
@@ -200,7 +310,9 @@ export const router = createBrowserRouter([
         path: 'admin/questions/:id/edit',
         element: (
           <AdminRoute>
-            <LazyWrapper><AdminQuestionFormPage /></LazyWrapper>
+            <LazyWrapper>
+              <AdminQuestionFormPage />
+            </LazyWrapper>
           </AdminRoute>
         ),
       },

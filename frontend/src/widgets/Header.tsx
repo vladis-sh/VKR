@@ -6,7 +6,7 @@ import { useAuthStore } from '@/features/auth/useAuthStore'
 import { cn } from '@/shared/lib/cn'
 
 const routeTitles: Record<string, string> = {
-  '/app/roadmaps': 'Роадмапы',
+  '/app/roadmaps': 'Планы подготовки',
   '/app/chat': 'Чат с ИИ',
   '/app/tests': 'Тесты',
   '/app/tests/topics': 'Выберите тему',
@@ -26,9 +26,12 @@ export function Header() {
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
 
-  const title = Object.entries(routeTitles).find(([key]) =>
-    pathname.startsWith(key) && (key === pathname || pathname[key.length] === '/')
-  )?.[1] ?? routeTitles[pathname] ?? ''
+  const title =
+    Object.entries(routeTitles).find(
+      ([key]) => pathname.startsWith(key) && (key === pathname || pathname[key.length] === '/')
+    )?.[1] ??
+    routeTitles[pathname] ??
+    ''
 
   const displayTitle = (() => {
     for (const [key, val] of Object.entries(routeTitles)) {
@@ -54,9 +57,7 @@ export function Header() {
 
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4 md:px-6">
-      <h1 className="min-w-0 truncate text-base font-semibold text-foreground">
-        {displayTitle}
-      </h1>
+      <h1 className="min-w-0 truncate text-base font-semibold text-foreground">{displayTitle}</h1>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <button
