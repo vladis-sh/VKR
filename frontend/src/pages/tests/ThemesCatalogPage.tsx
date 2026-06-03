@@ -1,23 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import {
-  ArrowLeft,
-  BookOpen,
-  Boxes,
-  Braces,
-  ChevronDown,
-  Code,
-  Cpu,
-  Database,
-  GitBranch,
-  Globe2,
-  Library,
-  Network,
-  Server,
-  Sigma,
-  Terminal,
-} from 'lucide-react'
+import { ArrowLeft, ChevronDown, Library } from 'lucide-react'
 import { getThemeQuestionCount, type TestTheme } from '@/entities/testCatalog'
 import {
   groupThemesByCategory,
@@ -25,6 +9,7 @@ import {
 } from '@/entities/testCategories'
 import { useTestCatalogThemes } from '@/features/tests/useTestCatalog'
 import { useTestCatalogProgress } from '@/features/tests/useTestCatalogProgress'
+import { renderThemeIcon } from '@/features/tests/themeIcon'
 import { CircularProgress } from '@/shared/ui/CircularProgress'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Skeleton } from '@/shared/ui/Skeleton'
@@ -32,49 +17,6 @@ import { cn } from '@/shared/lib/cn'
 
 /** How many cards a category shows before "Показать все". */
 const PREVIEW_COUNT = 3
-
-// Curated lucide icons addressable from theme content via payload `icon` (by name).
-const lucideByName: Record<string, React.ReactNode> = {
-  Database: <Database size={22} />,
-  Sigma: <Sigma size={22} />,
-  BookOpen: <BookOpen size={22} />,
-  Network: <Network size={22} />,
-  GitBranch: <GitBranch size={22} />,
-  Braces: <Braces size={22} />,
-  Code: <Code size={22} />,
-  Cpu: <Cpu size={22} />,
-  Server: <Server size={22} />,
-  Globe: <Globe2 size={22} />,
-  Boxes: <Boxes size={22} />,
-  Terminal: <Terminal size={22} />,
-}
-
-// Back-compat: seeded themes that don't carry an `icon` in payload yet.
-const themeIconsBySlug: Record<string, React.ReactNode> = {
-  databases: <Database size={22} />,
-  algorithms: <Sigma size={22} />,
-  javascript: <Braces size={22} />,
-  python: <Terminal size={22} />,
-  networks: <Network size={22} />,
-  git: <GitBranch size={22} />,
-  'frontend-core': <Code size={22} />,
-  'typescript-deep': <Braces size={22} />,
-  'react-next': <Boxes size={22} />,
-  'backend-node': <Server size={22} />,
-  'postgres-production': <Database size={22} />,
-  'advanced-algorithms': <Sigma size={22} />,
-  'system-design': <Globe2 size={22} />,
-}
-
-function renderThemeIcon(theme: TestTheme): React.ReactNode {
-  const icon = theme.icon?.trim()
-  if (icon) {
-    // 1) known lucide icon name, 2) otherwise treat as emoji / short glyph
-    if (lucideByName[icon]) return lucideByName[icon]
-    return <span className="text-xl leading-none">{icon}</span>
-  }
-  return themeIconsBySlug[theme.slug] ?? <BookOpen size={22} />
-}
 
 /** A single test theme rendered as a horizontal card (icon · text · progress). */
 function TestThemeCard({

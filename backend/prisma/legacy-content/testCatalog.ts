@@ -1,4 +1,5 @@
 import { DEMO_TEST_CATALOG_THEMES } from './demoTestCatalog'
+import { EXTRA_QUESTIONS_BY_SUBTOPIC } from './extraQuestions'
 
 export type CatalogDifficulty = 'easy' | 'medium' | 'hard'
 
@@ -1479,7 +1480,10 @@ const ADDITIONAL_QUESTIONS_BY_SUBTOPIC: Record<string, CatalogQuestion[]> = {
 }
 
 function withMinimumQuestions(subtopic: TestSubtopic): TestSubtopic {
-  const additions = ADDITIONAL_QUESTIONS_BY_SUBTOPIC[subtopic.id] ?? []
+  const additions = [
+    ...(ADDITIONAL_QUESTIONS_BY_SUBTOPIC[subtopic.id] ?? []),
+    ...(EXTRA_QUESTIONS_BY_SUBTOPIC[subtopic.id] ?? []),
+  ]
   const questions = [...subtopic.questions, ...additions].slice(0, MAX_QUESTIONS_PER_SUBTOPIC)
 
   return {

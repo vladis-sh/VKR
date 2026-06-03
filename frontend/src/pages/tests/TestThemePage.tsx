@@ -1,307 +1,273 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  Layers3,
-} from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Play, Sparkles } from 'lucide-react'
 import {
   getThemeQuestionCount,
   getThemeSubtopics,
-  type CatalogDifficulty,
-  type TestSection,
   type TestSubtopic,
 } from '@/entities/testCatalog'
+import { resolveCategory } from '@/entities/testCategories'
 import { useTestCatalogTheme } from '@/features/tests/useTestCatalog'
-import { useTestCatalogProgress } from '@/features/tests/useTestCatalogProgress'
+import {
+  useTestCatalogProgress,
+  type TestProgressStatus,
+} from '@/features/tests/useTestCatalogProgress'
+import { renderThemeIcon } from '@/features/tests/themeIcon'
+import { difficultyLabel, difficultyTone } from '@/features/tests/difficulty'
 import { Button } from '@/shared/ui/Button'
+import { CircularProgress } from '@/shared/ui/CircularProgress'
 import { EmptyState } from '@/shared/ui/EmptyState'
-import { FullPageSpinner } from '@/shared/ui/Spinner'
+import { Skeleton } from '@/shared/ui/Skeleton'
 import { cn } from '@/shared/lib/cn'
 
-const difficultyLabel: Record<CatalogDifficulty, string> = {
-  easy: '˸гкий',
-  medium: 'Средний',
-  hard: 'Сложный',
+interface SubtopicStats {
+  total: number
+  checked: number
+  status: TestProgressStatus
+  progressPercent: number
 }
 
-function statusLabel(status: string) {
-  if (status === 'completed') return 'Пройдено'
-  if (status === 'in-progress') return 'В процессе'
-  return 'Не начато'
-}
-
-function difficultyTone(difficulty: CatalogDifficulty) {
-  if (difficulty === 'easy') return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-  if (difficulty === 'medium') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-  return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-}
-
-function SubtopicRow({
-  themeSlug,
-  subtopic,
-}: {
-  themeSlug: string
-  subtopic: TestSubtopic
-}) {
-  const { getSubtopicStats } = useTestCatalogProgress()
-  const stats = getSubtopicStats(subtopic)
-
+function MetaChip({ children }: { children: React.ReactNode }) {
   return (
-    <Link
-      to={`/app/tests/theme/${themeSlug}/${subtopic.slug}`}
-      className="group flex flex-col gap-3 rounded-lg border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-sm sm:flex-row sm:items-center"
-    >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-primary">
-        <BookOpen size={18} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-sm font-semibold text-foreground group-hover:text-primary">
-            {subtopic.title}
-          </h3>
-          <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-semibold', difficultyTone(subtopic.difficulty))}>
-            {difficultyLabel[subtopic.difficulty]}
-          </span>
-        </div>
-        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          {subtopic.description}
-        </p>
-      </div>
-      <div className="flex items-center gap-3 sm:w-40">
-        <div className="flex-1">
-          <div className="mb-1 flex justify-between text-[10px] text-muted-foreground">
-            <span>{statusLabel(stats.status)}</span>
-            <span>{stats.progressPercent}%</span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
-            <div className="h-full rounded-full bg-primary" style={{ width: `${stats.progressPercent}%` }} />
-          </div>
-        </div>
-        <ArrowRight size={15} className="text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
-      </div>
-    </Link>
+    <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+      {children}
+    </span>
   )
 }
 
-function SectionBlock({
-  section,
-  themeSlug,
-  expanded,
-  onToggle,
+/** Presentational subtopic card — receives stats as props (no per-card hooks). */
+function SubtopicCard({
+  to,
+  subtopic,
+  stats,
+  index,
 }: {
-  section: TestSection
-  themeSlug: string
-  expanded: boolean
-  onToggle: () => void
+  to: string
+  subtopic: TestSubtopic
+  stats: SubtopicStats
+  index: number
 }) {
-  return (
-    <section className="rounded-lg border border-border bg-card shadow-sm">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-start justify-between gap-3 p-4 text-left"
-      >
-        <div>
-          <h2 className="text-base font-semibold text-foreground">{section.title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
-        </div>
-        <div className="mt-1 text-muted-foreground">
-          {expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-        </div>
-      </button>
+  const isCompleted = stats.status === 'completed'
 
-      {expanded && (
-        <div className="space-y-2 border-t border-border p-3">
-          {section.subtopics.map((subtopic) => (
-            <SubtopicRow key={subtopic.id} themeSlug={themeSlug} subtopic={subtopic} />
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index, 8) * 0.03 }}
+    >
+      <Link
+        to={to}
+        className="group flex h-full flex-col gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <span
+            className={cn(
+              'rounded-full px-2.5 py-1 text-[11px] font-semibold',
+              difficultyTone[subtopic.difficulty]
+            )}
+          >
+            {difficultyLabel[subtopic.difficulty]}
+          </span>
+          {isCompleted ? (
+            <span className="flex items-center gap-1 text-xs font-medium text-success">
+              <CheckCircle2 size={14} />
+              Пройдено
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              {subtopic.questions.length} вопр.
+            </span>
+          )}
+        </div>
+
+        <div className="flex-1">
+          <h3 className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">
+            {subtopic.title}
+          </h3>
+          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+            {subtopic.description}
+          </p>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>
+              {stats.checked} / {stats.total}
+            </span>
+            <span className="font-semibold text-foreground">{stats.progressPercent}%</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+            <div
+              className={cn(
+                'h-full rounded-full transition-all duration-500',
+                isCompleted ? 'bg-success' : 'bg-primary'
+              )}
+              style={{ width: `${stats.progressPercent}%` }}
+            />
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  )
+}
+
+function ThemePageSkeleton() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-5 w-40" />
+      <Skeleton className="h-44 rounded-3xl" />
+      <div className="space-y-3">
+        <Skeleton className="h-5 w-52" />
+        <div className="grid gap-3 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-40 rounded-2xl" />
           ))}
         </div>
-      )}
-    </section>
+      </div>
+    </div>
   )
 }
 
 export default function TestThemePage() {
   const { themeSlug } = useParams<{ themeSlug: string }>()
-  const navigate = useNavigate()
   const { data: theme, isLoading } = useTestCatalogTheme(themeSlug)
   const { getThemeStats, getSubtopicStats } = useTestCatalogProgress()
 
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    () => new Set()
-  )
+  if (isLoading) return <ThemePageSkeleton />
 
-  useEffect(() => {
-    if (theme) {
-      setExpandedSections(new Set(theme.sections.map((section) => section.id)))
-    }
-  }, [theme])
-
-  const allExpanded = theme ? expandedSections.size === theme.sections.length : false
-  const firstAvailableSubtopic = theme ? getThemeSubtopics(theme)[0] : undefined
-  const stats = theme ? getThemeStats(theme) : undefined
-  const questionsCount = theme ? getThemeQuestionCount(theme) : 0
-
-  const navItems = useMemo(() => {
-    if (!theme) return []
-
-    return theme.sections.map((section) => ({
-      ...section,
-      subtopics: section.subtopics.map((subtopic) => ({
-        ...subtopic,
-        stats: getSubtopicStats(subtopic),
-      })),
-    }))
-  }, [getSubtopicStats, theme])
-
-  if (isLoading) return <FullPageSpinner />
-
-  if (!theme || !stats) {
+  if (!theme) {
     return (
       <EmptyState
         title="Тема не найдена"
         description="Проверьте ссылку или вернитесь к списку тем."
         action={
           <Button asChild>
-            <Link to="/app/tests">К списку тем</Link>
+            <Link to="/app/tests/themes">К списку тем</Link>
           </Button>
         }
       />
     )
   }
 
-  const toggleAll = () => {
-    setExpandedSections((current) => {
-      if (current.size === theme.sections.length) return new Set()
-      return new Set(theme.sections.map((section) => section.id))
-    })
-  }
+  const category = resolveCategory(theme)
+  const stats = getThemeStats(theme)
+  const questionsCount = getThemeQuestionCount(theme)
+  const subtopics = getThemeSubtopics(theme)
 
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections((current) => {
-      const next = new Set(current)
-      if (next.has(sectionId)) {
-        next.delete(sectionId)
-      } else {
-        next.add(sectionId)
-      }
-      return next
-    })
-  }
+  // CTA jumps to the first unfinished subtopic, or the first one for a re-run.
+  const resumeSubtopic =
+    subtopics.find((subtopic) => getSubtopicStats(subtopic).status !== 'completed') ??
+    subtopics[0]
+  const isStarted = stats.checked > 0
+  const isCompleted = stats.status === 'completed'
+  const ctaLabel = isCompleted ? 'Пройти заново' : isStarted ? 'Продолжить' : 'Начать тест'
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => navigate('/app/tests')}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          aria-label="Назад"
-        >
-          <ArrowLeft size={16} />
-        </button>
-        <div>
-          <p className="text-xs text-muted-foreground">Раздел тестов</p>
-          <h1 className="text-xl font-bold text-foreground">{theme.title}</h1>
-        </div>
-      </div>
+    <div className="space-y-6">
+      <Link
+        to="/app/tests/themes"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft size={16} />
+        Тесты по темам
+      </Link>
 
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
-              <Layers3 size={14} />
-              {theme.sections.length} раздела, {stats.subtopicsTotal} подтем
-            </div>
-            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-              {theme.description}
-            </p>
-          </div>
-          <div className="rounded-lg bg-secondary p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-semibold text-foreground">Общий прогресс</span>
-              <span className="text-sm font-semibold text-primary">{stats.progressPercent}%</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-background">
-              <div className="h-full rounded-full bg-primary" style={{ width: `${stats.progressPercent}%` }} />
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {stats.completedSubtopics} из {stats.subtopicsTotal} подтем пройдено, {questionsCount} вопросов
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <div className="grid gap-5 lg:grid-cols-[260px_1fr]">
-        <aside className="space-y-3 lg:sticky lg:top-4 lg:self-start">
-          <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-foreground">Навигация</h2>
-              <button
-                type="button"
-                onClick={toggleAll}
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                {allExpanded ? 'Свернуть всё' : 'Развернуть всё'}
-              </button>
-            </div>
-            <div className="space-y-3">
-              {navItems.map((section) => (
-                <div key={section.id}>
-                  <p className="mb-1 text-xs font-semibold text-muted-foreground">
-                    {section.title}
-                  </p>
-                  <div className="space-y-1">
-                    {section.subtopics.map((subtopic) => (
-                      <Link
-                        key={subtopic.id}
-                        to={`/app/tests/theme/${theme.slug}/${subtopic.slug}`}
-                        className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-xs text-foreground transition-colors hover:bg-accent"
-                      >
-                        <span className="line-clamp-1">{subtopic.title}</span>
-                        {subtopic.stats.status === 'completed' && (
-                          <CheckCircle2 size={13} className="shrink-0 text-green-500" />
-                        )}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {firstAvailableSubtopic && (
-            <Button className="w-full" asChild>
-              <Link to={`/app/tests/theme/${theme.slug}/${firstAvailableSubtopic.slug}`}>
-                Начать первый тест
-              </Link>
-            </Button>
-          )}
-        </aside>
-
-        <div className="space-y-3">
-          {theme.sections.map((section, index) => (
-            <motion.div
-              key={section.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.04 }}
+      {/* Hero */}
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-sm md:p-8"
+      >
+        <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-4">
+            <div
+              className={cn(
+                'flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl',
+                category.accentClass
+              )}
             >
-              <SectionBlock
-                section={section}
-                themeSlug={theme.slug}
-                expanded={expandedSections.has(section.id)}
-                onToggle={() => toggleSection(section.id)}
-              />
-            </motion.div>
-          ))}
+              {renderThemeIcon(theme, 30)}
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {category.title}
+              </p>
+              <h1 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">
+                {theme.title}
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                {theme.description}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <MetaChip>Разделов: {theme.sections.length}</MetaChip>
+                <MetaChip>Подтем: {stats.subtopicsTotal}</MetaChip>
+                <MetaChip>Вопросов: {questionsCount}</MetaChip>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-6 md:flex-col md:items-stretch md:gap-4">
+            <CircularProgress
+              value={stats.progressPercent}
+              size={108}
+              strokeWidth={9}
+              className="mx-auto"
+              indicatorClassName={isCompleted ? 'text-success' : 'text-primary'}
+            >
+              <div className="text-center">
+                <p className="text-2xl font-bold text-foreground">{stats.progressPercent}%</p>
+                <p className="text-[10px] text-muted-foreground">
+                  {stats.completedSubtopics}/{stats.subtopicsTotal} подтем
+                </p>
+              </div>
+            </CircularProgress>
+
+            {resumeSubtopic && (
+              <Button asChild size="lg" className="md:w-48">
+                <Link to={`/app/tests/theme/${theme.slug}/${resumeSubtopic.slug}`}>
+                  {isCompleted ? <Sparkles size={16} /> : <Play size={16} />}
+                  {ctaLabel}
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      </motion.section>
+
+      {/* Sections */}
+      {theme.sections.map((section, sectionIndex) => (
+        <motion.section
+          key={section.id}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.05 + sectionIndex * 0.04 }}
+          className="space-y-4"
+        >
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-foreground">{section.title}</h2>
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
+                {section.subtopics.length}
+              </span>
+            </div>
+            {section.description && (
+              <p className="mt-1 text-sm text-muted-foreground">{section.description}</p>
+            )}
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {section.subtopics.map((subtopic, index) => (
+              <SubtopicCard
+                key={subtopic.id}
+                to={`/app/tests/theme/${theme.slug}/${subtopic.slug}`}
+                subtopic={subtopic}
+                stats={getSubtopicStats(subtopic)}
+                index={index}
+              />
+            ))}
+          </div>
+        </motion.section>
+      ))}
     </div>
   )
 }

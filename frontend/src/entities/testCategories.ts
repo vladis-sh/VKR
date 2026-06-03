@@ -107,7 +107,7 @@ export const TEST_CATEGORIES: TestCategory[] = [
 /** Catch-all category used when a theme matches nothing else. */
 export const FALLBACK_CATEGORY_ID = 'tools'
 
-const CATEGORY_IDS = new Set(TEST_CATEGORIES.map((category) => category.id))
+const CATEGORY_BY_ID = new Map(TEST_CATEGORIES.map((category) => [category.id, category]))
 
 /**
  * Maps seeded theme slugs to a category. New themes can be tagged here or, long
@@ -137,9 +137,14 @@ const CATEGORY_BY_THEME_SLUG: Record<string, string> = {
 /** Resolves a theme to a category id: explicit payload field → slug map → fallback. */
 export function resolveCategoryId(theme: TestTheme): string {
   const explicit = theme.category?.trim()
-  if (explicit && CATEGORY_IDS.has(explicit)) return explicit
+  if (explicit && CATEGORY_BY_ID.has(explicit)) return explicit
 
   return CATEGORY_BY_THEME_SLUG[theme.slug] ?? FALLBACK_CATEGORY_ID
+}
+
+/** Resolves a theme to its full category object (always defined). */
+export function resolveCategory(theme: TestTheme): TestCategory {
+  return CATEGORY_BY_ID.get(resolveCategoryId(theme)) ?? CATEGORY_BY_ID.get(FALLBACK_CATEGORY_ID)!
 }
 
 export interface CategoryGroup {
