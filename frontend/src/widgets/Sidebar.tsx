@@ -1,5 +1,13 @@
 import { NavLink } from 'react-router-dom'
-import { MessageSquare, ClipboardList, BarChart2, Map, Shield, Database } from 'lucide-react'
+import {
+  BarChart2,
+  ClipboardList,
+  Database,
+  FileCheck2,
+  Map,
+  MessageSquare,
+  Shield,
+} from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { useAuthStore } from '@/features/auth/useAuthStore'
 
@@ -13,6 +21,8 @@ const navItems = [
 
 const adminNavItems = [
   { to: '/app/admin/content', label: 'Content DB (admin)', icon: Database },
+  { to: '/app/admin/content/sources', label: 'Источники (admin)', icon: Database },
+  { to: '/app/admin/content/candidates', label: 'Модерация (admin)', icon: FileCheck2 },
   { to: '/app/admin/materials', label: 'Материалы (admin)', icon: Shield },
   { to: '/app/admin/questions', label: 'Вопросы (admin)', icon: Shield },
 ]

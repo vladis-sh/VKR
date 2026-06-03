@@ -1,16 +1,45 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ContentEntryType, ContentImportStatus, ContentOrigin, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateContentCandidateDto, CreateContentEntryDto } from './dto/create-content-entry.dto';
+import {
+  CreateContentCandidateDto,
+  CreateContentEntryDto,
+  CreateContentSourceDto,
+} from './dto/create-content-entry.dto';
 import {
   QueryContentCandidatesDto,
   QueryContentEntriesDto,
+  QueryContentSourcesDto,
 } from './dto/query-content-entries.dto';
-import { UpdateContentEntryDto } from './dto/update-content-entry.dto';
+import {
+  UpdateContentEntryDto,
+  UpdateContentSourceDto,
+} from './dto/update-content-entry.dto';
 
 @Injectable()
 export class ContentService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private toRecord(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return null;
+    }
+
+    return value as Record<string, unknown>;
+  }
+
+  private parseConfiguredCandidates(config: Prisma.JsonValue | null) {
+    const configRecord = this.toRecord(config);
+    const candidates = configRecord?.candidates;
+
+    if (!Array.isArray(candidates)) {
+      return [];
+    }
+
+    return candidates
+      .map((candidate) => this.toRecord(candidate))
+      .filter((candidate): candidate is Record<string, unknown> => candidate !== null);
+  }
 
   async findPublishedPayloads(type: ContentEntryType) {
     const entries = await this.prisma.contentEntry.findMany({
@@ -137,6 +166,170 @@ export class ContentService {
     });
 
     return { message: 'Content entry deleted' };
+  }
+
+  async adminFindSources(query: QueryContentSourcesDto) {
+    const { type, adapter, search, page = 1, limit = 20 } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ContentImportSourceWhereInput = {};
+    if (type) where.type = type;
+    if (adapter) where.adapter = adapter;
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { url: { contains: search, mode: 'insensitive' } },
+        { adapter: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.prisma.contentImportSource.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: [{ enabled: 'desc' }, { createdAt: 'desc' }],
+        include: {
+          _count: {
+            select: { candidates: true },
+          },
+        },
+      }),
+      this.prisma.contentImportSource.count({ where }),
+    ]);
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async adminFindSource(id: string) {
+    const source = await this.prisma.contentImportSource.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { candidates: true },
+        },
+      },
+    });
+
+    if (!source) {
+      throw new NotFoundException('Content source not found');
+    }
+
+    return source;
+  }
+
+  async createSource(dto: CreateContentSourceDto) {
+    return this.prisma.contentImportSource.create({
+      data: {
+        name: dto.name.trim(),
+        url: dto.url.trim(),
+        type: dto.type,
+        adapter: dto.adapter.trim(),
+        enabled: dto.enabled ?? true,
+        config: dto.config ? (dto.config as Prisma.InputJsonValue) : undefined,
+      },
+    });
+  }
+
+  async updateSource(id: string, dto: UpdateContentSourceDto) {
+    await this.adminFindSource(id);
+
+    const data: Prisma.ContentImportSourceUpdateInput = {};
+    if (dto.name !== undefined) data.name = dto.name.trim();
+    if (dto.url !== undefined) data.url = dto.url.trim();
+    if (dto.type !== undefined) data.type = dto.type;
+    if (dto.adapter !== undefined) data.adapter = dto.adapter.trim();
+    if (dto.enabled !== undefined) data.enabled = dto.enabled;
+    if (dto.config !== undefined) data.config = dto.config as Prisma.InputJsonValue;
+
+    return this.prisma.contentImportSource.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async deleteSource(id: string) {
+    await this.adminFindSource(id);
+
+    await this.prisma.contentImportSource.delete({
+      where: { id },
+    });
+
+    return { message: 'Content source deleted' };
+  }
+
+  async runSource(id: string) {
+    const source = await this.adminFindSource(id);
+
+    if (!source.enabled) {
+      throw new BadRequestException('Disabled source cannot be collected');
+    }
+
+    const configuredCandidates = this.parseConfiguredCandidates(source.config);
+    const created = [];
+    let skipped = 0;
+
+    for (const candidate of configuredCandidates) {
+      const payload = this.toRecord(candidate.payload);
+      const title = typeof candidate.title === 'string' ? candidate.title.trim() : '';
+
+      if (!title || !payload) {
+        skipped += 1;
+        continue;
+      }
+
+      const candidateType =
+        typeof candidate.type === 'string' &&
+        Object.values(ContentEntryType).includes(candidate.type as ContentEntryType)
+          ? (candidate.type as ContentEntryType)
+          : source.type;
+
+      created.push(
+        await this.prisma.contentImportCandidate.create({
+          data: {
+            sourceId: source.id,
+            type: candidateType,
+            slug: typeof candidate.slug === 'string' ? candidate.slug.trim() : null,
+            title,
+            payload: payload as Prisma.InputJsonValue,
+            sourceUrl:
+              typeof candidate.sourceUrl === 'string'
+                ? candidate.sourceUrl.trim()
+                : source.url,
+            raw: this.toRecord(candidate.raw)
+              ? (candidate.raw as Prisma.InputJsonValue)
+              : ({
+                  adapter: source.adapter,
+                  sourceName: source.name,
+                  sourceUrl: source.url,
+                } as Prisma.InputJsonValue),
+          },
+        }),
+      );
+    }
+
+    await this.prisma.contentImportSource.update({
+      where: { id: source.id },
+      data: { lastRunAt: new Date() },
+    });
+
+    return {
+      created: created.length,
+      skipped,
+      candidates: created,
+      message:
+        created.length > 0
+          ? 'Source collection finished'
+          : 'Source has no config.candidates items to import yet',
+    };
   }
 
   async adminFindCandidates(query: QueryContentCandidatesDto) {

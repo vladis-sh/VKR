@@ -17,12 +17,20 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { ContentService } from './content.service';
-import { CreateContentCandidateDto, CreateContentEntryDto } from './dto/create-content-entry.dto';
+import {
+  CreateContentCandidateDto,
+  CreateContentEntryDto,
+  CreateContentSourceDto,
+} from './dto/create-content-entry.dto';
 import {
   QueryContentCandidatesDto,
   QueryContentEntriesDto,
+  QueryContentSourcesDto,
 } from './dto/query-content-entries.dto';
-import { UpdateContentEntryDto } from './dto/update-content-entry.dto';
+import {
+  UpdateContentEntryDto,
+  UpdateContentSourceDto,
+} from './dto/update-content-entry.dto';
 
 @ApiTags('Roadmaps')
 @UseGuards(JwtAuthGuard)
@@ -127,6 +135,44 @@ export class ContentAdminController {
   @ApiOperation({ summary: 'Admin: soft delete content entry' })
   async deleteEntry(@Param('id') id: string) {
     return this.contentService.softDeleteEntry(id);
+  }
+
+  @Get('sources')
+  @ApiOperation({ summary: 'Admin: list import sources' })
+  async listSources(@Query() query: QueryContentSourcesDto) {
+    return this.contentService.adminFindSources(query);
+  }
+
+  @Get('sources/:id')
+  @ApiOperation({ summary: 'Admin: get import source' })
+  async getSource(@Param('id') id: string) {
+    return this.contentService.adminFindSource(id);
+  }
+
+  @Post('sources')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Admin: create import source' })
+  async createSource(@Body() dto: CreateContentSourceDto) {
+    return this.contentService.createSource(dto);
+  }
+
+  @Patch('sources/:id')
+  @ApiOperation({ summary: 'Admin: update import source' })
+  async updateSource(@Param('id') id: string, @Body() dto: UpdateContentSourceDto) {
+    return this.contentService.updateSource(id, dto);
+  }
+
+  @Delete('sources/:id')
+  @ApiOperation({ summary: 'Admin: delete import source' })
+  async deleteSource(@Param('id') id: string) {
+    return this.contentService.deleteSource(id);
+  }
+
+  @Post('sources/:id/run')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Admin: collect configured source candidates' })
+  async runSource(@Param('id') id: string) {
+    return this.contentService.runSource(id);
   }
 
   @Get('candidates')

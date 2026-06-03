@@ -1,3 +1,5 @@
+import { DEMO_TEST_CATALOG_THEMES } from './demoTestCatalog'
+
 export type CatalogDifficulty = 'easy' | 'medium' | 'hard'
 
 export interface CatalogQuestion {
@@ -1489,7 +1491,10 @@ function withMinimumQuestions(subtopic: TestSubtopic): TestSubtopic {
   }
 }
 
-export const TEST_CATALOG_THEMES: TestTheme[] = BASE_TEST_CATALOG_THEMES.map((theme) => ({
+export const TEST_CATALOG_THEMES: TestTheme[] = [
+  ...BASE_TEST_CATALOG_THEMES,
+  ...DEMO_TEST_CATALOG_THEMES,
+].map((theme) => ({
   ...theme,
   sections: theme.sections.map((section) => ({
     ...section,
