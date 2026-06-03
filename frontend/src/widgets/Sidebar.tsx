@@ -3,7 +3,6 @@ import {
   BarChart2,
   ClipboardList,
   Database,
-  FileCheck2,
   Map,
   MessageSquare,
   Shield,
@@ -21,8 +20,6 @@ const navItems = [
 
 const adminNavItems = [
   { to: '/app/admin/content', label: 'Content DB (admin)', icon: Database },
-  { to: '/app/admin/content/sources', label: 'Источники (admin)', icon: Database },
-  { to: '/app/admin/content/candidates', label: 'Модерация (admin)', icon: FileCheck2 },
   { to: '/app/admin/materials', label: 'Материалы (admin)', icon: Shield },
   { to: '/app/admin/questions', label: 'Вопросы (admin)', icon: Shield },
 ]

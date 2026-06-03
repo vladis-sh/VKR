@@ -27,9 +27,6 @@ export const QUERY_KEYS = {
   TEST_CATALOG_THEME: (slug: string) => ['test-catalog', 'themes', slug],
   ADMIN_CONTENT_ENTRIES: ['admin', 'content', 'entries'],
   ADMIN_CONTENT_ENTRY: (id: string) => ['admin', 'content', 'entries', id],
-  ADMIN_CONTENT_SOURCES: ['admin', 'content', 'sources'],
-  ADMIN_CONTENT_SOURCE: (id: string) => ['admin', 'content', 'sources', id],
-  ADMIN_CONTENT_CANDIDATES: ['admin', 'content', 'candidates'],
 } as const
 
 export const KNOWLEDGE_LEVELS = [

@@ -6,14 +6,17 @@ import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { Skeleton } from '@/shared/ui/Skeleton'
 import { EmptyState } from '@/shared/ui/EmptyState'
+import { useDebouncedValue } from '@/shared/lib/useDebouncedValue'
 
 export default function AdminQuestionsListPage() {
   const [search, setSearch] = useState('')
   const [topic, setTopic] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 300)
+  const debouncedTopic = useDebouncedValue(topic, 300)
   const { data, isLoading } = useAdminQuestions({
     limit: 50,
-    search: search || undefined,
-    topic: topic || undefined,
+    search: debouncedSearch || undefined,
+    topic: debouncedTopic || undefined,
   })
   const deleteQuestion = useDeleteQuestion()
 
@@ -117,8 +120,9 @@ export default function AdminQuestionsListPage() {
                       <Button
                         variant="destructive"
                         size="sm"
+                        aria-label="Удалить вопрос"
                         onClick={() => handleDelete(q.id, q.text)}
-                        loading={deleteQuestion.isPending}
+                        loading={deleteQuestion.isPending && deleteQuestion.variables === q.id}
                       >
                         <Trash2 size={14} />
                       </Button>

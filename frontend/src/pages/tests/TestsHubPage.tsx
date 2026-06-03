@@ -1,211 +1,115 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  AlertCircle,
-  ArrowRight,
-  Bot,
-  BookOpen,
-  CheckCircle2,
-  Database,
-  GitBranch,
-  Globe2,
-  Network,
-  Sigma,
-  Zap,
+  AlertTriangle,
+  Brain,
+  ClipboardList,
+  Library,
+  Timer,
+  type LucideIcon,
 } from 'lucide-react'
-import {
-  getThemeQuestionCount,
-  getThemeSubtopics,
-  type TestTheme,
-} from '@/entities/testCatalog'
-import { useTestCatalogThemes } from '@/features/tests/useTestCatalog'
-import { useTestCatalogProgress } from '@/features/tests/useTestCatalogProgress'
-import { EmptyState } from '@/shared/ui/EmptyState'
-import { Skeleton } from '@/shared/ui/Skeleton'
-import { cn } from '@/shared/lib/cn'
 
-const themeIcons: Record<string, React.ReactNode> = {
-  databases: <Database size={22} />,
-  algorithms: <Sigma size={22} />,
-  javascript: <BookOpen size={22} />,
-  python: <BookOpen size={22} />,
-  networks: <Network size={22} />,
-  git: <GitBranch size={22} />,
+interface TestCard {
+  to: string
+  title: string
+  subtitle: string
+  icon: LucideIcon
+  /** Tailwind gradient classes applied to the card background. */
+  gradient: string
 }
 
-const quickModes = [
+const testCards: TestCard[] = [
+  {
+    to: '/app/tests/themes',
+    title: 'Тесты по темам',
+    subtitle: 'Проверьте ваши знания',
+    icon: Library,
+    gradient: 'from-blue-500 via-indigo-500 to-indigo-600',
+  },
   {
     to: '/app/tests/time-attack',
-    icon: <Zap size={20} className="text-amber-500" />,
     title: 'Борьба со временем',
-    desc: '5 минут на максимум вопросов',
+    subtitle: 'Ответьте как можно больше',
+    icon: Timer,
+    gradient: 'from-amber-400 via-orange-500 to-orange-600',
   },
   {
     to: '/app/tests/one-mistake',
-    icon: <AlertCircle size={20} className="text-red-500" />,
     title: 'Одна ошибка',
-    desc: 'Тест завершается после первого промаха',
+    subtitle: 'И ты ошибся',
+    icon: AlertTriangle,
+    gradient: 'from-rose-500 via-red-500 to-red-600',
   },
   {
     to: '/app/tests/ai',
-    icon: <Bot size={20} className="text-violet-500" />,
     title: 'Тест от ИИ',
-    desc: 'Сгенерировать новый набор вопросов',
+    subtitle: 'Новый опыт с GPT',
+    icon: Brain,
+    gradient: 'from-violet-500 via-purple-500 to-fuchsia-600',
   },
 ]
 
-function statusLabel(status: string) {
-  if (status === 'completed') return 'Пройдено'
-  if (status === 'in-progress') return 'В процессе'
-  return 'Не начато'
-}
-
-function ThemeCard({ theme, index }: { theme: TestTheme; index: number }) {
-  const { getThemeStats } = useTestCatalogProgress()
-  const stats = getThemeStats(theme)
-  const subtopicsCount = getThemeSubtopics(theme).length
-  const questionsCount = getThemeQuestionCount(theme)
+function TestModeCard({ card, index }: { card: TestCard; index: number }) {
+  const Icon = card.icon
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 12 }}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
+      transition={{ delay: index * 0.06, duration: 0.3 }}
     >
       <Link
-        to={`/app/tests/theme/${theme.slug}`}
-        className="group flex h-full flex-col gap-4 rounded-lg border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+        to={card.to}
+        className={`group relative flex min-h-[160px] cursor-pointer items-center overflow-hidden rounded-3xl bg-gradient-to-br ${card.gradient} p-7 shadow-lg shadow-black/5 ring-1 ring-white/10 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl`}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            {themeIcons[theme.slug] ?? <BookOpen size={22} />}
-          </div>
-          <span
-            className={cn(
-              'rounded-md px-2 py-1 text-[10px] font-semibold',
-              stats.status === 'completed'
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
-                : stats.status === 'in-progress'
-                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'
-                  : 'bg-secondary text-secondary-foreground'
-            )}
-          >
-            {statusLabel(stats.status)}
-          </span>
-        </div>
+        {/* Decorative oversized icon bleeding off the right edge */}
+        <Icon
+          aria-hidden
+          strokeWidth={1.25}
+          className="pointer-events-none absolute -bottom-6 -right-5 h-44 w-44 text-white/10 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3"
+        />
+        {/* Soft glow accent */}
+        <div className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full bg-white/15 blur-2xl" />
 
-        <div>
-          <h2 className="text-base font-bold text-foreground transition-colors group-hover:text-primary">
-            {theme.shortTitle}
-          </h2>
-          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted-foreground">
-            {theme.description}
-          </p>
-        </div>
-
-        <div className="mt-auto space-y-3">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="rounded-md bg-secondary px-3 py-2">
-              <p className="text-muted-foreground">Подтемы</p>
-              <p className="font-semibold text-foreground">{subtopicsCount}</p>
-            </div>
-            <div className="rounded-md bg-secondary px-3 py-2">
-              <p className="text-muted-foreground">Вопросы</p>
-              <p className="font-semibold text-foreground">{questionsCount}</p>
-            </div>
+        <div className="relative z-10 flex w-full items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-2xl font-bold leading-tight text-white">{card.title}</h2>
+            <p className="mt-1.5 text-sm font-medium text-white/80">{card.subtitle}</p>
           </div>
 
-          <div>
-            <div className="mb-1 flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Прогресс</span>
-              <span className="font-semibold text-foreground">{stats.progressPercent}%</span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-secondary">
-              <div
-                className="h-full rounded-full bg-primary"
-                style={{ width: `${stats.progressPercent}%` }}
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between text-sm font-medium text-primary">
-            Открыть тему
-            <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" />
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-inset ring-white/25 backdrop-blur-sm transition-transform duration-300 group-hover:scale-110">
+            <Icon size={30} className="text-white" />
           </div>
         </div>
       </Link>
-    </motion.article>
+    </motion.div>
   )
 }
 
 export default function TestsHubPage() {
-  const { data: themes = [], isLoading } = useTestCatalogThemes()
-
   return (
-    <div className="space-y-6">
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-              Тема, раздел, подтема, тест
-            </p>
-            <h1 className="mt-1 text-2xl font-bold text-foreground">Тесты</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Выберите направление подготовки, откройте подтему и отмечайте, что уже знаете,
-              что стоит повторить и что пока даётся сложно.
-            </p>
-          </div>
-          <div className="rounded-lg bg-secondary px-4 py-3">
-            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-              <CheckCircle2 size={16} className="text-primary" />
-              Прогресс сохраняется
-            </div>
-            <p className="mt-1 text-xs text-muted-foreground">Локально в браузере</p>
-          </div>
+    <div className="space-y-7">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="flex items-center gap-3"
+      >
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <ClipboardList size={22} />
         </div>
-      </section>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl">Тесты</h1>
+          <p className="text-sm text-muted-foreground">
+            Выберите режим и проверьте свои знания
+          </p>
+        </div>
+      </motion.div>
 
-      {isLoading ? (
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <Skeleton key={index} className="h-72 rounded-lg" />
-          ))}
-        </section>
-      ) : themes.length === 0 ? (
-        <EmptyState
-          title="Каталог тестов пока недоступен"
-          description="Мы не нашли опубликованные темы. Попробуйте обновить страницу чуть позже."
-        />
-      ) : (
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {themes.map((theme, index) => (
-            <ThemeCard key={theme.id} theme={theme} index={index} />
-          ))}
-        </section>
-      )}
-
-      <section className="space-y-3">
-        <div className="flex items-center gap-2">
-          <Globe2 size={16} className="text-primary" />
-          <h2 className="text-sm font-semibold text-foreground">Быстрые режимы</h2>
-        </div>
-        <div className="grid gap-3 md:grid-cols-3">
-          {quickModes.map((mode) => (
-            <Link
-              key={mode.to}
-              to={mode.to}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 shadow-sm transition-colors hover:border-primary/40"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary">
-                {mode.icon}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">{mode.title}</p>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">{mode.desc}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+      <section className="grid gap-5 sm:grid-cols-2">
+        {testCards.map((card, index) => (
+          <TestModeCard key={card.to} card={card} index={index} />
+        ))}
       </section>
     </div>
   )

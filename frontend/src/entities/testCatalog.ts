@@ -31,6 +31,10 @@ export interface TestTheme {
   title: string
   shortTitle: string
   description: string
+  /** Lucide icon name (e.g. "Database") or an emoji. Falls back to slug map / default. */
+  icon?: string
+  /** Optional category id (see entities/testCategories). Falls back to slug map / "tools". */
+  category?: string
   sections: TestSection[]
 }
 

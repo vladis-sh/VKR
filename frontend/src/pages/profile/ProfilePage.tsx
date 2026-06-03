@@ -20,7 +20,7 @@ import { cn } from '@/shared/lib/cn'
 
 const themes: { value: Theme; label: string; icon: React.ReactNode }[] = [
   { value: 'light', label: 'Светлая', icon: <Sun size={15} /> },
-  { value: 'dark', label: 'Ҹмная', icon: <Moon size={15} /> },
+  { value: 'dark', label: 'Тёмная', icon: <Moon size={15} /> },
   { value: 'system', label: 'Системная', icon: <Monitor size={15} /> },
 ]
 

@@ -6,6 +6,7 @@ import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Skeleton } from '@/shared/ui/Skeleton'
+import { useDebouncedValue } from '@/shared/lib/useDebouncedValue'
 import type { ContentEntryType } from '@/entities/types'
 
 const contentTypeLabels: Record<ContentEntryType, string> = {
@@ -16,10 +17,11 @@ const contentTypeLabels: Record<ContentEntryType, string> = {
 
 export default function AdminContentListPage() {
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebouncedValue(search, 300)
   const [type, setType] = useState<ContentEntryType | 'all'>('all')
   const { data, isLoading } = useAdminContentEntries({
     limit: 50,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     type: type === 'all' ? undefined : type,
   })
   const deleteContent = useDeleteContentEntry()
@@ -46,12 +48,6 @@ export default function AdminContentListPage() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline">
-              <Link to="/app/admin/content/sources">Источники</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/app/admin/content/candidates">Кандидаты</Link>
-            </Button>
             <Button asChild>
               <Link to="/app/admin/content/new">
                 <Plus size={16} />
@@ -141,7 +137,8 @@ export default function AdminContentListPage() {
                       <Button
                         variant="destructive"
                         size="sm"
-                        loading={deleteContent.isPending}
+                        aria-label={`Удалить «${entry.title}»`}
+                        loading={deleteContent.isPending && deleteContent.variables === entry.id}
                         onClick={() => handleDelete(entry.id, entry.title)}
                       >
                         <Trash2 size={14} />

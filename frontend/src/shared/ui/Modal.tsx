@@ -38,7 +38,10 @@ export function Modal({
           )}
         >
           {!hideClose && (
-            <Dialog.Close className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+            <Dialog.Close
+              aria-label="Закрыть"
+              className="absolute right-4 top-4 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
               <X size={16} />
             </Dialog.Close>
           )}

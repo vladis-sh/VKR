@@ -14,6 +14,7 @@ const RegisterStep1Page = lazy(() => import('@/pages/auth/RegisterStep1Page'))
 const RegisterStep2Page = lazy(() => import('@/pages/auth/RegisterStep2Page'))
 const ChatPage = lazy(() => import('@/pages/chat/ChatPage'))
 const TestsHubPage = lazy(() => import('@/pages/tests/TestsHubPage'))
+const ThemesCatalogPage = lazy(() => import('@/pages/tests/ThemesCatalogPage'))
 const TopicsPage = lazy(() => import('@/pages/tests/TopicsPage'))
 const TestThemePage = lazy(() => import('@/pages/tests/TestThemePage'))
 const SubtopicTestPage = lazy(() => import('@/pages/tests/SubtopicTestPage'))
@@ -36,16 +37,6 @@ const AdminQuestionsListPage = lazy(() => import('@/pages/admin/AdminQuestionsLi
 const AdminQuestionFormPage = lazy(() => import('@/pages/admin/AdminQuestionFormPage'))
 const AdminContentListPage = lazy(() => import('@/pages/admin/AdminContentListPage'))
 const AdminContentFormPage = lazy(() => import('@/pages/admin/AdminContentFormPage'))
-const AdminContentSourcesPage = lazy(() => import('@/pages/admin/AdminContentSourcesPage'))
-const AdminContentSourceFormPage = lazy(
-  () => import('@/pages/admin/AdminContentSourceFormPage')
-)
-const AdminContentCandidatesPage = lazy(
-  () => import('@/pages/admin/AdminContentCandidatesPage')
-)
-const AdminContentCandidateFormPage = lazy(
-  () => import('@/pages/admin/AdminContentCandidateFormPage')
-)
 
 function LazyWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -113,6 +104,14 @@ export const router = createBrowserRouter([
         element: (
           <LazyWrapper>
             <TestsHubPage />
+          </LazyWrapper>
+        ),
+      },
+      {
+        path: 'tests/themes',
+        element: (
+          <LazyWrapper>
+            <ThemesCatalogPage />
           </LazyWrapper>
         ),
       },
@@ -294,56 +293,6 @@ export const router = createBrowserRouter([
           <AdminRoute>
             <LazyWrapper>
               <AdminContentFormPage />
-            </LazyWrapper>
-          </AdminRoute>
-        ),
-      },
-      {
-        path: 'admin/content/sources',
-        element: (
-          <AdminRoute>
-            <LazyWrapper>
-              <AdminContentSourcesPage />
-            </LazyWrapper>
-          </AdminRoute>
-        ),
-      },
-      {
-        path: 'admin/content/sources/new',
-        element: (
-          <AdminRoute>
-            <LazyWrapper>
-              <AdminContentSourceFormPage />
-            </LazyWrapper>
-          </AdminRoute>
-        ),
-      },
-      {
-        path: 'admin/content/sources/:id/edit',
-        element: (
-          <AdminRoute>
-            <LazyWrapper>
-              <AdminContentSourceFormPage />
-            </LazyWrapper>
-          </AdminRoute>
-        ),
-      },
-      {
-        path: 'admin/content/candidates',
-        element: (
-          <AdminRoute>
-            <LazyWrapper>
-              <AdminContentCandidatesPage />
-            </LazyWrapper>
-          </AdminRoute>
-        ),
-      },
-      {
-        path: 'admin/content/candidates/new',
-        element: (
-          <AdminRoute>
-            <LazyWrapper>
-              <AdminContentCandidateFormPage />
             </LazyWrapper>
           </AdminRoute>
         ),

@@ -12,26 +12,72 @@ import {
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { FullPageSpinner } from '@/shared/ui/Spinner'
+import { payloadSchemaByType } from '@/entities/contentSchemas'
 import type { ContentEntryType } from '@/entities/types'
 
-const contentSchema = z.object({
-  type: z.enum(['roadmap', 'live_coding_task', 'test_catalog_theme']),
-  slug: z.string().min(1, 'Enter slug').max(160),
-  title: z.string().min(1, 'Enter title').max(240),
-  sourceUrl: z.string().max(500).optional(),
-  payloadJson: z
-    .string()
-    .min(2, 'Enter JSON payload')
-    .refine((value) => {
-      try {
-        const parsed = JSON.parse(value)
-        return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-      } catch {
-        return false
-      }
-    }, 'Payload must be a valid JSON object'),
-  isPublished: z.boolean(),
-})
+const MAX_REPORTED_ISSUES = 8
+
+const contentSchema = z
+  .object({
+    type: z.enum(['roadmap', 'live_coding_task', 'test_catalog_theme']),
+    slug: z.string().min(1, 'Введите slug').max(160),
+    title: z.string().min(1, 'Введите title').max(240),
+    sourceUrl: z.string().max(500).optional(),
+    payloadJson: z.string().min(2, 'Введите JSON payload'),
+    isPublished: z.boolean(),
+  })
+  .superRefine((values, ctx) => {
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(values.payloadJson)
+    } catch {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['payloadJson'],
+        message: 'Невалидный JSON',
+      })
+      return
+    }
+
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['payloadJson'],
+        message: 'Payload должен быть JSON-объектом',
+      })
+      return
+    }
+
+    // Validate the payload against the schema for the selected content type.
+    const result = payloadSchemaByType[values.type].safeParse(parsed)
+    if (!result.success) {
+      const issues = result.error.issues
+      const lines = issues.slice(0, MAX_REPORTED_ISSUES).map((issue) => {
+        const where = issue.path.length ? issue.path.join('.') : '(корень)'
+        return `• ${where}: ${issue.message}`
+      })
+      const extra =
+        issues.length > MAX_REPORTED_ISSUES
+          ? `\n…и ещё ${issues.length - MAX_REPORTED_ISSUES}`
+          : ''
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['payloadJson'],
+        message: `Ошибки структуры payload:\n${lines.join('\n')}${extra}`,
+      })
+      return
+    }
+
+    // The public API returns only `payload`, so payload.slug must match the form slug.
+    const payloadSlug = (parsed as Record<string, unknown>).slug
+    if (typeof payloadSlug === 'string' && payloadSlug.trim() !== values.slug.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['payloadJson'],
+        message: `payload.slug ("${payloadSlug}") не совпадает со slug формы ("${values.slug}")`,
+      })
+    }
+  })
 
 type ContentForm = z.infer<typeof contentSchema>
 
@@ -87,13 +133,16 @@ export default function AdminContentFormPage() {
       isPublished: values.isPublished,
     }
 
-    if (isEdit) {
-      await updateEntry.mutateAsync(payload)
-    } else {
-      await createEntry.mutateAsync(payload)
+    try {
+      if (isEdit) {
+        await updateEntry.mutateAsync(payload)
+      } else {
+        await createEntry.mutateAsync(payload)
+      }
+      navigate('/app/admin/content')
+    } catch {
+      // Error toast is handled by the mutation's onError; stay on the form.
     }
-
-    navigate('/app/admin/content')
   })
 
   if (isEdit && isLoadingExisting) return <FullPageSpinner />
@@ -148,7 +197,9 @@ export default function AdminContentFormPage() {
             className="w-full rounded-lg border border-input bg-background p-3 font-mono text-xs leading-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
           {errors.payloadJson?.message && (
-            <p className="mt-1 text-xs text-destructive">{errors.payloadJson.message}</p>
+            <p className="mt-1 whitespace-pre-line text-xs text-destructive">
+              {errors.payloadJson.message}
+            </p>
           )}
         </div>
 

@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { Request, Response } from 'express';
 
 @Catch()
@@ -34,6 +35,20 @@ export class HttpExceptionFilter implements ExceptionFilter {
           details = resp.message;
           message = 'Validation failed';
         }
+      }
+    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      // Map common Prisma errors to proper HTTP statuses instead of leaking 500s
+      if (exception.code === 'P2002') {
+        status = HttpStatus.CONFLICT;
+        message = 'Resource already exists (unique constraint violation)';
+      } else if (exception.code === 'P2025') {
+        status = HttpStatus.NOT_FOUND;
+        message = 'Resource not found';
+      } else {
+        this.logger.error(
+          `Prisma error ${exception.code}: ${exception.message}`,
+          exception.stack,
+        );
       }
     } else if (exception instanceof Error) {
       message = exception.message;

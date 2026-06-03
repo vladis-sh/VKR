@@ -97,8 +97,9 @@ export default function AdminMaterialsListPage() {
                       <Button
                         variant="destructive"
                         size="sm"
+                        aria-label={`Удалить «${m.title}»`}
                         onClick={() => handleDelete(m.id, m.title)}
-                        loading={deleteMaterial.isPending}
+                        loading={deleteMaterial.isPending && deleteMaterial.variables === m.id}
                       >
                         <Trash2 size={14} />
                       </Button>

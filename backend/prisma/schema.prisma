@@ -55,13 +55,6 @@ enum ContentOrigin {
   parser
 }
 
-enum ContentImportStatus {
-  pending
-  approved
-  rejected
-  failed
-}
-
 model User {
   id                String         @id @default(cuid())
   email             String         @unique
@@ -217,41 +210,4 @@ model ContentEntry {
   @@unique([type, slug])
   @@index([type, deletedAt, isPublished])
   @@index([title])
-}
-
-model ContentImportSource {
-  id        String             @id @default(cuid())
-  name      String
-  url       String
-  type      ContentEntryType
-  adapter   String
-  enabled   Boolean            @default(true)
-  config    Json?
-  lastRunAt DateTime?
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
-
-  candidates ContentImportCandidate[]
-
-  @@index([type, enabled])
-}
-
-model ContentImportCandidate {
-  id        String              @id @default(cuid())
-  sourceId  String?
-  type      ContentEntryType
-  slug      String?
-  title     String
-  payload   Json
-  sourceUrl String?
-  raw       Json?
-  status    ContentImportStatus @default(pending)
-  error     String?             @db.Text
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
-
-  source ContentImportSource? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-
-  @@index([type, status])
-  @@index([sourceId])
 }

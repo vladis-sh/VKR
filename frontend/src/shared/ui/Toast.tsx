@@ -35,6 +35,7 @@ function ToastItemComponent({ toast }: { toast: ToastItem }) {
   return (
     <motion.div
       layout
+      role={toast.variant === 'error' ? 'alert' : 'status'}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -47,6 +48,7 @@ function ToastItemComponent({ toast }: { toast: ToastItem }) {
       <p className="flex-1 text-sm font-medium text-foreground">{toast.message}</p>
       <button
         onClick={() => remove(toast.id)}
+        aria-label="Закрыть уведомление"
         className="ml-1 shrink-0 rounded-md p-0.5 text-muted-foreground transition-colors hover:text-foreground"
       >
         <X size={14} />
@@ -59,7 +61,11 @@ export function ToastContainer() {
   const { toasts } = useToastStore()
 
   return (
-    <div className="fixed bottom-20 left-1/2 z-[100] flex -translate-x-1/2 flex-col items-center gap-2 md:bottom-6 md:right-6 md:left-auto md:translate-x-0 md:items-end">
+    <div
+      aria-live="polite"
+      aria-atomic="false"
+      className="fixed bottom-20 left-1/2 z-[100] flex -translate-x-1/2 flex-col items-center gap-2 md:bottom-6 md:right-6 md:left-auto md:translate-x-0 md:items-end"
+    >
       <AnimatePresence mode="popLayout">
         {toasts.map((toast) => (
           <ToastItemComponent key={toast.id} toast={toast} />

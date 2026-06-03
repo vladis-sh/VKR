@@ -1,4 +1,4 @@
-import { forwardRef, useState } from 'react'
+import { forwardRef, useId, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 
@@ -15,7 +15,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const [showPassword, setShowPassword] = useState(false)
     const isPassword = type === 'password'
     const inputType = isPassword ? (showPassword ? 'text' : 'password') : type
-    const inputId = id ?? `input-${Math.random().toString(36).slice(2, 9)}`
+    const generatedId = useId()
+    const inputId = id ?? generatedId
 
     return (
       <div className="w-full space-y-1.5">
@@ -50,6 +51,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
               className="absolute inset-y-0 right-3 flex items-center text-muted-foreground transition-colors hover:text-foreground"
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}

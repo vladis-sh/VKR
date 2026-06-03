@@ -313,7 +313,13 @@ export default function ChatPage() {
           </Button>
           {activeSession && (
             <button
-              onClick={() => { deleteSession.mutate(activeSession.id); setActiveSession(null) }}
+              onClick={() => {
+                if (!window.confirm(`Удалить чат «${activeSession.title}»? Историю нельзя восстановить.`)) {
+                  return
+                }
+                deleteSession.mutate(activeSession.id)
+                setActiveSession(null)
+              }}
               className="text-muted-foreground hover:text-destructive transition-colors"
               aria-label="Удалить чат"
             >

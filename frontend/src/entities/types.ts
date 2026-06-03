@@ -53,7 +53,6 @@ export interface AdminQuestion {
 
 export type ContentEntryType = 'roadmap' | 'live_coding_task' | 'test_catalog_theme'
 export type ContentOrigin = 'manual' | 'seed' | 'parser'
-export type ContentImportStatus = 'pending' | 'approved' | 'rejected' | 'failed'
 
 export interface ContentEntry {
   id: string
@@ -67,37 +66,6 @@ export interface ContentEntry {
   deletedAt?: string | null
   createdAt: string
   updatedAt?: string
-}
-
-export interface ContentImportSource {
-  id: string
-  name: string
-  url: string
-  type: ContentEntryType
-  adapter: string
-  enabled: boolean
-  config?: Record<string, unknown> | null
-  lastRunAt?: string | null
-  createdAt: string
-  updatedAt: string
-  _count?: {
-    candidates: number
-  }
-}
-
-export interface ContentImportCandidate {
-  id: string
-  sourceId?: string | null
-  type: ContentEntryType
-  slug?: string | null
-  title: string
-  payload: Record<string, unknown>
-  sourceUrl?: string | null
-  raw?: Record<string, unknown> | null
-  status: ContentImportStatus
-  error?: string | null
-  createdAt: string
-  updatedAt: string
 }
 
 export interface MaterialsPagination {

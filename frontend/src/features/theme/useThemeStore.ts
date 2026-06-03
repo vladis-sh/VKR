@@ -3,16 +3,26 @@ import { persist } from 'zustand/middleware'
 
 export type Theme = 'light' | 'dark' | 'system'
 
+const defaultTheme: Theme = 'light'
+
 interface ThemeState {
   theme: Theme
   setTheme: (theme: Theme) => void
   applyTheme: () => void
 }
 
+interface PersistedThemeState {
+  theme?: unknown
+}
+
+function isTheme(value: unknown): value is Theme {
+  return value === 'light' || value === 'dark' || value === 'system'
+}
+
 export const useThemeStore = create<ThemeState>()(
-  persist(
+  persist<ThemeState, [], [], PersistedThemeState>(
     (set, get) => ({
-      theme: 'system',
+      theme: defaultTheme,
       setTheme: (theme) => {
         set({ theme })
         setTimeout(() => get().applyTheme(), 0)
@@ -38,6 +48,22 @@ export const useThemeStore = create<ThemeState>()(
     {
       name: 'theme',
       partialize: (state) => ({ theme: state.theme }),
+      version: 1,
+      migrate: (persistedState, version) => {
+        if (!persistedState || typeof persistedState !== 'object') {
+          return { theme: defaultTheme }
+        }
+
+        const { theme } = persistedState as PersistedThemeState
+
+        return {
+          theme: version < 1 && theme === 'system'
+            ? defaultTheme
+            : isTheme(theme)
+              ? theme
+              : defaultTheme,
+        }
+      },
     }
   )
 )

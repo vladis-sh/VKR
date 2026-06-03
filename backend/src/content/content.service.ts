@@ -1,45 +1,17 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { ContentEntryType, ContentImportStatus, ContentOrigin, Prisma } from '@prisma/client';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { ContentEntryType, ContentOrigin, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import {
-  CreateContentCandidateDto,
-  CreateContentEntryDto,
-  CreateContentSourceDto,
-} from './dto/create-content-entry.dto';
-import {
-  QueryContentCandidatesDto,
-  QueryContentEntriesDto,
-  QueryContentSourcesDto,
-} from './dto/query-content-entries.dto';
-import {
-  UpdateContentEntryDto,
-  UpdateContentSourceDto,
-} from './dto/update-content-entry.dto';
+import { CreateContentEntryDto } from './dto/create-content-entry.dto';
+import { QueryContentEntriesDto } from './dto/query-content-entries.dto';
+import { UpdateContentEntryDto } from './dto/update-content-entry.dto';
 
 @Injectable()
 export class ContentService {
   constructor(private readonly prisma: PrismaService) {}
-
-  private toRecord(value: unknown): Record<string, unknown> | null {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
-      return null;
-    }
-
-    return value as Record<string, unknown>;
-  }
-
-  private parseConfiguredCandidates(config: Prisma.JsonValue | null) {
-    const configRecord = this.toRecord(config);
-    const candidates = configRecord?.candidates;
-
-    if (!Array.isArray(candidates)) {
-      return [];
-    }
-
-    return candidates
-      .map((candidate) => this.toRecord(candidate))
-      .filter((candidate): candidate is Record<string, unknown> => candidate !== null);
-  }
 
   async findPublishedPayloads(type: ContentEntryType) {
     const entries = await this.prisma.contentEntry.findMany({
@@ -50,6 +22,7 @@ export class ContentService {
       },
       orderBy: { createdAt: 'asc' },
       select: { payload: true },
+      take: 200, // defensive cap against unbounded public responses
     });
 
     return entries.map((entry) => entry.payload);
@@ -123,17 +96,39 @@ export class ContentService {
   }
 
   async createEntry(dto: CreateContentEntryDto) {
-    return this.prisma.contentEntry.create({
-      data: {
-        type: dto.type,
-        slug: dto.slug.trim(),
-        title: dto.title.trim(),
-        payload: dto.payload as Prisma.InputJsonValue,
-        origin: dto.origin ?? ContentOrigin.manual,
-        sourceUrl: dto.sourceUrl?.trim() || null,
-        isPublished: dto.isPublished ?? true,
-      },
+    const slug = dto.slug.trim();
+
+    // The DB unique constraint @@unique([type, slug]) ignores deletedAt, so a
+    // soft-deleted row would otherwise block re-creation with a raw P2002/500.
+    const existing = await this.prisma.contentEntry.findUnique({
+      where: { type_slug: { type: dto.type, slug } },
     });
+
+    if (existing && !existing.deletedAt) {
+      throw new ConflictException(
+        'Content entry with this type and slug already exists',
+      );
+    }
+
+    const data = {
+      type: dto.type,
+      slug,
+      title: dto.title.trim(),
+      payload: dto.payload as Prisma.InputJsonValue,
+      origin: dto.origin ?? ContentOrigin.manual,
+      sourceUrl: dto.sourceUrl?.trim() || null,
+      isPublished: dto.isPublished ?? true,
+    };
+
+    // Reuse a previously soft-deleted row instead of failing on the unique key.
+    if (existing) {
+      return this.prisma.contentEntry.update({
+        where: { id: existing.id },
+        data: { ...data, deletedAt: null },
+      });
+    }
+
+    return this.prisma.contentEntry.create({ data });
   }
 
   async updateEntry(id: string, dto: UpdateContentEntryDto) {
@@ -166,289 +161,5 @@ export class ContentService {
     });
 
     return { message: 'Content entry deleted' };
-  }
-
-  async adminFindSources(query: QueryContentSourcesDto) {
-    const { type, adapter, search, page = 1, limit = 20 } = query;
-    const skip = (page - 1) * limit;
-
-    const where: Prisma.ContentImportSourceWhereInput = {};
-    if (type) where.type = type;
-    if (adapter) where.adapter = adapter;
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { url: { contains: search, mode: 'insensitive' } },
-        { adapter: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    const [items, total] = await Promise.all([
-      this.prisma.contentImportSource.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: [{ enabled: 'desc' }, { createdAt: 'desc' }],
-        include: {
-          _count: {
-            select: { candidates: true },
-          },
-        },
-      }),
-      this.prisma.contentImportSource.count({ where }),
-    ]);
-
-    return {
-      items,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
-
-  async adminFindSource(id: string) {
-    const source = await this.prisma.contentImportSource.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { candidates: true },
-        },
-      },
-    });
-
-    if (!source) {
-      throw new NotFoundException('Content source not found');
-    }
-
-    return source;
-  }
-
-  async createSource(dto: CreateContentSourceDto) {
-    return this.prisma.contentImportSource.create({
-      data: {
-        name: dto.name.trim(),
-        url: dto.url.trim(),
-        type: dto.type,
-        adapter: dto.adapter.trim(),
-        enabled: dto.enabled ?? true,
-        config: dto.config ? (dto.config as Prisma.InputJsonValue) : undefined,
-      },
-    });
-  }
-
-  async updateSource(id: string, dto: UpdateContentSourceDto) {
-    await this.adminFindSource(id);
-
-    const data: Prisma.ContentImportSourceUpdateInput = {};
-    if (dto.name !== undefined) data.name = dto.name.trim();
-    if (dto.url !== undefined) data.url = dto.url.trim();
-    if (dto.type !== undefined) data.type = dto.type;
-    if (dto.adapter !== undefined) data.adapter = dto.adapter.trim();
-    if (dto.enabled !== undefined) data.enabled = dto.enabled;
-    if (dto.config !== undefined) data.config = dto.config as Prisma.InputJsonValue;
-
-    return this.prisma.contentImportSource.update({
-      where: { id },
-      data,
-    });
-  }
-
-  async deleteSource(id: string) {
-    await this.adminFindSource(id);
-
-    await this.prisma.contentImportSource.delete({
-      where: { id },
-    });
-
-    return { message: 'Content source deleted' };
-  }
-
-  async runSource(id: string) {
-    const source = await this.adminFindSource(id);
-
-    if (!source.enabled) {
-      throw new BadRequestException('Disabled source cannot be collected');
-    }
-
-    const configuredCandidates = this.parseConfiguredCandidates(source.config);
-    const created = [];
-    let skipped = 0;
-
-    for (const candidate of configuredCandidates) {
-      const payload = this.toRecord(candidate.payload);
-      const title = typeof candidate.title === 'string' ? candidate.title.trim() : '';
-
-      if (!title || !payload) {
-        skipped += 1;
-        continue;
-      }
-
-      const candidateType =
-        typeof candidate.type === 'string' &&
-        Object.values(ContentEntryType).includes(candidate.type as ContentEntryType)
-          ? (candidate.type as ContentEntryType)
-          : source.type;
-
-      created.push(
-        await this.prisma.contentImportCandidate.create({
-          data: {
-            sourceId: source.id,
-            type: candidateType,
-            slug: typeof candidate.slug === 'string' ? candidate.slug.trim() : null,
-            title,
-            payload: payload as Prisma.InputJsonValue,
-            sourceUrl:
-              typeof candidate.sourceUrl === 'string'
-                ? candidate.sourceUrl.trim()
-                : source.url,
-            raw: this.toRecord(candidate.raw)
-              ? (candidate.raw as Prisma.InputJsonValue)
-              : ({
-                  adapter: source.adapter,
-                  sourceName: source.name,
-                  sourceUrl: source.url,
-                } as Prisma.InputJsonValue),
-          },
-        }),
-      );
-    }
-
-    await this.prisma.contentImportSource.update({
-      where: { id: source.id },
-      data: { lastRunAt: new Date() },
-    });
-
-    return {
-      created: created.length,
-      skipped,
-      candidates: created,
-      message:
-        created.length > 0
-          ? 'Source collection finished'
-          : 'Source has no config.candidates items to import yet',
-    };
-  }
-
-  async adminFindCandidates(query: QueryContentCandidatesDto) {
-    const { type, status, search, page = 1, limit = 20 } = query;
-    const skip = (page - 1) * limit;
-
-    const where: Prisma.ContentImportCandidateWhereInput = {};
-    if (type) where.type = type;
-    if (status) where.status = status;
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { slug: { contains: search, mode: 'insensitive' } },
-        { sourceUrl: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-
-    const [items, total] = await Promise.all([
-      this.prisma.contentImportCandidate.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.prisma.contentImportCandidate.count({ where }),
-    ]);
-
-    return {
-      items,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
-  }
-
-  async createCandidate(dto: CreateContentCandidateDto) {
-    return this.prisma.contentImportCandidate.create({
-      data: {
-        type: dto.type,
-        slug: dto.slug?.trim() || null,
-        title: dto.title.trim(),
-        payload: dto.payload as Prisma.InputJsonValue,
-        sourceUrl: dto.sourceUrl?.trim() || null,
-        raw: dto.raw ? (dto.raw as Prisma.InputJsonValue) : undefined,
-      },
-    });
-  }
-
-  async publishCandidate(id: string) {
-    const candidate = await this.prisma.contentImportCandidate.findUnique({
-      where: { id },
-    });
-
-    if (!candidate) {
-      throw new NotFoundException('Content candidate not found');
-    }
-
-    if (candidate.status === ContentImportStatus.rejected) {
-      throw new BadRequestException('Rejected candidate cannot be published');
-    }
-
-    const payload = candidate.payload as Record<string, unknown>;
-    const slug = (candidate.slug || payload.slug) as string | undefined;
-
-    if (!slug) {
-      throw new BadRequestException('Candidate must have slug or payload.slug');
-    }
-
-    return this.prisma.$transaction(async (tx) => {
-      const entry = await tx.contentEntry.upsert({
-        where: {
-          type_slug: {
-            type: candidate.type,
-            slug,
-          },
-        },
-        update: {
-          title: candidate.title,
-          payload: candidate.payload as Prisma.InputJsonValue,
-          origin: ContentOrigin.parser,
-          sourceUrl: candidate.sourceUrl,
-          isPublished: true,
-          deletedAt: null,
-        },
-        create: {
-          type: candidate.type,
-          slug,
-          title: candidate.title,
-          payload: candidate.payload as Prisma.InputJsonValue,
-          origin: ContentOrigin.parser,
-          sourceUrl: candidate.sourceUrl,
-          isPublished: true,
-        },
-      });
-
-      await tx.contentImportCandidate.update({
-        where: { id },
-        data: { status: ContentImportStatus.approved },
-      });
-
-      return entry;
-    });
-  }
-
-  async rejectCandidate(id: string) {
-    const candidate = await this.prisma.contentImportCandidate.findUnique({
-      where: { id },
-    });
-
-    if (!candidate) {
-      throw new NotFoundException('Content candidate not found');
-    }
-
-    return this.prisma.contentImportCandidate.update({
-      where: { id },
-      data: { status: ContentImportStatus.rejected },
-    });
   }
 }

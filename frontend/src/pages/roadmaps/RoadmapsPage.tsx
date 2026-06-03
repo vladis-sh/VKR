@@ -1,5 +1,16 @@
 import { Link } from 'react-router-dom'
-import { Map, ArrowRight, Target, Layers } from 'lucide-react'
+import {
+  ArrowRight,
+  Code2,
+  Database,
+  Layers,
+  Layout,
+  Map,
+  Server,
+  Smartphone,
+  Target,
+  type LucideIcon,
+} from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { Roadmap } from '@/entities/roadmap'
 import { getRoadmapNodeCount, getRoadmapRequiredCount } from '@/entities/roadmap'
@@ -8,27 +19,76 @@ import { useRoadmaps } from '@/features/roadmap/useRoadmaps'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Skeleton } from '@/shared/ui/Skeleton'
 
+interface RoadmapTheme {
+  gradient: string
+  Icon: LucideIcon
+}
+
+// Curated, vibrant banners per roadmap. Drives the look instead of the (very faint)
+// `accent` stored in content, so a card can never render as a blank white banner.
+const roadmapThemes: Record<string, RoadmapTheme> = {
+  frontend: { gradient: 'from-sky-500 via-blue-500 to-indigo-600', Icon: Layout },
+  backend: { gradient: 'from-emerald-500 via-green-500 to-teal-600', Icon: Server },
+  fullstack: { gradient: 'from-violet-500 via-purple-500 to-fuchsia-600', Icon: Code2 },
+  mobile: { gradient: 'from-rose-500 via-pink-500 to-fuchsia-600', Icon: Smartphone },
+  devops: { gradient: 'from-amber-500 via-orange-500 to-red-500', Icon: Server },
+  database: { gradient: 'from-cyan-500 via-teal-500 to-emerald-600', Icon: Database },
+}
+
+// Stable fallback palette so unknown slugs still get a distinct, non-white banner.
+const fallbackGradients = [
+  'from-blue-500 via-indigo-500 to-violet-600',
+  'from-emerald-500 via-teal-500 to-cyan-600',
+  'from-amber-500 via-orange-500 to-rose-500',
+  'from-fuchsia-500 via-purple-500 to-indigo-600',
+]
+
+function getRoadmapTheme(slug: string): RoadmapTheme {
+  if (roadmapThemes[slug]) return roadmapThemes[slug]
+  let hash = 0
+  for (let i = 0; i < slug.length; i += 1) {
+    hash = (hash + slug.charCodeAt(i)) % fallbackGradients.length
+  }
+  return { gradient: fallbackGradients[hash], Icon: Map }
+}
+
 function RoadmapCard({ roadmap }: { roadmap: Roadmap }) {
   const { completed } = useRoadmapProgress(roadmap.slug)
   const total = getRoadmapNodeCount(roadmap)
   const required = getRoadmapRequiredCount(roadmap)
   const done = completed.length
   const percent = total === 0 ? 0 : Math.round((done / total) * 100)
+  const { gradient, Icon } = getRoadmapTheme(roadmap.slug)
 
   return (
     <Link
       to={`/app/roadmaps/${roadmap.slug}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
     >
-      <div className={`relative h-32 bg-gradient-to-br ${roadmap.accent} p-5`}>
-        <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl bg-background/80 backdrop-blur">
-          <Map size={20} className="text-primary" />
+      {/* Banner */}
+      <div className={`relative h-40 overflow-hidden bg-gradient-to-br ${gradient}`}>
+        {/* Oversized decorative icon */}
+        <Icon
+          aria-hidden
+          strokeWidth={1.25}
+          className="pointer-events-none absolute -bottom-6 -right-4 h-44 w-44 text-white/15 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3"
+        />
+        {/* Soft glow + bottom legibility overlay */}
+        <div className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/20 blur-2xl" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+
+        <div className="relative flex h-full flex-col justify-between p-5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 ring-1 ring-inset ring-white/25 backdrop-blur-sm">
+            <Icon size={24} className="text-white" />
+          </div>
+          <h3 className="text-xl font-bold leading-tight text-white drop-shadow-sm">
+            {roadmap.title}
+          </h3>
         </div>
       </div>
 
+      {/* Body */}
       <div className="flex flex-1 flex-col gap-4 p-5">
-        <h3 className="text-lg font-semibold text-foreground">{roadmap.title}</h3>
-
         <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Layers size={13} />
@@ -101,7 +161,7 @@ export default function RoadmapsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {roadmaps.map((roadmap) => (
-          <RoadmapCard key={roadmap.slug} roadmap={roadmap} />
+            <RoadmapCard key={roadmap.slug} roadmap={roadmap} />
           ))}
         </div>
       )}
