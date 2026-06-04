@@ -13,6 +13,7 @@ export interface User {
   avatarUrl?: string | null
   knowledgeLevel: KnowledgeLevel
   isProfileComplete?: boolean
+  emailVerified?: boolean
   role?: UserRole
   createdAt: string
   updatedAt?: string

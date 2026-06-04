@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   BadRequestException,
   UnauthorizedException,
   ConflictException,
@@ -7,17 +8,25 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { MailService } from '../mail/mail.service';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { RegisterDto } from './dto/register.dto';
 import { RegisterProfileDto, RegisterLevelDto } from './dto/register-profile.dto';
-import { KnowledgeLevel } from '@prisma/client';
+import { KnowledgeLevel, VerificationTokenType } from '@prisma/client';
+
+const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private mail: MailService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -52,13 +61,17 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
-    return this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         passwordHash,
         isProfileComplete: false,
       },
     });
+
+    await this.sendEmailVerification(user);
+
+    return user;
   }
 
   async updateProfile(userId: string, dto: RegisterProfileDto) {
@@ -145,6 +158,174 @@ export class AuthService {
     }
 
     return this.sanitizeUser(user);
+  }
+
+  // ── Email verification & password reset ──────────────────────────────
+
+  private hashToken(rawToken: string): string {
+    return crypto.createHash('sha256').update(rawToken).digest('hex');
+  }
+
+  private async issueToken(
+    userId: string,
+    type: VerificationTokenType,
+    ttlMs: number,
+  ): Promise<string> {
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = this.hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + ttlMs);
+
+    await this.prisma.verificationToken.create({
+      data: { userId, tokenHash, type, expiresAt },
+    });
+
+    return rawToken;
+  }
+
+  /** Validates a single-use token, marks it used, and returns the record. */
+  private async consumeToken(rawToken: string, type: VerificationTokenType) {
+    const tokenHash = this.hashToken(rawToken);
+    const record = await this.prisma.verificationToken.findUnique({
+      where: { tokenHash },
+    });
+
+    if (
+      !record ||
+      record.type !== type ||
+      record.usedAt !== null ||
+      record.expiresAt < new Date()
+    ) {
+      throw new BadRequestException('Ссылка недействительна или устарела');
+    }
+
+    await this.prisma.verificationToken.update({
+      where: { id: record.id },
+      data: { usedAt: new Date() },
+    });
+
+    return record;
+  }
+
+  /** Issues a token and sends the verification email. Never throws. */
+  async sendEmailVerification(user: { id: string; email: string }) {
+    let link: string;
+    try {
+      const rawToken = await this.issueToken(
+        user.id,
+        VerificationTokenType.email_verify,
+        EMAIL_VERIFY_TTL_MS,
+      );
+      link = `${this.frontendUrl()}/verify-email?token=${rawToken}`;
+    } catch (err) {
+      this.logger.error(`Failed to issue verification token for ${user.email}`, err as Error);
+      return;
+    }
+
+    // In dev, always surface the link in the logs so the flow is testable
+    // even when outbound SMTP is blocked.
+    if (this.isDev()) {
+      this.logger.log(`[DEV] Email verification link for ${user.email}: ${link}`);
+    }
+
+    // Fire-and-forget: never block the HTTP response on the SMTP round-trip.
+    void this.mail
+      .sendEmailVerification(user.email, link)
+      .catch((err) =>
+        this.logger.error(`Failed to send verification email to ${user.email}`, err as Error),
+      );
+  }
+
+  async verifyEmail(rawToken: string) {
+    const record = await this.consumeToken(rawToken, VerificationTokenType.email_verify);
+    const user = await this.prisma.user.update({
+      where: { id: record.userId },
+      data: { emailVerified: true },
+    });
+    return this.sanitizeUser(user);
+  }
+
+  async resendVerification(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+    if (user.emailVerified) {
+      return { message: 'Email уже подтверждён' };
+    }
+    await this.sendEmailVerification(user);
+    return { message: 'Письмо с подтверждением отправлено' };
+  }
+
+  async requestPasswordReset(email: string) {
+    // Generic response — do not reveal whether the email exists.
+    const genericResponse = {
+      message:
+        'Если аккаунт с таким email существует, мы отправили письмо со ссылкой для сброса пароля',
+    };
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return genericResponse;
+    }
+
+    let link: string;
+    try {
+      const rawToken = await this.issueToken(
+        user.id,
+        VerificationTokenType.password_reset,
+        PASSWORD_RESET_TTL_MS,
+      );
+      link = `${this.frontendUrl()}/reset-password?token=${rawToken}`;
+    } catch (err) {
+      this.logger.error(`Failed to issue password reset token for ${user.email}`, err as Error);
+      return genericResponse;
+    }
+
+    if (this.isDev()) {
+      this.logger.log(`[DEV] Password reset link for ${user.email}: ${link}`);
+    }
+
+    // Fire-and-forget: never block the HTTP response on the SMTP round-trip.
+    void this.mail
+      .sendPasswordReset(user.email, link)
+      .catch((err) =>
+        this.logger.error(`Failed to send password reset email to ${user.email}`, err as Error),
+      );
+
+    return genericResponse;
+  }
+
+  async resetPassword(rawToken: string, password: string, confirmPassword: string) {
+    if (password !== confirmPassword) {
+      throw new BadRequestException('Пароли не совпадают');
+    }
+
+    const record = await this.consumeToken(rawToken, VerificationTokenType.password_reset);
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await this.prisma.user.update({
+      where: { id: record.userId },
+      data: { passwordHash },
+    });
+
+    // Invalidate any other outstanding reset tokens for this user.
+    await this.prisma.verificationToken.deleteMany({
+      where: {
+        userId: record.userId,
+        type: VerificationTokenType.password_reset,
+        usedAt: null,
+      },
+    });
+
+    return { message: 'Пароль успешно изменён' };
+  }
+
+  private frontendUrl(): string {
+    return this.configService.get<string>('frontendUrl') || 'http://localhost:5173';
+  }
+
+  private isDev(): boolean {
+    return (this.configService.get<string>('nodeEnv') || 'development') !== 'production';
   }
 
   sanitizeUser(user: any) {

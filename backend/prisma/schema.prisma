@@ -55,6 +55,11 @@ enum ContentOrigin {
   parser
 }
 
+enum VerificationTokenType {
+  email_verify
+  password_reset
+}
+
 model User {
   id                String         @id @default(cuid())
   email             String         @unique
@@ -63,15 +68,17 @@ model User {
   avatarUrl         String?
   knowledgeLevel    KnowledgeLevel @default(junior)
   isProfileComplete Boolean        @default(false)
+  emailVerified     Boolean        @default(false)
   role              UserRole       @default(user)
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
-  favorites    UserFavorite[]
-  chatSessions ChatSession[]
-  testSessions TestSession[]
-  reminder     Reminder?
-  progress     UserProgress[]
+  favorites          UserFavorite[]
+  chatSessions       ChatSession[]
+  testSessions       TestSession[]
+  reminder           Reminder?
+  progress           UserProgress[]
+  verificationTokens VerificationToken[]
 }
 
 model Material {
@@ -225,4 +232,18 @@ model ContentEntry {
   @@unique([type, slug])
   @@index([type, deletedAt, isPublished])
   @@index([title])
+}
+
+model VerificationToken {
+  id        String                @id @default(cuid())
+  userId    String
+  tokenHash String                @unique
+  type      VerificationTokenType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime              @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
 }

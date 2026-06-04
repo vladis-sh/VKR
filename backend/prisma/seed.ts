@@ -53,13 +53,14 @@ async function main() {
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
-    update: { role: UserRole.admin },
+    update: { role: UserRole.admin, emailVerified: true },
     create: {
       email: 'admin@example.com',
       passwordHash,
       fullName: 'Администратор',
       knowledgeLevel: KnowledgeLevel.senior,
       isProfileComplete: true,
+      emailVerified: true,
       role: UserRole.admin,
     },
   });
@@ -67,37 +68,40 @@ async function main() {
 
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@example.com' },
-    update: {},
+    update: { emailVerified: true },
     create: {
       email: 'demo@example.com',
       passwordHash,
       fullName: 'Демо Пользователь',
       knowledgeLevel: KnowledgeLevel.middle,
       isProfileComplete: true,
+      emailVerified: true,
     },
   });
 
   const juniorUser = await prisma.user.upsert({
     where: { email: 'junior@example.com' },
-    update: {},
+    update: { emailVerified: true },
     create: {
       email: 'junior@example.com',
       passwordHash,
       fullName: 'Алексей Новиков',
       knowledgeLevel: KnowledgeLevel.junior,
       isProfileComplete: true,
+      emailVerified: true,
     },
   });
 
   const seniorUser = await prisma.user.upsert({
     where: { email: 'senior@example.com' },
-    update: {},
+    update: { emailVerified: true },
     create: {
       email: 'senior@example.com',
       passwordHash,
       fullName: 'Мария Петрова',
       knowledgeLevel: KnowledgeLevel.senior,
       isProfileComplete: true,
+      emailVerified: true,
     },
   });
 

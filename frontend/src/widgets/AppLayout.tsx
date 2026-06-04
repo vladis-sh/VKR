@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { Header } from './Header'
+import { EmailVerificationBanner } from './EmailVerificationBanner'
 import { cn } from '@/shared/lib/cn'
 
 export function AppLayout() {
@@ -21,6 +22,7 @@ export function AppLayout() {
         {/* Page content */}
         <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
           <div className={cn('mx-auto p-4 md:p-6', isWidePage ? 'max-w-7xl' : 'max-w-5xl')}>
+            <EmailVerificationBanner />
             <Outlet />
           </div>
         </main>

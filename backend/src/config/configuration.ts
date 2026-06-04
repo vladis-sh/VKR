@@ -32,6 +32,15 @@ export default () => ({
     deepseekModel: (process.env.DEEPSEEK_MODEL || 'deepseek-chat').trim(),
     deepseekBaseUrl: (process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').trim(),
   },
+  mail: {
+    // Empty host => fall back to an Ethereal test inbox (preview URL in logs).
+    host: (process.env.SMTP_HOST || '').trim(),
+    port: parseInt(process.env.SMTP_PORT, 10) || 587,
+    secure: process.env.SMTP_SECURE === 'true',
+    user: (process.env.SMTP_USER || '').trim(),
+    pass: (process.env.SMTP_PASS || '').trim(),
+    from: (process.env.MAIL_FROM || 'InterviewPrep <no-reply@interviewprep.local>').trim(),
+  },
   uploads: {
     avatarsPath: './uploads/avatars',
   },

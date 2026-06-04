@@ -12,6 +12,9 @@ const LandingPage = lazy(() => import('@/pages/landing/LandingPage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterStep1Page = lazy(() => import('@/pages/auth/RegisterStep1Page'))
 const RegisterStep2Page = lazy(() => import('@/pages/auth/RegisterStep2Page'))
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'))
+const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage'))
 const ChatPage = lazy(() => import('@/pages/chat/ChatPage'))
 const TestsHubPage = lazy(() => import('@/pages/tests/TestsHubPage'))
 const ThemesCatalogPage = lazy(() => import('@/pages/tests/ThemesCatalogPage'))
@@ -76,6 +79,30 @@ export const router = createBrowserRouter([
     element: (
       <LazyWrapper>
         <RegisterStep2Page />
+      </LazyWrapper>
+    ),
+  },
+  {
+    path: '/forgot-password',
+    element: (
+      <LazyWrapper>
+        <ForgotPasswordPage />
+      </LazyWrapper>
+    ),
+  },
+  {
+    path: '/reset-password',
+    element: (
+      <LazyWrapper>
+        <ResetPasswordPage />
+      </LazyWrapper>
+    ),
+  },
+  {
+    path: '/verify-email',
+    element: (
+      <LazyWrapper>
+        <VerifyEmailPage />
       </LazyWrapper>
     ),
   },

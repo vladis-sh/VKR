@@ -41,4 +41,16 @@ export const authApi = {
 
   me: () =>
     apiClient.get<{ user: User }>('/auth/me'),
+
+  verifyEmail: (token: string) =>
+    apiClient.post<{ user: User }>('/auth/verify-email', { token }),
+
+  resendVerification: () =>
+    apiClient.post<{ message: string }>('/auth/resend-verification'),
+
+  forgotPassword: (email: string) =>
+    apiClient.post<{ message: string }>('/auth/forgot-password', { email }),
+
+  resetPassword: (data: { token: string; password: string; confirmPassword: string }) =>
+    apiClient.post<{ message: string }>('/auth/reset-password', data),
 }
