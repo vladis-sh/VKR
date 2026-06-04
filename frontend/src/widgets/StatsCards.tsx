@@ -17,14 +17,14 @@ function StatCard({ icon, label, value, color, delay = 0 }: StatCardProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay }}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm"
+      className="flex items-center gap-2.5 rounded-2xl border border-border bg-card p-3 shadow-sm sm:gap-3 sm:p-4"
     >
-      <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}>
+      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl sm:h-10 sm:w-10 ${color}`}>
         {icon}
       </div>
-      <div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-xl font-bold text-foreground">{value}</p>
+      <div className="min-w-0">
+        <p className="break-words text-xs text-muted-foreground">{label}</p>
+        <p className="text-lg font-bold text-foreground sm:text-xl">{value}</p>
       </div>
     </motion.div>
   )
@@ -46,7 +46,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       />
       <StatCard
         icon={<XCircle size={20} className="text-red-500" />}
-        label="Неправильных"
+        label="Неверных ответов"
         value={String(stats.totalIncorrect)}
         color="bg-red-100 dark:bg-red-900/30"
         delay={0.05}

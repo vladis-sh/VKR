@@ -96,7 +96,7 @@ function SectionCard({
       transition={{ delay }}
       className={cn('rounded-2xl border border-border bg-card p-5 shadow-sm', className)}
     >
-      <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-x-2 gap-y-3">
         <div className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
             {icon}
@@ -360,7 +360,7 @@ export default function StatsPage() {
         subtitle="По последним тестам"
         delay={0.2}
         action={
-          <div className="flex gap-2">
+          <div className="flex shrink-0 gap-2">
             <div className="rounded-lg bg-secondary px-3 py-1.5 text-right">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Среднее</p>
               <p className="text-sm font-semibold text-foreground">{formatDuration(recentAvg)}</p>
