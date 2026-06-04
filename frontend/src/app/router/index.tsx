@@ -16,6 +16,7 @@ const ChatPage = lazy(() => import('@/pages/chat/ChatPage'))
 const TestsHubPage = lazy(() => import('@/pages/tests/TestsHubPage'))
 const ThemesCatalogPage = lazy(() => import('@/pages/tests/ThemesCatalogPage'))
 const TopicsPage = lazy(() => import('@/pages/tests/TopicsPage'))
+const TestTopicSelectPage = lazy(() => import('@/pages/tests/TestTopicSelectPage'))
 const TestThemePage = lazy(() => import('@/pages/tests/TestThemePage'))
 const SubtopicTestPage = lazy(() => import('@/pages/tests/SubtopicTestPage'))
 const TestSessionPage = lazy(() => import('@/pages/tests/TestSessionPage'))
@@ -150,12 +151,28 @@ export const router = createBrowserRouter([
         path: 'tests/time-attack',
         element: (
           <LazyWrapper>
+            <TestTopicSelectPage mode="time-attack" />
+          </LazyWrapper>
+        ),
+      },
+      {
+        path: 'tests/time-attack/:slug',
+        element: (
+          <LazyWrapper>
             <TestSessionPage mode="time-attack" />
           </LazyWrapper>
         ),
       },
       {
         path: 'tests/one-mistake',
+        element: (
+          <LazyWrapper>
+            <TestTopicSelectPage mode="one-mistake" />
+          </LazyWrapper>
+        ),
+      },
+      {
+        path: 'tests/one-mistake/:slug',
         element: (
           <LazyWrapper>
             <TestSessionPage mode="one-mistake" />

@@ -38,6 +38,13 @@ function difficultyDot(difficulty: LiveCodingDifficulty) {
   return 'bg-red-500'
 }
 
+// Order used to sort tasks within a category: easy → medium → hard.
+const DIFFICULTY_ORDER: Record<LiveCodingDifficulty, number> = {
+  easy: 0,
+  medium: 1,
+  hard: 2,
+}
+
 interface CategoryStats {
   solved: number
   total: number
@@ -229,6 +236,10 @@ export default function LiveCodingPage() {
     for (const task of filteredTasks) {
       if (!map.has(task.category)) map.set(task.category, [])
       map.get(task.category)!.push(task)
+    }
+    // Sort each category from easy to hard (stable: same-difficulty tasks keep their order).
+    for (const list of map.values()) {
+      list.sort((a, b) => DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty])
     }
     return Array.from(map.entries())
   }, [filteredTasks])

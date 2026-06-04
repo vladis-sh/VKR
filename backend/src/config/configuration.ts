@@ -28,11 +28,9 @@ export default () => ({
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
   },
   ai: {
-    provider: (process.env.AI_PROVIDER || 'mock').trim().toLowerCase(),
-    ollamaBaseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
-    ollamaModel: process.env.OLLAMA_MODEL || 'llama3',
-    geminiApiKey: (process.env.GEMINI_API_KEY || '').trim(),
-    geminiModel: (process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite').trim(),
+    deepseekApiKey: (process.env.DEEPSEEK_API_KEY || '').trim(),
+    deepseekModel: (process.env.DEEPSEEK_MODEL || 'deepseek-chat').trim(),
+    deepseekBaseUrl: (process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').trim(),
   },
   uploads: {
     avatarsPath: './uploads/avatars',

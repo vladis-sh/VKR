@@ -6,7 +6,7 @@
 |------|-----------|
 | **Frontend** | React 18, TypeScript, Vite, React Router v6, Tailwind CSS, shadcn/ui, Zustand, TanStack Query, React Hook Form + Zod, Framer Motion, Recharts |
 | **Backend** | NestJS, TypeScript, Prisma ORM, PostgreSQL, JWT (httpOnly cookies), Passport, Multer, Swagger |
-| **ИИ** | Внешний провайдер ( Пока что используется Gemini в качестве бесплатной альтернативы )|
+| **ИИ** | DeepSeek API (OpenAI-совместимый чат и генерация тестов) |
 | **DevOps** | Docker, Docker Compose |
 
 ---
@@ -21,7 +21,7 @@ prepai/
 │   │   ├── materials/        # Учебные материалы
 │   │   ├── chat/             # Чат с ИИ-ассистентом
 │   │   ├── ai/               # Абстракция AI-провайдера
-│   │   │   ├── providers/    # MockProvider, OllamaProvider
+│   │   │   ├── providers/    # DeepseekProvider
 │   │   │   └── prompts/      # Промпты для ролей ИИ
 │   │   ├── tests/            # Модуль тестирования
 │   │   ├── stats/            # Статистика

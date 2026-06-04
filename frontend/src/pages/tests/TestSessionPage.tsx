@@ -72,15 +72,20 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
   const isTimeAttack = mode === 'time-attack'
   const isAi = mode === 'ai'
 
+  // topic / time-attack / one-mistake all draw questions from a topic chosen via
+  // the URL slug. The special slug "all" means "questions from every topic".
+  const usesTopicSlug = mode === 'topic' || mode === 'time-attack' || mode === 'one-mistake'
+  const hasTopicSlug = usesTopicSlug && !!slug && slug !== 'all'
+
   // Resolve topic name from slug
-  const topicName =
-    mode === 'topic'
-      ? (topics ? (topics.find((t) => t.slug === slug)?.name ?? slug) : undefined)
-      : undefined
+  const topicName = hasTopicSlug
+    ? (topics ? (topics.find((t) => t.slug === slug)?.name ?? slug) : undefined)
+    : undefined
 
   // Initialize session & fetch questions
   useEffect(() => {
-    if (mode === 'topic' && !topicName) return
+    // Wait for the topic list before resolving a topic slug.
+    if (hasTopicSlug && !topicName) return
     if (initialized.current) return
     initialized.current = true
 
@@ -103,7 +108,7 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
         const questionsRes = isAi
           ? await testsApi.getAIQuestions({ count: 10 })
           : await testsApi.getQuestions({
-              topic: mode === 'topic' ? topicName : undefined,
+              topic: topicName,
               limit: isTimeAttack ? 30 : 10,
             })
 
@@ -117,7 +122,7 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
       }
     }
     init()
-  }, [mode, topicName, isTimeAttack, isAi])
+  }, [mode, topicName, hasTopicSlug, isTimeAttack, isAi])
 
   // Timer hook (correct interface)
   const { seconds: timerValue, stop: stopTimer } = useTimer({
@@ -203,7 +208,7 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <div>
-          {mode === 'topic' && topicName && (
+          {topicName && (
             <p className="text-xs text-muted-foreground mb-0.5">{topicName}</p>
           )}
           <p className="text-sm font-semibold text-foreground">

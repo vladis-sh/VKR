@@ -7,15 +7,14 @@ import {
   useChatSession,
   useSendMessage,
   useDeleteChatSession,
+  useDeleteAllChatSessions,
 } from '@/features/chat/useChat'
 import { ChatSessionList } from '@/widgets/ChatSessionList'
 import { ChatMessages } from '@/widgets/ChatMessages'
 import { Button } from '@/shared/ui/Button'
 import { Modal } from '@/shared/ui/Modal'
-import { ASSISTANT_ROLES, QUICK_PHRASES } from '@/shared/constants'
+import { ASSISTANT_ROLES } from '@/shared/constants'
 import { cn } from '@/shared/lib/cn'
-import { useQueryClient } from '@tanstack/react-query'
-import { QUERY_KEYS } from '@/shared/constants'
 import type { ChatSession, AssistantRole } from '@/entities/types'
 
 // ── New Chat Modal ─────────────────────────────────────────────────────────────
@@ -40,7 +39,7 @@ function NewChatModal({
       description="Выберите сценарий, под который ассистент будет вести разговор."
       className="max-w-lg"
     >
-      <div className="grid gap-3 py-1 sm:grid-cols-3">
+      <div className="grid gap-3 py-1 sm:grid-cols-2">
         {ASSISTANT_ROLES.map((role) => (
           <button
             key={role.value}
@@ -154,29 +153,8 @@ function ChatInput({
     }
   }
 
-  const sendQuick = (phrase: string) => {
-    if (isLoading || disabled) return
-    onSend(phrase)
-  }
-
   return (
-    <div className="border-t border-border bg-card p-3 space-y-2">
-      {/* Quick phrases */}
-      {!disabled && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-          {QUICK_PHRASES.map((phrase) => (
-            <button
-              key={phrase}
-              onClick={() => sendQuick(phrase)}
-              disabled={isLoading}
-              className="shrink-0 rounded-full border border-border bg-background px-3 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
-            >
-              {phrase}
-            </button>
-          ))}
-        </div>
-      )}
-
+    <div className="border-t border-border bg-card p-3">
       {/* Input row */}
       <div className="flex items-end gap-2">
         <textarea
@@ -212,12 +190,12 @@ export default function ChatPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
-  const queryClient = useQueryClient()
 
   const { data: sessions = [], isLoading: sessionsLoading } = useChatSessions()
   const { data: sessionDetail } = useChatSession(activeSession?.id ?? '')
   const createSession = useCreateChatSession()
   const deleteSession = useDeleteChatSession()
+  const deleteAllSessions = useDeleteAllChatSessions()
 
   const {
     sendMessage,
@@ -239,10 +217,9 @@ export default function ChatPage() {
   }
 
   const handleDeleteAll = async () => {
-    await Promise.all(sessions.map((s) => deleteSession.mutateAsync(s.id)))
+    await deleteAllSessions.mutateAsync()
     setActiveSession(null)
     setShowDeleteModal(false)
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CHAT_SESSIONS })
   }
 
   const handleDeleteActive = () => {
@@ -373,7 +350,7 @@ export default function ChatPage() {
         open={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDeleteAll}
-        isLoading={deleteSession.isPending}
+        isLoading={deleteAllSessions.isPending}
       />
       <Modal
         open={confirmDelete}

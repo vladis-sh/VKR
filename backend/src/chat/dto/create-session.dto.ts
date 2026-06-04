@@ -9,9 +9,9 @@ export class CreateSessionDto {
   @MaxLength(200)
   title?: string;
 
-  @ApiProperty({ enum: ['hr', 'technical', 'algorithms'], default: 'technical' })
-  @IsIn(['hr', 'technical', 'algorithms'])
-  assistantRole: 'hr' | 'technical' | 'algorithms';
+  @ApiProperty({ enum: ['technical', 'hr'], default: 'technical' })
+  @IsIn(['technical', 'hr'])
+  assistantRole: 'technical' | 'hr';
 }
 
 export class SendMessageDto {

@@ -10,6 +10,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { ChatService } from './chat.service';
 import { CreateSessionDto, SendMessageDto } from './dto/create-session.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -59,6 +60,8 @@ export class ChatController {
 
   @Post('sessions/:id/messages')
   @HttpCode(HttpStatus.CREATED)
+  // Stricter than the global 60/min: AI calls cost money, so cap chat sends.
+  @Throttle({ default: { limit: 15, ttl: 60_000 } })
   @ApiOperation({ summary: 'Send message and get AI response' })
   @ApiParam({ name: 'id', description: 'Session ID' })
   async sendMessage(

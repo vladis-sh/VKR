@@ -157,18 +157,30 @@ export default function StatsPage() {
       nodesDone += (completedByRoadmap[roadmap.slug] ?? []).filter((id) => nodeIds.has(id)).length
     }
 
+    const favoritesSet = new Set(lcProgress.favorites)
+    const favoriteTasks = tasks
+      .filter((task) => favoritesSet.has(task.id))
+      .map((task) => ({
+        slug: task.slug,
+        title: task.title,
+        category: task.category,
+        difficulty: task.difficulty,
+        estimatedMinutes: task.estimatedMinutes,
+        solved: solvedSet.has(task.id),
+      }))
+
     return {
       tasksSolved,
       tasksTotal: freeTasks.length,
       nodesDone,
       nodesTotal,
-      favorites: lcProgress.favorites.length,
+      favoriteTasks,
     }
   }, [tasks, roadmaps, lcProgress.solved, lcProgress.favorites, completedByRoadmap])
 
   const hasPracticeData = practice.tasksTotal > 0 || practice.nodesTotal > 0
   const hasPracticeActivity =
-    practice.tasksSolved > 0 || practice.nodesDone > 0 || practice.favorites > 0
+    practice.tasksSolved > 0 || practice.nodesDone > 0 || practice.favoriteTasks.length > 0
   const practiceSection = hasPracticeData ? <PracticeStats {...practice} /> : null
 
   if (isLoading) return <StatsSkeleton />

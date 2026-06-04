@@ -235,8 +235,7 @@ function StageSection({
 }) {
   const doneCount = stage.nodes.filter((node) => isCompleted(node.id)).length
   const stageDone = stage.nodes.length > 0 && doneCount === stage.nodes.length
-  const percent =
-    stage.nodes.length === 0 ? 0 : Math.round((doneCount / stage.nodes.length) * 100)
+  const percent = stage.nodes.length === 0 ? 0 : Math.round((doneCount / stage.nodes.length) * 100)
 
   return (
     <motion.section
@@ -307,7 +306,7 @@ export default function RoadmapDetailPage() {
     return (
       <div className="mx-auto max-w-3xl">
         <EmptyState
-          title="Роадмап не найден"
+          title="План подготовки не найден"
           description="Возможно, ссылка устарела. Вернитесь к списку планов подготовки."
           action={
             <Button asChild>
@@ -331,8 +330,7 @@ export default function RoadmapDetailPage() {
         to="/app/roadmaps"
         className="inline-flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
       >
-        <ArrowLeft size={15} />
-        К списку планов подготовки
+        <ArrowLeft size={15} />К списку планов подготовки
       </Link>
 
       <motion.header
@@ -392,16 +390,13 @@ export default function RoadmapDetailPage() {
       {/* Study plan — vertical, document-style */}
       {roadmap.stages.length === 0 ? (
         <EmptyState
-          title="В этом роадмапе пока нет тем"
+          title="В этом плане подготовки пока нет тем"
           description="Опубликованный план найден, но его структура еще не заполнена."
         />
       ) : (
         <div className="relative space-y-8 md:space-y-10">
           {/* Continuous timeline rail behind the stage numbers */}
-          <span
-            aria-hidden
-            className="absolute bottom-6 left-[18px] top-4 w-0.5 bg-border"
-          />
+          <span aria-hidden className="absolute bottom-6 left-[18px] top-4 w-0.5 bg-border" />
           {roadmap.stages.map((stage, index) => (
             <StageSection
               key={stage.id}

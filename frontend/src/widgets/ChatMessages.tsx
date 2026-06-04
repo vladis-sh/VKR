@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Copy, Check, Bot, User, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import ReactMarkdown, { type Components } from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import 'highlight.js/styles/github-dark.css'
 import { cn } from '@/shared/lib/cn'
 import { toast } from '@/features/theme/useToastStore'
 import type { ChatMessage } from '@/entities/types'
@@ -12,6 +16,113 @@ interface ChatMessagesProps {
   isTyping?: boolean
   errorMessage?: string | null
 }
+
+// ── Markdown rendering (assistant replies) ──────────────────────────────────────
+
+const CodeSpan: Components['code'] = ({ className, children }) => {
+  // Inline code has no language class; fenced blocks get `language-*`/`hljs`
+  // from rehype-highlight, which is how we tell the two apart.
+  if (!className) {
+    return (
+      <code className="rounded bg-foreground/10 px-1.5 py-0.5 font-mono text-[0.85em]">
+        {children}
+      </code>
+    )
+  }
+  return <code className={cn('font-mono', className)}>{children}</code>
+}
+
+const CodeBlock: Components['pre'] = ({ children }) => {
+  const preRef = useRef<HTMLPreElement>(null)
+  const [copied, setCopied] = useState(false)
+
+  const copyCode = async () => {
+    const text = preRef.current?.textContent ?? ''
+    if (!text) return
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      toast.error('Не удалось скопировать')
+    }
+  }
+
+  return (
+    <div className="group/code relative my-2">
+      <button
+        type="button"
+        onClick={copyCode}
+        className="absolute right-2 top-2 z-10 rounded-md bg-white/10 p-1 text-gray-300 opacity-0 transition-opacity hover:bg-white/20 hover:text-white group-hover/code:opacity-100"
+        aria-label="Копировать код"
+      >
+        {copied ? <Check size={13} className="text-green-400" /> : <Copy size={13} />}
+      </button>
+      <pre
+        ref={preRef}
+        className="overflow-x-auto rounded-lg bg-[#0d1117] p-3 text-xs leading-relaxed"
+      >
+        {children}
+      </pre>
+    </div>
+  )
+}
+
+const markdownComponents: Components = {
+  code: CodeSpan,
+  pre: CodeBlock,
+  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+  ul: ({ children }) => <ul className="mb-2 last:mb-0 list-disc space-y-1 pl-5">{children}</ul>,
+  ol: ({ children }) => <ol className="mb-2 last:mb-0 list-decimal space-y-1 pl-5">{children}</ol>,
+  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
+  a: ({ children, href }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-primary underline underline-offset-2"
+    >
+      {children}
+    </a>
+  ),
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+  em: ({ children }) => <em className="italic">{children}</em>,
+  h1: ({ children }) => <h3 className="mb-2 mt-1 text-base font-semibold">{children}</h3>,
+  h2: ({ children }) => <h3 className="mb-2 mt-1 text-base font-semibold">{children}</h3>,
+  h3: ({ children }) => <h4 className="mb-1.5 mt-1 text-sm font-semibold">{children}</h4>,
+  h4: ({ children }) => <h4 className="mb-1.5 mt-1 text-sm font-semibold">{children}</h4>,
+  blockquote: ({ children }) => (
+    <blockquote className="my-2 border-l-2 border-border pl-3 text-muted-foreground">
+      {children}
+    </blockquote>
+  ),
+  table: ({ children }) => (
+    <div className="my-2 overflow-x-auto">
+      <table className="w-full border-collapse text-xs">{children}</table>
+    </div>
+  ),
+  th: ({ children }) => (
+    <th className="border border-border px-2 py-1 text-left font-semibold">{children}</th>
+  ),
+  td: ({ children }) => <td className="border border-border px-2 py-1">{children}</td>,
+  hr: () => <hr className="my-3 border-border" />,
+}
+
+function MarkdownMessage({ content }: { content: string }) {
+  return (
+    <div className="text-sm leading-relaxed [&_pre_code]:bg-transparent [&_pre_code]:p-0">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeHighlight]}
+        components={markdownComponents}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
+}
+
+// ── Pieces ──────────────────────────────────────────────────────────────────────
 
 function TypingIndicator() {
   return (
@@ -90,7 +201,11 @@ function MessageBubble({ message }: { message: PendingMessage }) {
             message.failed && 'opacity-70 ring-1 ring-destructive/40'
           )}
         >
-          <p className="whitespace-pre-wrap">{message.content}</p>
+          {isUser ? (
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          ) : (
+            <MarkdownMessage content={message.content} />
+          )}
           {message.failed && (
             <p className="mt-1 flex items-center gap-1 text-[11px] text-destructive">
               <AlertCircle size={11} />

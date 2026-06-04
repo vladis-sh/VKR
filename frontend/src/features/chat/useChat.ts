@@ -84,6 +84,22 @@ export function useDeleteChatSession() {
   })
 }
 
+export function useDeleteAllChatSessions() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    // Single request instead of one-per-session, so we show exactly one toast.
+    mutationFn: () => chatApi.deleteAllSessions(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CHAT_SESSIONS })
+      toast.success('Все чаты удалены')
+    },
+    onError: () => {
+      toast.error('Не удалось удалить чаты')
+    },
+  })
+}
+
 // ── Send message hook ──────────────────────────────────────────────────────────
 
 export interface PendingMessage extends ChatMessage {

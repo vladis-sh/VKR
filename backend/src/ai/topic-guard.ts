@@ -4,6 +4,11 @@
  * Strategy: low-false-positive blacklist. The system prompt on the model side
  * is the primary gate; this filter only short-circuits obviously non-IT
  * questions so we do not spend API quota on them.
+ *
+ * Off-topic keywords are matched at a word boundary (the start of a word), so
+ * "спорт" does not fire on "транспорт"/"паспорт" and "акци" does not fire on
+ * "транзакция". Tech hints stay plain substring checks because a generous
+ * rescue (fewer false blocks) is the safer direction.
  */
 const OFF_TOPIC_KEYWORDS: string[] = [
   // Daily life / non-tech
@@ -15,7 +20,7 @@ const OFF_TOPIC_KEYWORDS: string[] = [
   'любов',
   'президент',
   'политик',
-  'выбор',
+  'голосован',
   'санкци',
   'война',
   'новост',
@@ -36,13 +41,17 @@ const OFF_TOPIC_KEYWORDS: string[] = [
   'тренировк',
   'порн',
   'эрот',
-  'секс ',
+  'секс',
   'нарко',
   'алког',
-  'крипт',
+  // Finance / trading (note: cryptography is a valid topic, so block the
+  // currency stem specifically rather than the broad "крипт").
+  'криптовалют',
+  'биткоин',
   'инвести',
   'трейд',
-  'акци ',
+  'акци',
+  // Medicine
   'медиц',
   'болезн',
   'лечен',
@@ -100,6 +109,7 @@ const TECH_HINTS: string[] = [
   'sql',
   'orm',
   'api',
+  'serializ',
 
   // Russian tech
   'код',
@@ -160,12 +170,10 @@ const TECH_HINTS: string[] = [
   'собеседован',
   'интервью',
   'задач',
+  'сериализ',
+  'криптограф',
+  'шифр',
 ];
-
-export interface TopicCheckOptions {
-  /** Whether the session already has prior messages. */
-  hasHistory: boolean;
-}
 
 export interface TopicCheckResult {
   allowed: boolean;
@@ -173,23 +181,31 @@ export interface TopicCheckResult {
   reason?: string;
 }
 
-export function checkAssistantTopic(
-  message: string,
-  options: TopicCheckOptions = { hasHistory: false },
-): TopicCheckResult {
+const WORD_CHAR = /[\p{L}\p{N}_]/u;
+
+/** A keyword matches only when it begins a word (start of string or after a non-letter). */
+function includesAtWordStart(text: string, keyword: string): boolean {
+  let from = 0;
+  for (;;) {
+    const index = text.indexOf(keyword, from);
+    if (index === -1) return false;
+    const prev = index > 0 ? text[index - 1] : undefined;
+    if (!prev || !WORD_CHAR.test(prev)) return true;
+    from = index + 1;
+  }
+}
+
+export function checkAssistantTopic(message: string): TopicCheckResult {
   const trimmed = message.trim().toLowerCase();
   if (!trimmed) return { allowed: false, reason: 'empty' };
 
-  // Short follow-ups in an existing conversation rely on prior context.
-  if (options.hasHistory && trimmed.length <= 40) {
-    return { allowed: true };
-  }
-
-  const isOffTopic = OFF_TOPIC_KEYWORDS.some((keyword) => trimmed.includes(keyword));
+  const isOffTopic = OFF_TOPIC_KEYWORDS.some((keyword) => includesAtWordStart(trimmed, keyword));
   if (!isOffTopic) {
     return { allowed: true };
   }
 
+  // An off-topic word may still belong to a technical question
+  // (e.g. "сортировка спортивных результатов"), so rescue on any tech signal.
   const hasTechSignal = TECH_HINTS.some((keyword) => trimmed.includes(keyword));
   if (hasTechSignal) {
     return { allowed: true };
