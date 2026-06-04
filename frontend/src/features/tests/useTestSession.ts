@@ -31,6 +31,10 @@ export function useTestSession({
   const [isGameOver, setIsGameOver] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [timerSeconds, setTimerSeconds] = useState(countdown ? initialSeconds : 0)
+  const [revealed, setRevealed] = useState<
+    Record<string, { correctIndex: number; explanation?: string }>
+  >({})
+  const [isChecking, setIsChecking] = useState(false)
 
   const currentQuestion = questions[currentIndex]
   const isLastQuestion = currentIndex === questions.length - 1
@@ -52,27 +56,40 @@ export function useTestSession({
   })
 
   const handleAnswer = useCallback(
-    (index: number) => {
-      if (hasAnswered || !currentQuestion) return
+    async (index: number) => {
+      if (hasAnswered || isChecking || !currentQuestion) return
+      setIsChecking(true)
       setSelectedIndex(index)
 
-      const isCorrect = index === currentQuestion.correctIndex
-      const newAnswer: TestAnswer = {
-        questionId: currentQuestion.id,
-        selectedIndex: index,
-        isCorrect,
-      }
-      const newAnswers = [...answers, newAnswer]
-      setAnswers(newAnswers)
+      try {
+        // Correctness is verified server-side; the answer key is never shipped
+        // to the client up front.
+        const { data } = await testsApi.checkAnswer(currentQuestion.id, index)
+        setRevealed((prev) => ({
+          ...prev,
+          [currentQuestion.id]: {
+            correctIndex: data.correctIndex,
+            explanation: data.explanation,
+          },
+        }))
+        setAnswers((prev) => [
+          ...prev,
+          { questionId: currentQuestion.id, selectedIndex: index, isCorrect: data.isCorrect },
+        ])
 
-      // One-mistake mode: game over on first wrong answer
-      if (mode === 'one-mistake' && !isCorrect) {
-        setTimeout(() => {
-          setIsGameOver(true)
-        }, 800)
+        // One-mistake mode: game over on first wrong answer
+        if (mode === 'one-mistake' && !data.isCorrect) {
+          setTimeout(() => setIsGameOver(true), 800)
+        }
+      } catch {
+        // Let the user retry the answer.
+        setSelectedIndex(null)
+        toast.error('Не удалось проверить ответ. Попробуйте ещё раз.')
+      } finally {
+        setIsChecking(false)
       }
     },
-    [hasAnswered, currentQuestion, answers, mode]
+    [hasAnswered, isChecking, currentQuestion, mode]
   )
 
   const handleNext = useCallback(() => {
@@ -112,6 +129,8 @@ export function useTestSession({
     hasAnswered,
     isLastQuestion,
     isGameOver,
+    revealed,
+    isChecking,
     showResult,
     setShowResult,
     handleAnswer,

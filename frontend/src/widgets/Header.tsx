@@ -15,7 +15,6 @@ const routeTitles: Record<string, string> = {
   '/app/tests/ai': 'Тест от ИИ',
   '/app/live-coding': 'Live Coding',
   '/app/stats': 'Статистика',
-  '/app/leaderboard': 'Лидерборд',
   '/app/profile': 'Профиль',
   '/app/profile/edit': 'Редактировать профиль',
   '/app/profile/history': 'История тестов',

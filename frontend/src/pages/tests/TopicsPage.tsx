@@ -44,7 +44,7 @@ export default function TopicsPage() {
           <ArrowLeft size={16} />
         </Link>
         <div>
-          <h1 className="text-lg font-bold text-foreground">Выберите тему</h1>
+          <h1 className="text-2xl font-bold text-foreground">Выберите тему</h1>
           <p className="text-xs text-muted-foreground">
             {topics ? `${topics.length} тем` : 'Загрузка...'}
           </p>

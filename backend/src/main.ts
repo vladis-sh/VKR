@@ -77,7 +77,7 @@ async function bootstrap() {
       .addTag('Materials', 'Study materials')
       .addTag('Chat', 'AI Chat sessions')
       .addTag('Tests', 'Quiz and testing')
-      .addTag('Stats', 'Statistics and leaderboard')
+      .addTag('Stats', 'Statistics')
       .addTag('Profile', 'User profile management')
       .addTag('Notifications', 'Notification settings')
       .addTag('Roadmaps', 'Database-backed learning roadmaps')

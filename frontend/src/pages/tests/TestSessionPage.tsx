@@ -10,55 +10,7 @@ import { Spinner } from '@/shared/ui/Spinner'
 import { cn } from '@/shared/lib/cn'
 import { TEST_TIME_ATTACK_SECONDS } from '@/shared/constants'
 import type { TestQuestion, TestMode } from '@/entities/types'
-
-// ── Option button ─────────────────────────────────────────────────────────────
-function OptionButton({
-  label,
-  index,
-  selected,
-  correct,
-  hasAnswered,
-  onClick,
-}: {
-  label: string
-  index: number
-  selected: boolean
-  correct: boolean
-  hasAnswered: boolean
-  onClick: () => void
-}) {
-  const letters = ['A', 'B', 'C', 'D']
-  const isCorrectAnswer = hasAnswered && correct
-  const isWrongAnswer = hasAnswered && selected && !correct
-
-  return (
-    <motion.button
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-      onClick={onClick}
-      disabled={hasAnswered}
-      className={cn(
-        'w-full flex items-center gap-3 rounded-xl border-2 p-4 text-left text-sm font-medium transition-all',
-        !hasAnswered && 'border-border bg-card hover:border-primary/40 hover:bg-accent active:scale-[0.99]',
-        isCorrectAnswer && 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300',
-        isWrongAnswer && 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300',
-        hasAnswered && !selected && !correct && 'border-border bg-secondary/50 text-muted-foreground'
-      )}
-    >
-      <span className={cn(
-        'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold border-2 transition-colors',
-        !hasAnswered && 'border-border bg-background text-muted-foreground',
-        isCorrectAnswer && 'border-green-500 bg-green-500 text-white',
-        isWrongAnswer && 'border-red-500 bg-red-500 text-white',
-        hasAnswered && !selected && !correct && 'border-border bg-secondary text-muted-foreground'
-      )}>
-        {letters[index]}
-      </span>
-      <span className="flex-1">{label}</span>
-    </motion.button>
-  )
-}
+import { QuizOption, type QuizOptionStatus } from '@/features/tests/QuizOption'
 
 // ── Timer display ─────────────────────────────────────────────────────────────
 function TimerDisplay({ seconds, isCountdown }: { seconds: number; isCountdown: boolean }) {
@@ -183,6 +135,8 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
     hasAnswered,
     isLastQuestion,
     isGameOver,
+    revealed,
+    isChecking,
     handleAnswer,
     handleNext,
     handleTimeUp,
@@ -242,6 +196,8 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
 
   if (!currentQuestion) return null
 
+  const reveal = revealed[currentQuestion.id]
+
   return (
     <div className="mx-auto max-w-xl space-y-5">
       {/* Top bar */}
@@ -284,32 +240,41 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
 
       {/* Options */}
       <div className="space-y-2.5">
-        {currentQuestion.options.map((opt, i) => (
-          <OptionButton
-            key={i}
-            label={opt}
-            index={i}
-            selected={selectedIndex === i}
-            correct={i === currentQuestion.correctIndex}
-            hasAnswered={hasAnswered}
-            onClick={() => handleAnswer(i)}
-          />
-        ))}
+        {currentQuestion.options.map((opt, i) => {
+          const status: QuizOptionStatus = !reveal
+            ? 'neutral'
+            : i === reveal.correctIndex
+              ? 'correct'
+              : selectedIndex === i
+                ? 'wrong'
+                : 'muted'
+          return (
+            <QuizOption
+              key={i}
+              text={opt}
+              index={i}
+              selected={selectedIndex === i}
+              status={status}
+              disabled={hasAnswered || isChecking}
+              onClick={() => handleAnswer(i)}
+            />
+          )
+        })}
       </div>
 
       {/* Explanation + Next button */}
       <AnimatePresence>
-        {hasAnswered && (
+        {reveal && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-3"
           >
-            {currentQuestion.explanation && (
+            {reveal.explanation && (
               <div className="rounded-xl border border-border bg-secondary/50 p-4">
                 <p className="text-xs font-semibold text-foreground mb-1">Объяснение:</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  {currentQuestion.explanation}
+                  {reveal.explanation}
                 </p>
               </div>
             )}

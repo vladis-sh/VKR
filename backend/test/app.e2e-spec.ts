@@ -143,17 +143,5 @@ describe('Interview Prep API (e2e)', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.data).toHaveProperty('completedTests');
     });
-
-    it('GET /stats/leaderboard - should return leaderboard', async () => {
-      if (!authCookie) return;
-
-      const res = await request(app.getHttpServer())
-        .get('/stats/leaderboard')
-        .set('Cookie', authCookie)
-        .expect(200);
-
-      expect(res.body.success).toBe(true);
-      expect(Array.isArray(res.body.data)).toBe(true);
-    });
   });
 });

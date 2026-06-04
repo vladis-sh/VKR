@@ -75,7 +75,7 @@ export default function NotificationsPage() {
         >
           <ArrowLeft size={16} />
         </Link>
-        <h1 className="text-lg font-bold text-foreground">Уведомления</h1>
+        <h1 className="text-2xl font-bold text-foreground">Уведомления</h1>
       </div>
 
       {isLoading ? (

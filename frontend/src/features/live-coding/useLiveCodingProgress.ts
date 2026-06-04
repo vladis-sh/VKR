@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
 import type { LiveCodingLanguage } from '@/entities/liveCoding'
+import { useSyncedProgress } from '@/features/progress/useSyncedProgress'
 
 interface LiveCodingProgress {
   solved: string[]
@@ -17,42 +18,12 @@ const emptyProgress: LiveCodingProgress = {
   submittedAt: {},
 }
 
-function readProgress(): LiveCodingProgress {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return emptyProgress
-
-    return { ...emptyProgress, ...JSON.parse(raw) } as LiveCodingProgress
-  } catch {
-    return emptyProgress
-  }
-}
-
-function writeProgress(progress: LiveCodingProgress) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
-}
-
 export function useLiveCodingProgress() {
-  const [progress, setProgress] = useState<LiveCodingProgress>(() => readProgress())
-
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        setProgress(readProgress())
-      }
-    }
-
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
-  }, [])
-
-  const commit = useCallback((updater: (current: LiveCodingProgress) => LiveCodingProgress) => {
-    setProgress((current) => {
-      const next = updater(current)
-      writeProgress(next)
-      return next
-    })
-  }, [])
+  const { progress, commit } = useSyncedProgress<LiveCodingProgress>(
+    'live-coding',
+    STORAGE_KEY,
+    emptyProgress
+  )
 
   const isSolved = useCallback((taskId: string) => progress.solved.includes(taskId), [progress.solved])
   const isFavorite = useCallback(

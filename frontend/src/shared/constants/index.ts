@@ -11,7 +11,6 @@ export const QUERY_KEYS = {
   TEST_QUESTIONS: (params: Record<string, unknown>) => ['tests', 'questions', params],
   TEST_SESSION: (id: string) => ['tests', 'sessions', id],
   STATS: ['stats'],
-  LEADERBOARD: (sort: string) => ['stats', 'leaderboard', sort],
   PROFILE: ['profile'],
   TEST_HISTORY: (page: number) => ['profile', 'test-history', page],
   NOTIFICATIONS: ['notifications'],

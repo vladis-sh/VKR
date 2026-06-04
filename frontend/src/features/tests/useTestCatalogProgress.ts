@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import {
   getThemeSubtopics,
   type CatalogQuestion,
   type TestSubtopic,
   type TestTheme,
 } from '@/entities/testCatalog'
+import { useSyncedProgress } from '@/features/progress/useSyncedProgress'
 
 export type TestProgressStatus = 'not-started' | 'in-progress' | 'completed'
 
@@ -24,23 +25,6 @@ const emptyProgress: TestCatalogProgress = {
   questions: {},
 }
 
-function readProgress(): TestCatalogProgress {
-  if (typeof window === 'undefined') return emptyProgress
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return emptyProgress
-
-    return { ...emptyProgress, ...JSON.parse(raw) } as TestCatalogProgress
-  } catch {
-    return emptyProgress
-  }
-}
-
-function writeProgress(progress: TestCatalogProgress) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
-}
-
 function getQuestionsStats(questions: CatalogQuestion[], progress: TestCatalogProgress) {
   const total = questions.length
   const checked = questions.filter((question) => progress.questions[question.id]?.checked).length
@@ -57,26 +41,11 @@ function getQuestionsStats(questions: CatalogQuestion[], progress: TestCatalogPr
 }
 
 export function useTestCatalogProgress() {
-  const [progress, setProgress] = useState<TestCatalogProgress>(() => readProgress())
-
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        setProgress(readProgress())
-      }
-    }
-
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
-  }, [])
-
-  const commit = useCallback((updater: (current: TestCatalogProgress) => TestCatalogProgress) => {
-    setProgress((current) => {
-      const next = updater(current)
-      writeProgress(next)
-      return next
-    })
-  }, [])
+  const { progress, commit } = useSyncedProgress<TestCatalogProgress>(
+    'test-catalog',
+    STORAGE_KEY,
+    emptyProgress
+  )
 
   const setAnswer = useCallback(
     (questionId: string, selectedIndex: number) => {

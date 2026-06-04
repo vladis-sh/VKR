@@ -24,7 +24,7 @@ prepai/
 │   │   │   ├── providers/    # MockProvider, OllamaProvider
 │   │   │   └── prompts/      # Промпты для ролей ИИ
 │   │   ├── tests/            # Модуль тестирования
-│   │   ├── stats/            # Статистика и лидерборд
+│   │   ├── stats/            # Статистика
 │   │   ├── profile/          # Профиль пользователя
 │   │   ├── notifications/    # Настройки уведомлений
 │   │   └── common/           # Guards, decorators, filters

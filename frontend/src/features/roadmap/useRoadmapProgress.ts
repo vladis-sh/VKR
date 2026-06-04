@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
+import { useSyncedProgress } from '@/features/progress/useSyncedProgress'
 
 interface RoadmapProgress {
   completedByRoadmap: Record<string, string[]>
@@ -10,42 +11,12 @@ const emptyProgress: RoadmapProgress = {
   completedByRoadmap: {},
 }
 
-function readProgress(): RoadmapProgress {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return emptyProgress
-
-    return { ...emptyProgress, ...JSON.parse(raw) } as RoadmapProgress
-  } catch {
-    return emptyProgress
-  }
-}
-
-function writeProgress(progress: RoadmapProgress) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress))
-}
-
 export function useRoadmapProgress(roadmapSlug: string) {
-  const [progress, setProgress] = useState<RoadmapProgress>(() => readProgress())
-
-  useEffect(() => {
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY) {
-        setProgress(readProgress())
-      }
-    }
-
-    window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
-  }, [])
-
-  const commit = useCallback((updater: (current: RoadmapProgress) => RoadmapProgress) => {
-    setProgress((current) => {
-      const next = updater(current)
-      writeProgress(next)
-      return next
-    })
-  }, [])
+  const { progress, commit } = useSyncedProgress<RoadmapProgress>(
+    'roadmap',
+    STORAGE_KEY,
+    emptyProgress
+  )
 
   const completed = useMemo(
     () => progress.completedByRoadmap[roadmapSlug] ?? [],

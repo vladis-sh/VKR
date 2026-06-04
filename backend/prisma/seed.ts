@@ -4311,7 +4311,7 @@ TTFB (Time to First Byte) — время до первого байта от с�
     `Seeded content entries: ${ROADMAPS.length} roadmaps, ${LIVE_CODING_TASKS.length} live coding tasks, ${TEST_CATALOG_THEMES.length} test themes`,
   );
 
-  // Create sample test sessions for leaderboard
+  // Create sample test sessions for stats
   const testSession1 = await prisma.testSession.create({
     data: {
       userId: demoUser.id,

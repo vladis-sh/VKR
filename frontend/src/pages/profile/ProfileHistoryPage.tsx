@@ -72,7 +72,7 @@ export default function ProfileHistoryPage() {
           <ArrowLeft size={16} />
         </Link>
         <div>
-          <h1 className="text-lg font-bold text-foreground">История тестов</h1>
+          <h1 className="text-2xl font-bold text-foreground">История тестов</h1>
           {data && (
             <p className="text-xs text-muted-foreground">
               {data.total ?? items.length} тестов

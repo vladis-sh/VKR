@@ -44,7 +44,7 @@ export default function TestHistoryPage() {
           <ArrowLeft size={16} />
         </Link>
         <div>
-          <h1 className="text-lg font-bold text-foreground">Разбор ответов</h1>
+          <h1 className="text-2xl font-bold text-foreground">Разбор ответов</h1>
           <p className="text-xs text-muted-foreground">
             {answers.length} вопросов · {result.correctAnswers ?? 0} верных
           </p>

@@ -24,6 +24,13 @@ export interface CompleteTestSessionPayload {
   durationSeconds: number
 }
 
+export interface RecordCatalogResultPayload {
+  topic: string
+  correctCount: number
+  totalQuestions: number
+  durationSeconds: number
+}
+
 export const testsApi = {
   getTopics: () =>
     apiClient.get<TestTopic[]>('/tests/topics'),
@@ -33,6 +40,12 @@ export const testsApi = {
 
   getAIQuestions: (params: { topic?: string; count?: number; difficulty?: string } = {}) =>
     apiClient.get<TestQuestion[]>('/tests/questions/ai', { params }),
+
+  checkAnswer: (questionId: string, selectedAnswerIndex: number) =>
+    apiClient.post<{ isCorrect: boolean; correctIndex: number; explanation: string }>(
+      `/tests/questions/${questionId}/check`,
+      { selectedAnswerIndex }
+    ),
 
   createSession: (data: CreateTestSessionPayload) =>
     apiClient.post<TestSession>('/tests/sessions', data),
@@ -48,4 +61,10 @@ export const testsApi = {
 
   getSession: (id: string) =>
     apiClient.get<TestSessionResult>(`/tests/sessions/${id}`),
+
+  recordCatalogResult: (data: RecordCatalogResultPayload) =>
+    apiClient.post<{ id: string; correctAnswers: number; totalQuestions: number; percentage: number }>(
+      '/tests/sessions/catalog-result',
+      data
+    ),
 }

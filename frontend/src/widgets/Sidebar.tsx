@@ -1,22 +1,8 @@
 import { NavLink } from 'react-router-dom'
-import {
-  BarChart2,
-  ClipboardList,
-  Database,
-  Map,
-  MessageSquare,
-  Shield,
-} from 'lucide-react'
+import { Database, Shield } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 import { useAuthStore } from '@/features/auth/useAuthStore'
-
-const navItems = [
-  { to: '/app/roadmaps', label: 'План подготовки', icon: Map },
-  { to: '/app/chat', label: 'Чат с ИИ', icon: MessageSquare },
-  { to: '/app/tests', label: 'Тесты', icon: ClipboardList },
-  // { to: '/app/live-coding', label: 'Live Coding', icon: Code2 },
-  { to: '/app/stats', label: 'Статистика', icon: BarChart2 },
-]
+import { MAIN_NAV } from '@/shared/config/nav'
 
 const adminNavItems = [
   { to: '/app/admin/content', label: 'Content DB (admin)', icon: Database },
@@ -38,7 +24,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex flex-1 flex-col gap-1 p-3">
-        {navItems.map(({ to, label, icon: Icon }) => (
+        {MAIN_NAV.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

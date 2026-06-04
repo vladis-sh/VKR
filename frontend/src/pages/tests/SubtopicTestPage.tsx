@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
   ArrowLeft,
@@ -19,41 +20,9 @@ import { CircularProgress } from '@/shared/ui/CircularProgress'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Skeleton } from '@/shared/ui/Skeleton'
 import { cn } from '@/shared/lib/cn'
-
-function QuestionOption({
-  option,
-  index,
-  selected,
-  onSelect,
-}: {
-  option: string
-  index: number
-  selected: boolean
-  onSelect: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'flex w-full items-center gap-3 rounded-xl border p-4 text-left text-sm transition-all',
-        selected
-          ? 'border-primary bg-primary/5 ring-1 ring-primary'
-          : 'border-border bg-card hover:border-primary/40 hover:bg-accent/40'
-      )}
-    >
-      <span
-        className={cn(
-          'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-colors',
-          selected ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background text-muted-foreground'
-        )}
-      >
-        {index + 1}
-      </span>
-      <span className="leading-relaxed text-foreground">{option}</span>
-    </button>
-  )
-}
+import { testsApi } from '@/shared/api/tests.api'
+import { QuizOption } from '@/features/tests/QuizOption'
+import { QUERY_KEYS } from '@/shared/constants'
 
 function TestPageSkeleton() {
   return (
@@ -75,6 +44,8 @@ export default function SubtopicTestPage() {
     useTestCatalogProgress()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [showResults, setShowResults] = useState(false)
+  const queryClient = useQueryClient()
+  const startedAtRef = useRef(Date.now())
 
   if (isLoading) return <TestPageSkeleton />
 
@@ -104,6 +75,7 @@ export default function SubtopicTestPage() {
     resetSubtopicProgress(subtopic)
     setCurrentIndex(0)
     setShowResults(false)
+    startedAtRef.current = Date.now()
   }
 
   // ── Results screen ──────────────────────────────────────────────────────────
@@ -239,9 +211,29 @@ export default function SubtopicTestPage() {
   // ── Quiz screen ─────────────────────────────────────────────────────────────
   const handleSelect = (index: number) => setAnswer(question.id, index)
 
+  // Persist an aggregated result so catalog tests also feed Stats.
+  const recordCatalogResult = () => {
+    const correctCount = questions.filter(
+      (item) => getQuestionProgress(item.id)?.selectedIndex === item.correctIndex
+    ).length
+    const durationSeconds = Math.max(1, Math.round((Date.now() - startedAtRef.current) / 1000))
+    testsApi
+      .recordCatalogResult({
+        topic: subtopic.title,
+        correctCount,
+        totalQuestions: total,
+        durationSeconds,
+      })
+      .then(() => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.STATS }))
+      .catch(() => {
+        // Non-blocking — results still render if the backend is unreachable.
+      })
+  }
+
   const goNext = () => {
     if (isLast) {
       completeSubtopicProgress(subtopic)
+      recordCatalogResult()
       setShowResults(true)
       return
     }
@@ -298,12 +290,12 @@ export default function SubtopicTestPage() {
 
           <div className="mt-5 space-y-2.5">
             {question.options.map((option, index) => (
-              <QuestionOption
+              <QuizOption
                 key={option}
-                option={option}
+                text={option}
                 index={index}
                 selected={selectedIndex === index}
-                onSelect={() => handleSelect(index)}
+                onClick={() => handleSelect(index)}
               />
             ))}
           </div>

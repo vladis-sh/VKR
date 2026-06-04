@@ -1,16 +1,7 @@
 import { CheckCircle, XCircle, Clock, Trophy } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { UserStats } from '@/entities/types'
-
-function formatTime(seconds: number): string {
-  if (seconds < 60) return `${seconds}с`
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  if (h > 0) return `${h}ч ${m}м`
-  if (s > 0) return `${m}м ${s}с`
-  return `${m}м`
-}
+import { formatDuration } from '@/shared/lib/formatDuration'
 
 interface StatCardProps {
   icon: React.ReactNode
@@ -70,7 +61,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
       <StatCard
         icon={<Clock size={20} className="text-blue-500" />}
         label="Время обучения"
-        value={formatTime(stats.totalTimeSeconds)}
+        value={formatDuration(stats.totalTimeSeconds)}
         color="bg-blue-100 dark:bg-blue-900/30"
         delay={0.15}
       />

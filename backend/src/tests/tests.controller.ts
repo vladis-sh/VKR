@@ -18,6 +18,8 @@ import {
   CreateTestSessionDto,
   CompleteTestSessionDto,
   QueryAiQuestionsDto,
+  RecordCatalogResultDto,
+  CheckAnswerDto,
 } from './dto/tests.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
@@ -103,11 +105,29 @@ export class TestsController {
     return this.testsService.getQuestions(userId, query);
   }
 
+  @Post('questions/:id/check')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Check a single answer and reveal the correct one' })
+  @ApiParam({ name: 'id', description: 'Question ID' })
+  async checkAnswer(@Param('id') id: string, @Body() dto: CheckAnswerDto) {
+    return this.testsService.checkAnswer(id, dto.selectedAnswerIndex);
+  }
+
   @Post('sessions')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new test session' })
   async createSession(@CurrentUser('id') userId: string, @Body() dto: CreateTestSessionDto) {
     return this.testsService.createTestSession(userId, dto);
+  }
+
+  @Post('sessions/catalog-result')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Record an aggregated result for a catalog (theme) test' })
+  async recordCatalogResult(
+    @CurrentUser('id') userId: string,
+    @Body() dto: RecordCatalogResultDto,
+  ) {
+    return this.testsService.recordCatalogResult(userId, dto);
   }
 
   @Get('sessions/:id')

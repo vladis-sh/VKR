@@ -14,6 +14,7 @@ import {
   CreateTestSessionDto,
   QueryAiQuestionsDto,
   QueryQuestionsDto,
+  RecordCatalogResultDto,
 } from './dto/tests.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 
@@ -186,6 +187,43 @@ export class TestsService {
     });
   }
 
+  /**
+   * Records an aggregated result for a catalog (theme) test. Catalog questions
+   * live in ContentEntry payloads, not the Question table, so they can't go
+   * through completeTestSession — we persist the totals directly so the result
+   * still feeds Stats.
+   */
+  async recordCatalogResult(userId: string, dto: RecordCatalogResultDto) {
+    const totalQuestions = dto.totalQuestions;
+    const correctCount = Math.min(Math.max(Math.trunc(dto.correctCount), 0), totalQuestions);
+    const incorrectCount = totalQuestions - correctCount;
+    const accuracyPercent = totalQuestions > 0 ? (correctCount / totalQuestions) * 100 : 0;
+    const durationSeconds = Math.min(
+      Math.max(Math.trunc(dto.durationSeconds || 0), 1),
+      24 * 60 * 60,
+    );
+
+    const session = await this.prisma.testSession.create({
+      data: {
+        userId,
+        mode: TestMode.topic,
+        topic: dto.topic?.trim() || 'Тест по теме',
+        correctCount,
+        incorrectCount,
+        totalQuestions,
+        durationSeconds,
+        accuracyPercent,
+      },
+    });
+
+    return {
+      id: session.id,
+      correctAnswers: correctCount,
+      totalQuestions,
+      percentage: accuracyPercent,
+    };
+  }
+
   async getTestSession(userId: string, sessionId: string) {
     const session = await this.prisma.testSession.findUnique({
       where: { id: sessionId },
@@ -260,14 +298,32 @@ export class TestsService {
   }
 
   private mapQuestion(question: any) {
+    // The answer key (correctIndex/explanation) is intentionally omitted so it
+    // can't be read from the network before answering — it is revealed only via
+    // POST /tests/questions/:id/check.
     return {
       id: question.id,
       topic: question.topic,
       text: question.text,
       options: question.options,
       difficulty: question.difficulty,
-      explanation: question.explanation,
+    };
+  }
+
+  async checkAnswer(questionId: string, selectedAnswerIndex: number) {
+    const question = await this.prisma.question.findFirst({
+      where: { id: questionId, deletedAt: null },
+      select: { correctAnswerIndex: true, explanation: true },
+    });
+
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    return {
+      isCorrect: question.correctAnswerIndex === selectedAnswerIndex,
       correctIndex: question.correctAnswerIndex,
+      explanation: question.explanation,
     };
   }
 

@@ -76,6 +76,40 @@ export class CompleteTestSessionDto {
   durationSeconds: number;
 }
 
+export class CheckAnswerDto {
+  @ApiProperty({ description: 'Index of the option the user selected' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(3)
+  selectedAnswerIndex: number;
+}
+
+export class RecordCatalogResultDto {
+  @ApiProperty({ description: 'Subtopic/theme title for history display' })
+  @IsString()
+  topic: string;
+
+  @ApiProperty({ description: 'Number of correct answers' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  correctCount: number;
+
+  @ApiProperty({ description: 'Total questions in the subtopic' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(500)
+  totalQuestions: number;
+
+  @ApiProperty({ description: 'Duration in seconds' })
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  durationSeconds: number;
+}
+
 export class QueryAiQuestionsDto {
   @ApiPropertyOptional({ description: 'Topic for AI-generated questions' })
   @IsOptional()

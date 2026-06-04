@@ -296,7 +296,7 @@ export default function EditProfilePage() {
         >
           <ArrowLeft size={16} />
         </Link>
-        <h1 className="text-lg font-bold text-foreground">Редактировать профиль</h1>
+        <h1 className="text-2xl font-bold text-foreground">Редактировать профиль</h1>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>

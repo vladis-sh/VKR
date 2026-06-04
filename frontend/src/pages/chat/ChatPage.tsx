@@ -210,6 +210,7 @@ export default function ChatPage() {
   const [activeSession, setActiveSession] = useState<ChatSession | null>(null)
   const [showNewModal, setShowNewModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [showSidebar, setShowSidebar] = useState(false)
   const queryClient = useQueryClient()
 
@@ -238,13 +239,17 @@ export default function ChatPage() {
   }
 
   const handleDeleteAll = async () => {
-    // Delete each session
-    for (const s of sessions) {
-      await deleteSession.mutateAsync(s.id)
-    }
+    await Promise.all(sessions.map((s) => deleteSession.mutateAsync(s.id)))
     setActiveSession(null)
     setShowDeleteModal(false)
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.CHAT_SESSIONS })
+  }
+
+  const handleDeleteActive = () => {
+    if (!activeSession) return
+    deleteSession.mutate(activeSession.id)
+    setActiveSession(null)
+    setConfirmDelete(false)
   }
 
   return (
@@ -313,13 +318,7 @@ export default function ChatPage() {
           </Button>
           {activeSession && (
             <button
-              onClick={() => {
-                if (!window.confirm(`Удалить чат «${activeSession.title}»? Историю нельзя восстановить.`)) {
-                  return
-                }
-                deleteSession.mutate(activeSession.id)
-                setActiveSession(null)
-              }}
+              onClick={() => setConfirmDelete(true)}
               className="text-muted-foreground hover:text-destructive transition-colors"
               aria-label="Удалить чат"
             >
@@ -376,6 +375,28 @@ export default function ChatPage() {
         onConfirm={handleDeleteAll}
         isLoading={deleteSession.isPending}
       />
+      <Modal
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        title="Удалить чат?"
+        description={
+          activeSession ? `«${activeSession.title}» — историю нельзя восстановить.` : undefined
+        }
+      >
+        <div className="mt-2 flex gap-2">
+          <Button variant="outline" className="flex-1" onClick={() => setConfirmDelete(false)}>
+            Отмена
+          </Button>
+          <Button
+            variant="destructive"
+            className="flex-1"
+            loading={deleteSession.isPending}
+            onClick={handleDeleteActive}
+          >
+            Удалить
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

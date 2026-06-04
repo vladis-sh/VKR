@@ -26,7 +26,6 @@ const LiveCodingTaskPage = lazy(() => import('@/pages/live-coding/LiveCodingTask
 const RoadmapsPage = lazy(() => import('@/pages/roadmaps/RoadmapsPage'))
 const RoadmapDetailPage = lazy(() => import('@/pages/roadmaps/RoadmapDetailPage'))
 const StatsPage = lazy(() => import('@/pages/stats/StatsPage'))
-const LeaderboardPage = lazy(() => import('@/pages/leaderboard/LeaderboardPage'))
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'))
 const EditProfilePage = lazy(() => import('@/pages/profile/EditProfilePage'))
 const ProfileHistoryPage = lazy(() => import('@/pages/profile/ProfileHistoryPage'))
@@ -224,14 +223,6 @@ export const router = createBrowserRouter([
         element: (
           <LazyWrapper>
             <StatsPage />
-          </LazyWrapper>
-        ),
-      },
-      {
-        path: 'leaderboard',
-        element: (
-          <LazyWrapper>
-            <LeaderboardPage />
           </LazyWrapper>
         ),
       },

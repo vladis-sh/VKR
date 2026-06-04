@@ -134,7 +134,8 @@ export interface TestQuestion {
   id: string
   text: string
   options: string[]
-  correctIndex: number
+  /** Omitted by list endpoints; revealed per-answer via the check endpoint. */
+  correctIndex?: number
   explanation?: string
   topic?: string
   difficulty?: KnowledgeLevel
@@ -195,22 +196,12 @@ export interface UserStats {
 export interface SessionStat {
   sessionId: string
   date: string
+  mode: TestMode
+  topic?: string | null
   accuracy: number
   correctAnswers: number
   totalQuestions: number
   durationSeconds: number
-}
-
-export interface LeaderboardEntry {
-  rank: number
-  userId: string
-  fullName: string
-  avatarUrl?: string | null
-  correctAnswers: number
-  studyTimeSeconds: number
-  isCurrentUser?: boolean
-  knowledgeLevel?: KnowledgeLevel
-  accuracy?: number
 }
 
 // ============================================================

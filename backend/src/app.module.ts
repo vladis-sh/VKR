@@ -12,6 +12,7 @@ import { StatsModule } from './stats/stats.module';
 import { ProfileModule } from './profile/profile.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ContentModule } from './content/content.module';
+import { ProgressModule } from './progress/progress.module';
 import configuration from './config/configuration';
 
 @Module({
@@ -34,6 +35,7 @@ import configuration from './config/configuration';
     ProfileModule,
     NotificationsModule,
     ContentModule,
+    ProgressModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

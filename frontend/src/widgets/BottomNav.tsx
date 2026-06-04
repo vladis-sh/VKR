@@ -1,19 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { MessageSquare, ClipboardList, BarChart2, Map } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
-
-const navItems = [
-  { to: '/app/roadmaps', label: 'План подготовки', icon: Map },
-  { to: '/app/chat', label: 'Чат', icon: MessageSquare },
-  { to: '/app/tests', label: 'Тесты', icon: ClipboardList },
-  // { to: '/app/live-coding', label: 'Кодинг', icon: Code2 },
-  { to: '/app/stats', label: 'Статы', icon: BarChart2 },
-]
+import { MAIN_NAV } from '@/shared/config/nav'
 
 export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 flex border-t border-border bg-card/95 backdrop-blur md:hidden">
-      {navItems.map(({ to, label, icon: Icon }) => (
+      {MAIN_NAV.map(({ to, shortLabel, icon: Icon }) => (
         <NavLink
           key={to}
           to={to}
@@ -27,7 +19,7 @@ export function BottomNav() {
           {({ isActive }) => (
             <>
               <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-              <span>{label}</span>
+              <span>{shortLabel}</span>
             </>
           )}
         </NavLink>
