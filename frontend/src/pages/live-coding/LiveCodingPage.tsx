@@ -13,9 +13,7 @@ import {
 } from 'lucide-react'
 import {
   DIFFICULTY_LABELS,
-  LANGUAGE_LABELS,
   type LiveCodingDifficulty,
-  type LiveCodingLanguage,
   type LiveCodingTask,
 } from '@/entities/liveCoding'
 import { useLiveCodingProgress } from '@/features/live-coding/useLiveCodingProgress'
@@ -100,12 +98,6 @@ function TaskRow({
           {task.isPremium && (
             <Lock size={12} className="shrink-0 text-amber-500" aria-label="Premium" />
           )}
-        </div>
-        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
-          <span className="truncate">
-            {task.companies.slice(0, 3).join(' · ')}
-            {task.companies.length > 3 && ` +${task.companies.length - 3}`}
-          </span>
         </div>
       </div>
 
@@ -214,15 +206,8 @@ export default function LiveCodingPage() {
   const { data: tasks = [], isLoading } = useLiveCodingTasks()
   const [search, setSearch] = useState('')
   const [difficulty, setDifficulty] = useState<LiveCodingDifficulty | 'all'>('all')
-  const [company, setCompany] = useState('all')
-  const [language, setLanguage] = useState<LiveCodingLanguage | 'all'>('all')
   const [onlyFavorites, setOnlyFavorites] = useState(false)
   const { progress, isSolved, isFavorite, toggleFavorite } = useLiveCodingProgress()
-
-  const companies = useMemo(
-    () => Array.from(new Set(tasks.flatMap((task) => task.companies))).sort(),
-    [tasks]
-  )
 
   const filteredTasks = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase()
@@ -231,22 +216,13 @@ export default function LiveCodingPage() {
       const matchesSearch =
         !normalizedSearch ||
         task.title.toLowerCase().includes(normalizedSearch) ||
-        task.category.toLowerCase().includes(normalizedSearch) ||
-        task.companies.some((item) => item.toLowerCase().includes(normalizedSearch))
+        task.category.toLowerCase().includes(normalizedSearch)
       const matchesDifficulty = difficulty === 'all' || task.difficulty === difficulty
-      const matchesCompany = company === 'all' || task.companies.includes(company)
-      const matchesLanguage = language === 'all' || task.languages.includes(language)
       const matchesFavorite = !onlyFavorites || isFavorite(task.id)
 
-      return (
-        matchesSearch &&
-        matchesDifficulty &&
-        matchesCompany &&
-        matchesLanguage &&
-        matchesFavorite
-      )
+      return matchesSearch && matchesDifficulty && matchesFavorite
     })
-  }, [company, difficulty, language, onlyFavorites, search, isFavorite, tasks])
+  }, [difficulty, onlyFavorites, search, isFavorite, tasks])
 
   const groupedTasks = useMemo(() => {
     const map = new Map<string, LiveCodingTask[]>()
@@ -273,18 +249,11 @@ export default function LiveCodingPage() {
     }
   })
 
-  const isFiltering =
-    Boolean(search) ||
-    difficulty !== 'all' ||
-    company !== 'all' ||
-    language !== 'all' ||
-    onlyFavorites
+  const isFiltering = Boolean(search) || difficulty !== 'all' || onlyFavorites
 
   const resetFilters = () => {
     setSearch('')
     setDifficulty('all')
-    setCompany('all')
-    setLanguage('all')
     setOnlyFavorites(false)
   }
 
@@ -360,7 +329,7 @@ export default function LiveCodingPage() {
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Поиск задачи, категории или компании"
+              placeholder="Поиск задачи или категории"
               className="h-9 w-full rounded-lg border border-border bg-background pl-9 pr-9 text-sm outline-none transition focus:ring-2 focus:ring-ring"
             />
             {search && (
@@ -392,36 +361,6 @@ export default function LiveCodingPage() {
               </button>
             ))}
           </div>
-
-          <select
-            value={company}
-            onChange={(event) => setCompany(event.target.value)}
-            className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm outline-none transition focus:ring-2 focus:ring-ring"
-            aria-label="Компания"
-          >
-            <option value="all">Все компании</option>
-            {companies.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={language}
-            onChange={(event) =>
-              setLanguage(event.target.value as LiveCodingLanguage | 'all')
-            }
-            className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm outline-none transition focus:ring-2 focus:ring-ring"
-            aria-label="Язык"
-          >
-            <option value="all">Все языки</option>
-            {Object.entries(LANGUAGE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
 
           <button
             type="button"

@@ -65,3 +65,12 @@ export function useRoadmapProgress(roadmapSlug: string) {
     resetRoadmap,
   }
 }
+
+/**
+ * Read-only view of completed nodes across *all* roadmaps — used by aggregate
+ * dashboards (e.g. the stats page) that need a global learning-progress number.
+ */
+export function useAllRoadmapProgress() {
+  const { progress } = useSyncedProgress<RoadmapProgress>('roadmap', STORAGE_KEY, emptyProgress)
+  return progress.completedByRoadmap
+}

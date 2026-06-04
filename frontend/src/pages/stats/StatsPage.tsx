@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -29,7 +30,12 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import type { TestMode } from '@/entities/types'
 import { useStats } from '@/features/stats/useStats'
+import { useLiveCodingTasks } from '@/features/live-coding/useLiveCodingTasks'
+import { useLiveCodingProgress } from '@/features/live-coding/useLiveCodingProgress'
+import { useRoadmaps } from '@/features/roadmap/useRoadmaps'
+import { useAllRoadmapProgress } from '@/features/roadmap/useRoadmapProgress'
 import { StatsCards } from '@/widgets/StatsCards'
+import { PracticeStats } from '@/widgets/PracticeStats'
 import { CircularProgress } from '@/shared/ui/CircularProgress'
 import { Skeleton } from '@/shared/ui/Skeleton'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -130,15 +136,51 @@ function StatsSkeleton() {
 export default function StatsPage() {
   const { data: stats, isLoading } = useStats()
 
+  // Practice & learning progress is local-first (no extra loading state) and is
+  // shown alongside the test-based statistics below.
+  const { data: tasks = [] } = useLiveCodingTasks()
+  const { data: roadmaps = [] } = useRoadmaps()
+  const { progress: lcProgress } = useLiveCodingProgress()
+  const completedByRoadmap = useAllRoadmapProgress()
+
+  const practice = useMemo(() => {
+    const solvedSet = new Set(lcProgress.solved)
+    const freeTasks = tasks.filter((task) => !task.isPremium)
+    const tasksSolved = freeTasks.filter((task) => solvedSet.has(task.id)).length
+
+    let nodesTotal = 0
+    let nodesDone = 0
+    for (const roadmap of roadmaps) {
+      const nodeIds = new Set(roadmap.stages.flatMap((stage) => stage.nodes.map((node) => node.id)))
+      nodesTotal += nodeIds.size
+      // Only count completions that still map to an existing node.
+      nodesDone += (completedByRoadmap[roadmap.slug] ?? []).filter((id) => nodeIds.has(id)).length
+    }
+
+    return {
+      tasksSolved,
+      tasksTotal: freeTasks.length,
+      nodesDone,
+      nodesTotal,
+      favorites: lcProgress.favorites.length,
+    }
+  }, [tasks, roadmaps, lcProgress.solved, lcProgress.favorites, completedByRoadmap])
+
+  const hasPracticeData = practice.tasksTotal > 0 || practice.nodesTotal > 0
+  const hasPracticeActivity =
+    practice.tasksSolved > 0 || practice.nodesDone > 0 || practice.favorites > 0
+  const practiceSection = hasPracticeData ? <PracticeStats {...practice} /> : null
+
   if (isLoading) return <StatsSkeleton />
 
   if (!stats || stats.completedTests === 0) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-6">
         <h1 className="text-2xl font-bold text-foreground">Статистика</h1>
+        {hasPracticeActivity && practiceSection}
         <EmptyState
-          title="Нет данных"
-          description="Пройдите первый тест, чтобы увидеть статистику"
+          title="Пока нет данных о тестах"
+          description="Пройдите первый тест, чтобы увидеть подробную статистику по тестированию"
           action={
             <Button asChild>
               <Link to="/app/tests">Начать тест</Link>
@@ -254,6 +296,9 @@ export default function StatsPage() {
 
       {/* Stat cards */}
       <StatsCards stats={stats} />
+
+      {/* Practice & learning progress */}
+      {practiceSection}
 
       {/* Accuracy trend + donut */}
       <div className="grid gap-4 lg:grid-cols-2">
