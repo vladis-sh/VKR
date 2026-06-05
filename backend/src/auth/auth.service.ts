@@ -80,6 +80,7 @@ export class AuthService {
       data: {
         fullName: dto.fullName,
         ...(dto.avatarUrl && { avatarUrl: dto.avatarUrl }),
+        isProfileComplete: true,
       },
     });
 

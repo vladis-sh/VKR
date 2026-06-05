@@ -20,24 +20,12 @@ import { profileApi } from '@/shared/api/profile.api'
 import { getApiErrorMessage } from '@/shared/lib/apiErrors'
 import { cropAvatarFile } from '@/shared/lib/avatarImage'
 import { toast } from '@/features/theme/useToastStore'
-import { KNOWLEDGE_LEVELS } from '@/shared/constants'
-
-type KnowledgeLevel = (typeof KNOWLEDGE_LEVELS)[number]['value']
-
 const CROP_VIEWPORT_SIZE = 220
 const MIN_CROP_ZOOM = 1
 const MAX_CROP_ZOOM = 3
 
-const KNOWLEDGE_LEVEL_VALUES = KNOWLEDGE_LEVELS.map((lvl) => lvl.value) as [
-  KnowledgeLevel,
-  ...KnowledgeLevel[]
-]
-
 const schema = z.object({
   fullName: z.string().min(2, 'Минимум 2 символа').max(50, 'Максимум 50 символов'),
-  knowledgeLevel: z.enum(KNOWLEDGE_LEVEL_VALUES, {
-    errorMap: () => ({ message: 'Выберите уровень' }),
-  }),
 })
 type FormData = z.infer<typeof schema>
 
@@ -332,9 +320,7 @@ export default function RegisterStep2Page() {
         height: `${cropMetrics.renderedHeight}px`,
         transform: `translate3d(${
           (CROP_VIEWPORT_SIZE - cropMetrics.renderedWidth) / 2 + cropOffset.x
-        }px, ${
-          (CROP_VIEWPORT_SIZE - cropMetrics.renderedHeight) / 2 + cropOffset.y
-        }px, 0)`,
+        }px, ${(CROP_VIEWPORT_SIZE - cropMetrics.renderedHeight) / 2 + cropOffset.y}px, 0)`,
       }
     : undefined
 
@@ -449,12 +435,7 @@ export default function RegisterStep2Page() {
                     <RotateCcw size={14} />
                     Сбросить позицию
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={openFilePicker}
-                  >
+                  <Button type="button" variant="ghost" size="sm" onClick={openFilePicker}>
                     Выбрать другое фото
                   </Button>
                 </div>
