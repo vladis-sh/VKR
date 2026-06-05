@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import { useRegisterStore } from '@/features/auth/useRegisterStore'
+import { useAuthStore } from '@/features/auth/useAuthStore'
 import { authApi } from '@/shared/api/auth.api'
 import { getApiErrorMessage } from '@/shared/lib/apiErrors'
 
@@ -49,6 +50,7 @@ function StepDots({ current }: { current: number }) {
 export default function RegisterStep1Page() {
   const navigate = useNavigate()
   const { setStep1 } = useRegisterStore()
+  const { setUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState('')
 
@@ -62,11 +64,12 @@ export default function RegisterStep1Page() {
     setIsLoading(true)
     setServerError('')
     try {
-      await authApi.register({
+      const res = await authApi.register({
         email: data.email,
         password: data.password,
         confirmPassword: data.confirmPassword,
       })
+      setUser(res.data.user)
       setStep1({ email: data.email, password: data.password })
       navigate('/register/profile')
     } catch (err: unknown) {
