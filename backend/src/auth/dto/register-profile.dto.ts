@@ -14,10 +14,10 @@ export class RegisterProfileDto {
   avatarUrl?: string;
 }
 
-export class RegisterLevelDto {
-  @ApiProperty({ enum: ['junior', 'middle', 'senior'] })
-  @IsIn(['junior', 'middle', 'senior'], {
-    message: 'Уровень знаний должен быть junior, middle или senior',
-  })
-  knowledgeLevel: 'junior' | 'middle' | 'senior';
-}
+// export class RegisterLevelDto {
+//   @ApiProperty({ enum: ['junior', 'middle', 'senior'] })
+//   @IsIn(['junior', 'middle', 'senior'], {
+//     message: 'Уровень знаний должен быть junior, middle или senior',
+//   })
+//   knowledgeLevel: 'junior' | 'middle' | 'senior';
+// }

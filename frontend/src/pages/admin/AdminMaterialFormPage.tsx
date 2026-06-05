@@ -97,8 +97,7 @@ export default function AdminMaterialFormPage() {
         to="/app/admin/materials"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft size={14} />
-        К списку материалов
+        <ArrowLeft size={14} />К списку материалов
       </Link>
 
       <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
@@ -109,18 +108,14 @@ export default function AdminMaterialFormPage() {
 
       <form onSubmit={onSubmit} className="space-y-5">
         <div className="rounded-lg border border-border bg-card p-5 space-y-4">
-          <Input
-            label="Название"
-            error={errors.title?.message}
-            {...register('title')}
-          />
+          <Input label="Название" error={errors.title?.message} {...register('title')} />
           <Input
             label="Краткое описание"
             error={errors.shortDescription?.message}
             {...register('shortDescription')}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-foreground">Уровень</label>
               <select
@@ -137,7 +132,7 @@ export default function AdminMaterialFormPage() {
               error={errors.tagsRaw?.message}
               {...register('tagsRaw')}
             />
-          </div>
+          </div> */}
 
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" {...register('isPublished')} />
@@ -172,11 +167,7 @@ export default function AdminMaterialFormPage() {
           <Button type="submit" loading={isSubmitting}>
             {isEdit ? 'Сохранить' : 'Создать'}
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate('/app/admin/materials')}
-          >
+          <Button type="button" variant="outline" onClick={() => navigate('/app/admin/materials')}>
             Отмена
           </Button>
         </div>

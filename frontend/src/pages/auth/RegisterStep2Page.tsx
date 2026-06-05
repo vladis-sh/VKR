@@ -118,7 +118,6 @@ export default function RegisterStep2Page() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { knowledgeLevel: 'junior' },
   })
 
   useEffect(() => {
@@ -296,20 +295,27 @@ export default function RegisterStep2Page() {
         toast.error('Не удалось загрузить аватар. Вы сможете добавить его позже в профиле.')
       }
     }
+    setStep2({ fullName: formData.fullName, avatarFile: avatarFile ?? undefined })
+    setUser({ ...regData, fullName: formData.fullName } as any) // подстрой под свою структуру
+    reset()
+    toast.success('Добро пожаловать!')
+    navigate('/app/roadmaps', { replace: true })
+
+    setIsLoading(false)
 
     // Step 3: knowledge level. If this fails the user can retry — step 1 won't re-run.
-    try {
-      const res = await authApi.registerLevel({ knowledgeLevel: formData.knowledgeLevel })
-      setStep2({ fullName: formData.fullName, avatarFile: avatarFile ?? undefined })
-      setUser(res.data.user)
-      reset()
-      toast.success('Добро пожаловать!')
-      navigate('/app/roadmaps', { replace: true })
-    } catch (err: unknown) {
-      setServerError(getApiErrorMessage(err, 'Не удалось сохранить уровень'))
-    } finally {
-      setIsLoading(false)
-    }
+    // try {
+    //   const res = await authApi.registerLevel({})
+    //   setStep2({ fullName: formData.fullName, avatarFile: avatarFile ?? undefined })
+    //   setUser(res.data.user)
+    //   reset()
+    //   toast.success('Добро пожаловать!')
+    //   navigate('/app/roadmaps', { replace: true })
+    // } catch (err: unknown) {
+    //   setServerError(getApiErrorMessage(err, 'Не удалось сохранить уровень'))
+    // } finally {
+    //   setIsLoading(false)
+    // }
   }
 
   const isAvatarPreparing = Boolean(avatarFile && !avatarImageSize)
@@ -479,32 +485,6 @@ export default function RegisterStep2Page() {
               error={errors.fullName?.message}
               {...register('fullName')}
             />
-
-            <fieldset className="space-y-2">
-              <legend className="text-sm font-medium text-foreground">Ваш уровень</legend>
-              <div className="grid gap-2">
-                {KNOWLEDGE_LEVELS.map((level) => (
-                  <label
-                    key={level.value}
-                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/60 has-[:checked]:border-primary has-[:checked]:bg-primary/5"
-                  >
-                    <input
-                      type="radio"
-                      value={level.value}
-                      className="mt-1 accent-primary"
-                      {...register('knowledgeLevel')}
-                    />
-                    <span className="flex flex-col">
-                      <span className="text-sm font-medium text-foreground">{level.label}</span>
-                      <span className="text-xs text-muted-foreground">{level.description}</span>
-                    </span>
-                  </label>
-                ))}
-              </div>
-              {errors.knowledgeLevel && (
-                <p className="text-xs text-destructive">{errors.knowledgeLevel.message}</p>
-              )}
-            </fieldset>
 
             {serverError && (
               <div
