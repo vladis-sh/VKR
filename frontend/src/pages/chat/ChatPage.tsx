@@ -289,10 +289,6 @@ export default function ChatPage() {
           ) : (
             <p className="text-sm text-muted-foreground flex-1">Выберите чат</p>
           )}
-          <Button size="sm" variant="outline" onClick={() => setShowNewModal(true)}>
-            <Plus size={14} />
-            <span className="hidden sm:inline">Новый чат</span>
-          </Button>
           {activeSession && (
             <button
               onClick={() => setConfirmDelete(true)}

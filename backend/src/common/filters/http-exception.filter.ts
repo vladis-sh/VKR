@@ -21,6 +21,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let details: any = undefined;
+    let errorCode: string | undefined = undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -31,6 +32,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
       } else if (typeof exceptionResponse === 'object') {
         const resp = exceptionResponse as any;
         message = resp.message || resp.error || message;
+        // Machine-readable code for errors the client must distinguish
+        // (e.g. EMAIL_NOT_VERIFIED) without parsing human-readable text.
+        if (typeof resp.errorCode === 'string') {
+          errorCode = resp.errorCode;
+        }
         if (Array.isArray(resp.message)) {
           details = resp.message;
           message = 'Validation failed';
@@ -60,6 +66,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error: {
         code: status,
         message,
+        ...(errorCode && { errorCode }),
         ...(details && { details }),
         timestamp: new Date().toISOString(),
         path: request.url,

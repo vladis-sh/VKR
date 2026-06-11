@@ -13,7 +13,6 @@ export const QUERY_KEYS = {
   STATS: ['stats'],
   PROFILE: ['profile'],
   TEST_HISTORY: (page: number) => ['profile', 'test-history', page],
-  NOTIFICATIONS: ['notifications'],
   ADMIN_MATERIALS: ['admin', 'materials'],
   ADMIN_MATERIAL: (id: string) => ['admin', 'materials', id],
   ADMIN_QUESTIONS: ['admin', 'questions'],
@@ -51,8 +50,6 @@ export const ASSISTANT_ROLES = [
     icon: '🎯',
   },
 ] as const
-
-export const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
 export const TOAST_DURATION = 3000
 

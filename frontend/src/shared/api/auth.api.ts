@@ -11,10 +11,6 @@ export interface RegisterStep2Payload {
   fullName: string
 }
 
-export interface RegisterStep3Payload {
-  knowledgeLevel: string
-}
-
 export interface LoginPayload {
   email: string
   password: string
@@ -26,9 +22,6 @@ export const authApi = {
 
   registerProfile: (data: RegisterStep2Payload) =>
     apiClient.post<{ user: User }>('/auth/register/profile', data),
-
-  registerLevel: (data: RegisterStep3Payload) =>
-    apiClient.post<{ user: User }>('/auth/register/level', data),
 
   login: (data: LoginPayload) =>
     apiClient.post<{ user: User }>('/auth/login', data),

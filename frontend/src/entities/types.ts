@@ -231,16 +231,6 @@ export interface TestHistoryResponse {
 }
 
 // ============================================================
-// Notifications
-// ============================================================
-
-export interface NotificationSettings {
-  enabled: boolean
-  time: string
-  weekdays: number[]
-}
-
-// ============================================================
 // API Response Wrappers
 // ============================================================
 

@@ -16,12 +16,13 @@ import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
-import { RegisterProfileDto, RegisterLevelDto } from './dto/register-profile.dto';
+import { RegisterProfileDto } from './dto/register-profile.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { AllowUnverified } from '../common/decorators/allow-unverified.decorator';
 
 const ACCESS_COOKIE_OPTIONS = {
   httpOnly: true,
@@ -65,16 +66,6 @@ export class AuthController {
   @ApiBearerAuth('access_token')
   async registerProfile(@CurrentUser() user: any, @Body() dto: RegisterProfileDto) {
     const updated = await this.authService.updateProfile(user.id, dto);
-    return { user: updated };
-  }
-
-  @Post('register/level')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Complete profile step 3 - set knowledge level' })
-  @ApiBearerAuth('access_token')
-  async registerLevel(@CurrentUser() user: any, @Body() dto: RegisterLevelDto) {
-    const updated = await this.authService.setKnowledgeLevel(user.id, dto);
     return { user: updated };
   }
 
@@ -135,6 +126,7 @@ export class AuthController {
 
   @Post('resend-verification')
   @UseGuards(JwtAuthGuard)
+  @AllowUnverified()
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Resend the email verification link to the current user' })
@@ -161,6 +153,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
+  @AllowUnverified()
   @ApiOperation({ summary: 'Get current authenticated user' })
   @ApiBearerAuth('access_token')
   async getMe(@CurrentUser() user: any) {

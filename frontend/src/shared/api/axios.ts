@@ -49,6 +49,16 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config as (typeof error.config & { _retry?: boolean }) | undefined
 
+    // The email-verification grace period is over: the session is still
+    // valid (me/resend keep working), but the app must switch to the
+    // locked screen. Event instead of a store import to avoid a cycle.
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.error?.errorCode === 'EMAIL_NOT_VERIFIED'
+    ) {
+      window.dispatchEvent(new CustomEvent('auth:email-unverified'))
+    }
+
     if (
       error.response?.status === 401 &&
       originalRequest &&

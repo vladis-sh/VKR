@@ -33,7 +33,6 @@ const StatsPage = lazy(() => import('@/pages/stats/StatsPage'))
 const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'))
 const EditProfilePage = lazy(() => import('@/pages/profile/EditProfilePage'))
 const ProfileHistoryPage = lazy(() => import('@/pages/profile/ProfileHistoryPage'))
-const NotificationsPage = lazy(() => import('@/pages/profile/NotificationsPage'))
 const AdminMaterialsListPage = lazy(() => import('@/pages/admin/AdminMaterialsListPage'))
 const AdminMaterialFormPage = lazy(() => import('@/pages/admin/AdminMaterialFormPage'))
 const AdminQuestionsListPage = lazy(() => import('@/pages/admin/AdminQuestionsListPage'))
@@ -50,6 +49,15 @@ function LazyWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export const router = createBrowserRouter([
+  // TEMP preview-only route (no auth) — remove after verifying the AI modal.
+  {
+    path: '/preview-tests-hub',
+    element: (
+      <LazyWrapper>
+        <TestsHubPage />
+      </LazyWrapper>
+    ),
+  },
   {
     path: '/',
     element: (
@@ -291,14 +299,6 @@ export const router = createBrowserRouter([
         element: (
           <LazyWrapper>
             <ProfileHistoryPage />
-          </LazyWrapper>
-        ),
-      },
-      {
-        path: 'profile/notifications',
-        element: (
-          <LazyWrapper>
-            <NotificationsPage />
           </LazyWrapper>
         ),
       },

@@ -2,14 +2,22 @@ import { create } from 'zustand'
 import { authApi } from '@/shared/api/auth.api'
 import type { User } from '@/entities/types'
 
-const CHECK_AUTH_TIMEOUT_MS = 8000
+// Generous timeout so a slow connection doesn't kick a valid session to /login.
+const CHECK_AUTH_TIMEOUT_MS = 20_000
 
 interface AuthState {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
+  /**
+   * True when the server rejected a request with EMAIL_NOT_VERIFIED —
+   * the verification grace period is over and the app must be locked.
+   * Cleared as soon as checkAuth sees a verified user.
+   */
+  verificationLockout: boolean
   _initialized: boolean
   setUser: (user: User | null) => void
+  setVerificationLockout: (locked: boolean) => void
   resetInitialized: () => void
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
@@ -19,6 +27,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isLoading: true,
   isAuthenticated: false,
+  verificationLockout: false,
   _initialized: false,
 
   setUser: (user) =>
@@ -26,6 +35,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       user,
       isAuthenticated: !!user,
     }),
+
+  setVerificationLockout: (locked) => set({ verificationLockout: locked }),
 
   resetInitialized: () => set({ _initialized: false }),
 
@@ -35,7 +46,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       // ignore errors on logout
     } finally {
-      set({ user: null, isAuthenticated: false, _initialized: false })
+      set({
+        user: null,
+        isAuthenticated: false,
+        verificationLockout: false,
+        _initialized: false,
+      })
     }
   },
 
@@ -52,7 +68,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           )
         ),
       ])
-      set({ user: response.data.user, isAuthenticated: true, isLoading: false })
+      const user = response.data.user
+      set({
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+        // A verified user is never locked out; an unverified one keeps the
+        // current lockout state until the server says otherwise.
+        ...(user.emailVerified !== false && { verificationLockout: false }),
+      })
     } catch {
       set({ user: null, isAuthenticated: false, isLoading: false })
     }

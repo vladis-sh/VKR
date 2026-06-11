@@ -96,7 +96,7 @@ function StepDots({ current }: { current: number }) {
 
 export default function RegisterStep2Page() {
   const navigate = useNavigate()
-  const { data: regData, setStep2, reset } = useRegisterStore()
+  const { data: regData, reset } = useRegisterStore()
   const { setUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [serverError, setServerError] = useState('')
@@ -270,7 +270,8 @@ export default function RegisterStep2Page() {
     // Step 1: save name. Skip if a previous attempt already succeeded.
     if (!profileCreatedRef.current) {
       try {
-        await authApi.registerProfile({ fullName: formData.fullName })
+        const res = await authApi.registerProfile({ fullName: formData.fullName })
+        setUser(res.data.user)
         profileCreatedRef.current = true
       } catch (err: unknown) {
         setServerError(getApiErrorMessage(err, 'Не удалось сохранить имя'))
@@ -290,32 +291,20 @@ export default function RegisterStep2Page() {
           viewportSize: CROP_VIEWPORT_SIZE,
         })
         avatarForm.append('file', preparedAvatar)
-        await profileApi.uploadAvatar(avatarForm)
+        const res = await profileApi.uploadAvatar(avatarForm)
+        const current = useAuthStore.getState().user
+        if (current) {
+          setUser({ ...current, avatarUrl: res.data.avatarUrl })
+        }
       } catch {
         toast.error('Не удалось загрузить аватар. Вы сможете добавить его позже в профиле.')
       }
     }
-    setStep2({ fullName: formData.fullName, avatarFile: avatarFile ?? undefined })
-    setUser({ ...regData, fullName: formData.fullName } as any) // подстрой под свою структуру
+
     reset()
     toast.success('Добро пожаловать!')
     navigate('/app/roadmaps', { replace: true })
-
     setIsLoading(false)
-
-    // Step 3: knowledge level. If this fails the user can retry — step 1 won't re-run.
-    // try {
-    //   const res = await authApi.registerLevel({})
-    //   setStep2({ fullName: formData.fullName, avatarFile: avatarFile ?? undefined })
-    //   setUser(res.data.user)
-    //   reset()
-    //   toast.success('Добро пожаловать!')
-    //   navigate('/app/roadmaps', { replace: true })
-    // } catch (err: unknown) {
-    //   setServerError(getApiErrorMessage(err, 'Не удалось сохранить уровень'))
-    // } finally {
-    //   setIsLoading(false)
-    // }
   }
 
   const isAvatarPreparing = Boolean(avatarFile && !avatarImageSize)

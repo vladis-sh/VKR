@@ -68,12 +68,7 @@ export function ChatSessionList({
           {sessions.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 gap-2">
               <MessageSquare size={28} className="text-muted-foreground/40" />
-              <p className="text-xs text-muted-foreground text-center">
-                Нет чатов.{' '}
-                <button onClick={onNew} className="text-primary hover:underline">
-                  Создать
-                </button>
-              </p>
+              <p className="text-xs text-muted-foreground text-center">Пока нет чатов</p>
             </div>
           ) : (
             sessions.map((s) => {

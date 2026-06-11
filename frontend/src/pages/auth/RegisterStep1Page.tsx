@@ -10,10 +10,14 @@ import { useRegisterStore } from '@/features/auth/useRegisterStore'
 import { useAuthStore } from '@/features/auth/useAuthStore'
 import { authApi } from '@/shared/api/auth.api'
 import { getApiErrorMessage } from '@/shared/lib/apiErrors'
+import { isRussianEmail, RUSSIAN_EMAIL_MESSAGE } from '@/shared/lib/russianEmail'
 
 const schema = z
   .object({
-    email: z.string().email('Некорректный email'),
+    email: z
+      .string()
+      .email('Некорректный email')
+      .refine(isRussianEmail, RUSSIAN_EMAIL_MESSAGE),
     password: z
       .string()
       .min(8, 'Минимум 8 символов')
@@ -70,7 +74,7 @@ export default function RegisterStep1Page() {
         confirmPassword: data.confirmPassword,
       })
       setUser(res.data.user)
-      setStep1({ email: data.email, password: data.password })
+      setStep1({ email: data.email })
       navigate('/register/profile')
     } catch (err: unknown) {
       setServerError(getApiErrorMessage(err, 'Ошибка при регистрации'))
@@ -95,7 +99,7 @@ export default function RegisterStep1Page() {
             <Input
               label="Email"
               type="email"
-              placeholder="you@example.com"
+              placeholder="ivan@yandex.ru"
               autoComplete="email"
               error={errors.email?.message}
               {...register('email')}

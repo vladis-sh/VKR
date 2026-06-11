@@ -47,6 +47,15 @@ function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
+function formatDateTime(dateStr: string) {
+  return new Date(dateStr).toLocaleString('ru-RU', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 function accuracyTone(value: number) {
   if (value >= 80) return 'bg-success/10 text-success'
   if (value >= 50) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
@@ -204,11 +213,17 @@ export default function StatsPage() {
   }
 
   const totalAnswered = stats.totalCorrect + stats.totalIncorrect
-  const accuracy = totalAnswered > 0 ? Math.round((stats.totalCorrect / totalAnswered) * 100) : 0
+  // The server already computes the weighted overall accuracy.
+  const accuracy = Math.round(stats.accuracy)
 
   // recentSessions arrive newest-first; reverse for chronological charts.
-  const chartData = [...stats.recentSessions].reverse().map((s) => ({
-    date: formatDate(s.date),
+  const recentChronological = [...stats.recentSessions].reverse()
+  // Two tests on the same day would get identical X-axis labels, so add the
+  // time as soon as any label repeats.
+  const dayLabels = recentChronological.map((s) => formatDate(s.date))
+  const needsTime = new Set(dayLabels).size !== dayLabels.length
+  const chartData = recentChronological.map((s, i) => ({
+    date: needsTime ? formatDateTime(s.date) : dayLabels[i],
     accuracy: Math.round(s.accuracy),
     durationSeconds: s.durationSeconds,
   }))
@@ -248,14 +263,16 @@ export default function StatsPage() {
     { name: 'Неверные', value: stats.totalIncorrect, color: 'hsl(var(--destructive))' },
   ]
 
-  const headline =
+  // Keep the headline and the encouraging note in the same tone tier —
+  // a struggling result should not be cheered with «Так держать!».
+  const hero =
     accuracy >= 80
-      ? 'Отличная точность!'
+      ? { headline: 'Отличная точность!', note: 'Так держать!' }
       : accuracy >= 60
-        ? 'Хороший прогресс'
+        ? { headline: 'Хороший прогресс', note: 'Ещё немного — и будет отлично.' }
         : accuracy >= 40
-          ? 'Уверенный старт'
-          : 'Продолжайте практиковаться'
+          ? { headline: 'Уверенный старт', note: 'Регулярная практика быстро поднимет точность.' }
+          : { headline: 'Продолжайте практиковаться', note: 'Разбирайте ошибки — и результат вырастет.' }
 
   const ringTone = accuracy >= 80 ? 'text-success' : accuracy >= 50 ? 'text-primary' : 'text-destructive'
 
@@ -274,9 +291,9 @@ export default function StatsPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Ваша статистика
             </p>
-            <h2 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">{headline}</h2>
+            <h2 className="mt-1 text-2xl font-bold text-foreground md:text-3xl">{hero.headline}</h2>
             <p className="mt-2 max-w-md text-sm text-muted-foreground">
-              {stats.totalCorrect} верных ответов из {totalAnswered}. Так держать!
+              {stats.totalCorrect} верных ответов из {totalAnswered}. {hero.note}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
@@ -361,7 +378,7 @@ export default function StatsPage() {
         <SectionCard
           icon={<PieIcon size={18} />}
           title="Соотношение ответов"
-          subtitle="Верные и неверные"
+          subtitle="Верные и неверные за всё время"
           delay={0.15}
           className={cn(!showTrend && 'lg:col-span-2')}
         >
@@ -425,7 +442,7 @@ export default function StatsPage() {
             <div className="rounded-lg bg-success/10 px-3 py-1.5 text-right">
               <p className="flex items-center justify-end gap-1 text-[10px] uppercase tracking-wide text-success/80">
                 <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                Лучшее
+                Самый быстрый
               </p>
               <p className="text-sm font-semibold text-success">{formatDuration(recentBest)}</p>
             </div>
@@ -459,7 +476,9 @@ export default function StatsPage() {
               tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `${Math.round(Number(value) / 60)}м`}
+              tickFormatter={(value) =>
+                Number(value) < 60 ? `${Math.round(Number(value))}с` : `${Math.round(Number(value) / 60)}м`
+              }
             />
             <Tooltip
               cursor={{ fill: 'hsl(var(--muted))', opacity: 0.4, radius: 6 }}

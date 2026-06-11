@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Clock, ChevronRight, Trophy } from 'lucide-react'
 import { testsApi } from '@/shared/api/tests.api'
@@ -60,6 +60,7 @@ interface TestSessionPageProps {
 
 export default function TestSessionPage({ mode }: TestSessionPageProps) {
   const { slug } = useParams<{ slug: string }>()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const [questions, setQuestions] = useState<TestQuestion[]>([])
   const [sessionId, setSessionId] = useState<string>('')
@@ -72,6 +73,10 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
   const isTimeAttack = mode === 'time-attack'
   const isAi = mode === 'ai'
 
+  // AI mode: the topic comes from the modal on the tests hub via ?topic=...
+  // (falls back to the backend default when absent).
+  const aiTopic = isAi ? searchParams.get('topic')?.trim() || undefined : undefined
+
   // topic / time-attack / one-mistake all draw questions from a topic chosen via
   // the URL slug. The special slug "all" means "questions from every topic".
   const usesTopicSlug = mode === 'topic' || mode === 'time-attack' || mode === 'one-mistake'
@@ -81,6 +86,10 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
   const topicName = hasTopicSlug
     ? (topics ? (topics.find((t) => t.slug === slug)?.name ?? slug) : undefined)
     : undefined
+
+  // Topic shown in the header and stored on the session — the AI topic for AI
+  // mode, the resolved topic name otherwise.
+  const sessionTopic = isAi ? aiTopic : topicName
 
   // Initialize session & fetch questions
   useEffect(() => {
@@ -100,13 +109,13 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
 
         const sessionRes = await testsApi.createSession({
           mode: nestMode,
-          topic: topicName,
+          topic: sessionTopic,
           timeLimit: isTimeAttack ? TEST_TIME_ATTACK_SECONDS : undefined,
         })
         setSessionId(sessionRes.data.id)
 
         const questionsRes = isAi
-          ? await testsApi.getAIQuestions({ count: 10 })
+          ? await testsApi.getAIQuestions({ topic: aiTopic, count: 10 })
           : await testsApi.getQuestions({
               topic: topicName,
               limit: isTimeAttack ? 30 : 10,
@@ -122,7 +131,7 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
       }
     }
     init()
-  }, [mode, topicName, hasTopicSlug, isTimeAttack, isAi])
+  }, [mode, topicName, hasTopicSlug, isTimeAttack, isAi, aiTopic, sessionTopic])
 
   // Timer hook (correct interface)
   const { seconds: timerValue, stop: stopTimer } = useTimer({
@@ -150,7 +159,7 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
     setElapsedSeconds,
   } = useTestSession({
     mode,
-    topic: topicName,
+    topic: sessionTopic,
     questions,
     sessionId,
     countdown: isTimeAttack,
@@ -208,8 +217,8 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <div>
-          {topicName && (
-            <p className="text-xs text-muted-foreground mb-0.5">{topicName}</p>
+          {sessionTopic && (
+            <p className="text-xs text-muted-foreground mb-0.5">{sessionTopic}</p>
           )}
           <p className="text-sm font-semibold text-foreground">
             Вопрос {currentIndex + 1}

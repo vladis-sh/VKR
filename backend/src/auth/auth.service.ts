@@ -12,8 +12,9 @@ import { MailService } from '../mail/mail.service';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { RegisterDto } from './dto/register.dto';
-import { RegisterProfileDto, RegisterLevelDto } from './dto/register-profile.dto';
-import { KnowledgeLevel, VerificationTokenType } from '@prisma/client';
+import { RegisterProfileDto } from './dto/register-profile.dto';
+import { isRussianEmail, RUSSIAN_EMAIL_MESSAGE } from './russian-email';
+import { VerificationTokenType } from '@prisma/client';
 
 const EMAIL_VERIFY_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
@@ -50,6 +51,12 @@ export class AuthService {
   }
 
   private async createUser(dto: RegisterDto) {
+    // Defense in depth: the DTO validates this too, but createUser may be
+    // reached from other entry points in the future.
+    if (!isRussianEmail(dto.email)) {
+      throw new BadRequestException(RUSSIAN_EMAIL_MESSAGE);
+    }
+
     if (dto.password !== dto.confirmPassword) {
       throw new BadRequestException('Пароли не совпадают');
     }
@@ -80,18 +87,6 @@ export class AuthService {
       data: {
         fullName: dto.fullName,
         ...(dto.avatarUrl && { avatarUrl: dto.avatarUrl }),
-        isProfileComplete: true,
-      },
-    });
-
-    return this.sanitizeUser(user);
-  }
-
-  async setKnowledgeLevel(userId: string, dto: RegisterLevelDto) {
-    const user = await this.prisma.user.update({
-      where: { id: userId },
-      data: {
-        knowledgeLevel: dto.knowledgeLevel as KnowledgeLevel,
         isProfileComplete: true,
       },
     });

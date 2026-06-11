@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, Matches, MinLength, MaxLength } from 'class-validator';
+import { IsRussianEmail } from '../russian-email';
 
 export class RegisterDto {
-  @ApiProperty({ example: 'user@example.com' })
+  @ApiProperty({ example: 'user@yandex.ru' })
+  @IsRussianEmail()
   @IsEmail({}, { message: 'Введите корректный email адрес' })
   email: string;
 

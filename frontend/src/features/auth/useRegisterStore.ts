@@ -1,18 +1,12 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
-interface RegisterData {
-  email: string
-  password: string
-  fullName: string
-  avatarFile?: File
-}
-
+// Step 1 creates the account server-side and sets auth cookies, so the store
+// only needs to remember that step 1 happened (and for which email) — step 2
+// uses it to redirect back if opened directly. Never store the password here.
 interface RegisterState {
-  data: Partial<RegisterData>
-  currentStep: number
-  setStep1: (data: { email: string; password: string }) => void
-  setStep2: (data: { fullName: string; avatarFile?: File }) => void
+  data: { email?: string }
+  setStep1: (data: { email: string }) => void
   reset: () => void
 }
 
@@ -20,33 +14,14 @@ export const useRegisterStore = create<RegisterState>()(
   persist(
     (set) => ({
       data: {},
-      currentStep: 1,
-
-      setStep1: (data) =>
-        set((state) => ({
-          data: { ...state.data, ...data },
-          currentStep: 2,
-        })),
-
-      setStep2: (data) =>
-        set((state) => ({
-          data: { ...state.data, ...data },
-        })),
-
-      reset: () => set({ data: {}, currentStep: 1 }),
+      setStep1: (data) => set({ data }),
+      reset: () => set({ data: {} }),
     }),
     {
       name: 'app.register',
       storage: createJSONStorage(() => sessionStorage),
-      // avatarFile is a File and cannot be serialized — persist only primitives.
-      partialize: (state) => ({
-        data: {
-          email: state.data.email,
-          password: state.data.password,
-          fullName: state.data.fullName,
-        },
-        currentStep: state.currentStep,
-      }),
+      // v1 drops the old shape that persisted the plaintext password.
+      version: 1,
     }
   )
 )

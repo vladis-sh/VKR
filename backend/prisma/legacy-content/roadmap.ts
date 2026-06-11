@@ -1,12 +1,10 @@
 export type RoadmapNodeKind = 'required' | 'alternative' | 'optional'
-
 export interface RoadmapResource {
   title: string
   url: string
   source: string
   language?: 'ru' | 'en'
 }
-
 export interface RoadmapNode {
   id: string
   title: string
@@ -14,14 +12,12 @@ export interface RoadmapNode {
   kind: RoadmapNodeKind
   resources?: RoadmapResource[]
 }
-
 export interface RoadmapStage {
   id: string
   title: string
   intro: string
   nodes: RoadmapNode[]
 }
-
 export interface Roadmap {
   slug: string
   title: string
@@ -30,20 +26,17 @@ export interface Roadmap {
   accent: string
   stages: RoadmapStage[]
 }
-
 export const KIND_LABELS: Record<RoadmapNodeKind, string> = {
   required: 'База',
   alternative: 'Альтернатива',
   optional: 'По желанию',
 }
-
 const r = (
   title: string,
   url: string,
   source: string,
   language: 'ru' | 'en' = 'ru'
 ): RoadmapResource => ({ title, url, source, language })
-
 const n = (
   id: string,
   title: string,
@@ -51,7 +44,6 @@ const n = (
   kind: RoadmapNodeKind = 'required',
   resources: RoadmapResource[] = []
 ): RoadmapNode => ({ id, title, summary, kind, resources })
-
 const frontendRoadmap: Roadmap = {
   slug: 'frontend',
   title: 'Frontend-разработчик',
@@ -82,8 +74,8 @@ const frontendRoadmap: Roadmap = {
               'learn.javascript.ru'
             ),
             r(
-              'Что происходит, когда вы вводите URL',
-              'https://habr.com/ru/articles/489884/',
+              'Что на самом деле происходит, когда пользователь вбивает в браузер адрес google.com',
+              'https://habr.com/ru/companies/htmlacademy/articles/254825/',
               'Habr'
             ),
             r(
@@ -117,8 +109,8 @@ const frontendRoadmap: Roadmap = {
               'MDN'
             ),
             r(
-              'HTTP-заголовки на пальцах',
-              'https://habr.com/ru/companies/selectel/articles/740670/',
+              '15 тривиальных фактов о правильной работе с протоколом HTTP',
+              'https://habr.com/ru/companies/yandex/articles/265569/',
               'Habr'
             ),
           ]
@@ -130,12 +122,6 @@ const frontendRoadmap: Roadmap = {
           'required',
           [
             r('URL и доменные имена', 'https://learn.javascript.ru/url', 'learn.javascript.ru'),
-            r(
-              'DNS — введение для разработчиков',
-              'https://habr.com/ru/companies/selectel/articles/449482/',
-              'Habr'
-            ),
-            r('Как работает DNS-сервер', 'https://habr.com/ru/articles/329788/', 'Habr'),
             r('DNS — MDN глоссарий', 'https://developer.mozilla.org/ru/docs/Glossary/DNS', 'MDN'),
             r(
               'Как работает DNS — видео от Cloudflare',
@@ -157,8 +143,8 @@ const frontendRoadmap: Roadmap = {
               'learn.javascript.ru'
             ),
             r(
-              'Что происходит, когда вы вводите URL',
-              'https://habr.com/ru/articles/489884/',
+              'Что на самом деле происходит, когда пользователь вбивает в браузер адрес google.com',
+              'https://habr.com/ru/companies/htmlacademy/articles/254825/',
               'Habr'
             ),
             r(
@@ -170,11 +156,6 @@ const frontendRoadmap: Roadmap = {
               'Критический путь рендеринга',
               'https://developer.mozilla.org/ru/docs/Web/Performance/Critical_rendering_path',
               'MDN'
-            ),
-            r(
-              'Песочница браузера и многопроцессность',
-              'https://habr.com/ru/companies/ruvds/articles/340176/',
-              'Habr'
             ),
           ]
         ),
@@ -191,11 +172,6 @@ const frontendRoadmap: Roadmap = {
             ),
             r('Документация Vercel', 'https://vercel.com/docs', 'Vercel', 'en'),
             r('Документация Netlify', 'https://docs.netlify.com/', 'Netlify', 'en'),
-            r(
-              'Что такое CDN и зачем он нужен',
-              'https://habr.com/ru/companies/selectel/articles/425667/',
-              'Habr'
-            ),
             r(
               'Деплой React-приложений',
               'https://create-react-app.dev/docs/deployment/',
@@ -253,12 +229,16 @@ const frontendRoadmap: Roadmap = {
               'https://developer.mozilla.org/ru/docs/Web/HTML/Element',
               'MDN'
             ),
-            r('Зачем нужна семантическая вёрстка', 'https://habr.com/ru/articles/445156/', 'Habr'),
             r(
               'Accessible semantic HTML — web.dev',
               'https://web.dev/learn/html/semantic-html',
               'web.dev',
               'en'
+            ),
+            r(
+              'Как улучшить доступность сайтов с помощью семантического HTML',
+              'https://habr.com/ru/articles/892516/',
+              'Habr'
             ),
           ]
         ),
@@ -274,11 +254,6 @@ const frontendRoadmap: Roadmap = {
               'HTML5-валидация форм',
               'https://developer.mozilla.org/ru/docs/Learn/Forms/Form_validation',
               'MDN'
-            ),
-            r(
-              'Как делать удобные формы',
-              'https://habr.com/ru/companies/htmlacademy/articles/338224/',
-              'Habr'
             ),
             r('Formidable forms (learn HTML)', 'https://web.dev/learn/html/forms', 'web.dev', 'en'),
           ]
@@ -325,7 +300,6 @@ const frontendRoadmap: Roadmap = {
               'https://developers.google.com/search/docs/fundamentals/seo-starter-guide?hl=ru',
               'Google Search Central'
             ),
-            r('Meta-теги: шпаргалка', 'https://habr.com/ru/articles/496764/', 'Habr'),
             r('schema.org — справочник', 'https://schema.org/docs/gs.html', 'schema.org', 'en'),
             r(
               'Мета-теги name — MDN',
@@ -387,6 +361,11 @@ const frontendRoadmap: Roadmap = {
               'https://developer.mozilla.org/ru/docs/Web/CSS/CSS_flexible_box_layout/Basic_concepts_of_flexbox',
               'MDN'
             ),
+            r(
+              'Полное руководство по Flexbox (перевод CSS-Tricks)',
+              'https://habr.com/ru/articles/467049/',
+              'Habr'
+            ),
           ]
         ),
         n(
@@ -408,6 +387,11 @@ const frontendRoadmap: Roadmap = {
               'https://css-tricks.com/snippets/css/complete-guide-grid/',
               'CSS-Tricks',
               'en'
+            ),
+            r(
+              'Полное визуальное руководство/шпаргалка по CSS Grid',
+              'https://habr.com/ru/companies/macloud/articles/564182/',
+              'Habr'
             ),
           ]
         ),
@@ -439,8 +423,8 @@ const frontendRoadmap: Roadmap = {
               'en'
             ),
             r(
-              'Mobile-first и 10 главных правил',
-              'https://habr.com/ru/companies/htmlacademy/articles/256893/',
+              'Самые простые техники адаптивной верстки',
+              'https://habr.com/ru/articles/144003/',
               'Habr'
             ),
           ]
@@ -456,11 +440,6 @@ const frontendRoadmap: Roadmap = {
               'prefers-color-scheme',
               'https://developer.mozilla.org/ru/docs/Web/CSS/@media/prefers-color-scheme',
               'MDN'
-            ),
-            r(
-              'Темизация через CSS-переменные',
-              'https://habr.com/ru/companies/yandex/articles/551522/',
-              'Habr'
             ),
             r(
               'Dark mode через CSS — CSS-Tricks',
@@ -564,7 +543,6 @@ const frontendRoadmap: Roadmap = {
             ),
             r('AbortController', 'https://learn.javascript.ru/fetch-abort', 'learn.javascript.ru'),
             r('Fetch — Doka Guide', 'https://doka.guide/js/fetch/', 'Doka Guide'),
-            r('Обработка ошибок в fetch', 'https://habr.com/ru/articles/498026/', 'Habr'),
           ]
         ),
         n(
@@ -581,7 +559,7 @@ const frontendRoadmap: Roadmap = {
               'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Functions/Arrow_functions',
               'MDN'
             ),
-            r('Всё, что нужно знать про ES6+', 'https://habr.com/ru/articles/305900/', 'Habr'),
+            r('ES6 по-человечески', 'https://habr.com/ru/articles/305900/', 'Habr'),
           ]
         ),
         n(
@@ -601,7 +579,11 @@ const frontendRoadmap: Roadmap = {
               'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Statements/async_function',
               'MDN'
             ),
-            r('Микротаски и макротаски', 'https://habr.com/ru/articles/461401/', 'Habr'),
+            r(
+              'Что ты такое, Event Loop? Или как устроен цикл событий в браузере Chrome',
+              'https://habr.com/ru/articles/461401/',
+              'Habr'
+            ),
             r(
               'Изучаем Event Loop',
               'https://learn.javascript.ru/event-loop',
@@ -622,7 +604,6 @@ const frontendRoadmap: Roadmap = {
             'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Operators/this',
             'MDN'
           ),
-          r('ООП в JavaScript на пальцах', 'https://habr.com/ru/articles/668780/', 'Habr'),
         ]),
       ],
     },
@@ -641,6 +622,11 @@ const frontendRoadmap: Roadmap = {
           r('Pro Git (русский перевод)', 'https://git-scm.com/book/ru/v2', 'Pro Git'),
           r('Хекслет: введение в Git', 'https://ru.hexlet.io/courses/intro_to_git_flow', 'Хекслет'),
           r('Stepik: Git для начинающих', 'https://stepik.org/course/4138/', 'Stepik'),
+          r(
+            'Git для самых маленьких. От первой команды до настройки SSH',
+            'https://habr.com/ru/articles/891050/',
+            'Habr'
+          ),
         ]),
         n(
           'git-remote',
@@ -685,11 +671,6 @@ const frontendRoadmap: Roadmap = {
               'GitHub Docs'
             ),
             r(
-              'Code review: как делать хорошо',
-              'https://habr.com/ru/companies/yandex/articles/426691/',
-              'Habr'
-            ),
-            r(
               'Шпаргалка по решению конфликтов',
               'https://docs.github.com/ru/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts',
               'GitHub Docs'
@@ -699,11 +680,7 @@ const frontendRoadmap: Roadmap = {
               'https://www.conventionalcommits.org/ru/v1.0.0/',
               'Conventional Commits'
             ),
-            r(
-              'Best practices для PR',
-              'https://habr.com/ru/companies/ibs/articles/547224/',
-              'Habr'
-            ),
+            r('6 советов для успешного Code Review', 'https://habr.com/ru/articles/480718/', 'Habr'),
           ]
         ),
       ],
@@ -717,27 +694,14 @@ const frontendRoadmap: Roadmap = {
           r('npm для начинающих', 'https://docs.npmjs.com/getting-started', 'npm Docs', 'en'),
           r('Официальная документация', 'https://docs.npmjs.com/', 'npm Docs', 'en'),
           r('Semver в npm', 'https://docs.npmjs.com/about-semantic-versioning', 'npm Docs', 'en'),
-          r('package.json: разбираемся подробно', 'https://habr.com/ru/articles/421019/', 'Habr'),
-          r(
-            'npm vs yarn vs pnpm',
-            'https://habr.com/ru/companies/timeweb/articles/655945/',
-            'Habr'
-          ),
         ]),
         n('pnpm', 'pnpm', 'Экономит диск за счёт hard-links, быстрее npm/yarn.', 'alternative', [
           r('Документация pnpm на русском', 'https://pnpm.io/ru/', 'pnpm'),
-          r(
-            'Почему pnpm быстрее и экономнее',
-            'https://habr.com/ru/companies/ruvds/articles/549980/',
-            'Habr'
-          ),
           r('Motivation — pnpm Docs', 'https://pnpm.io/motivation', 'pnpm Docs', 'en'),
           r('Workspaces в pnpm', 'https://pnpm.io/workspaces', 'pnpm Docs', 'en'),
-          r('pnpm vs npm: бенчмарки', 'https://habr.com/ru/articles/700944/', 'Habr'),
         ]),
         n('yarn', 'yarn', 'Классическая альтернатива npm, удобный workspaces.', 'alternative', [
           r('Документация Yarn', 'https://yarnpkg.com/getting-started', 'Yarn', 'en'),
-          r('Yarn vs npm: подробное сравнение', 'https://habr.com/ru/articles/341760/', 'Habr'),
           r('Yarn 2 и Plug’n’Play', 'https://yarnpkg.com/features/pnp', 'Yarn', 'en'),
           r('Миграция с npm на Yarn', 'https://yarnpkg.com/migration/guide', 'Yarn', 'en'),
           r('Workspaces в Yarn', 'https://yarnpkg.com/features/workspaces', 'Yarn', 'en'),
@@ -755,7 +719,6 @@ const frontendRoadmap: Roadmap = {
           'ESM dev-server, мгновенный HMR, оптимизация сборки через Rollup.',
           'required',
           [
-            r('Vite за 5 минут', 'https://habr.com/ru/companies/timeweb/articles/660787/', 'Habr'),
             r('Документация Vite', 'https://vitejs.dev/guide/', 'Vite', 'en'),
             r('Почему Vite? — официально', 'https://vitejs.dev/guide/why.html', 'Vite', 'en'),
             r(
@@ -765,8 +728,8 @@ const frontendRoadmap: Roadmap = {
               'en'
             ),
             r(
-              'Миграция с CRA на Vite',
-              'https://habr.com/ru/companies/dododev/articles/720802/',
+              'Webpack, Vite или Rspack: чем собирать микрофронтенды в 2025?',
+              'https://habr.com/ru/articles/888478/',
               'Habr'
             ),
           ]
@@ -777,7 +740,6 @@ const frontendRoadmap: Roadmap = {
           'Гибкий, но сложный bundler. Всё ещё живёт в legacy-проектах.',
           'alternative',
           [
-            r('Что такое Webpack и зачем он нужен', 'https://habr.com/ru/articles/506172/', 'Habr'),
             r('Концепции Webpack', 'https://webpack.js.org/concepts/', 'webpack', 'en'),
             r(
               'Руководство для начинающих',
@@ -786,7 +748,7 @@ const frontendRoadmap: Roadmap = {
               'en'
             ),
             r('Webpack: подробный разбор', 'https://doka.guide/tools/webpack/', 'Doka Guide'),
-            r('Webpack: от простого к сложному', 'https://habr.com/ru/articles/329202/', 'Habr'),
+            r('Webpack: руководство для начинающих', 'https://habr.com/ru/articles/514838/', 'Habr'),
           ]
         ),
         n('babel', 'Babel', 'Транспиляция современного JS под старые браузеры.', 'optional', [
@@ -803,7 +765,6 @@ const frontendRoadmap: Roadmap = {
             'en'
           ),
           r('Конфигурация Babel', 'https://babeljs.io/docs/configuration', 'Babel', 'en'),
-          r('Babel: как писать плагины', 'https://habr.com/ru/articles/344320/', 'Habr'),
         ]),
         n('eslint', 'ESLint', 'Статический анализ кода и автоматические правки.', 'required', [
           r('ESLint — официальная документация', 'https://eslint.org/docs/latest/', 'ESLint', 'en'),
@@ -812,12 +773,6 @@ const frontendRoadmap: Roadmap = {
             'https://eslint.org/docs/latest/use/getting-started',
             'ESLint',
             'en'
-          ),
-          r('ESLint: настройка с нуля', 'https://habr.com/ru/articles/444348/', 'Habr'),
-          r(
-            'Конфигурация для React-проекта',
-            'https://habr.com/ru/companies/ruvds/articles/501830/',
-            'Habr'
           ),
           r('Популярные правила ESLint', 'https://eslint.org/docs/latest/rules/', 'ESLint', 'en'),
         ]),
@@ -840,12 +795,6 @@ const frontendRoadmap: Roadmap = {
               'Prettier',
               'en'
             ),
-            r(
-              'Настройка Prettier + ESLint в VS Code',
-              'https://habr.com/ru/articles/449130/',
-              'Habr'
-            ),
-            r('Prettier vs ESLint', 'https://habr.com/ru/companies/ruvds/articles/423971/', 'Habr'),
           ]
         ),
       ],
@@ -896,11 +845,14 @@ const frontendRoadmap: Roadmap = {
               'Basarat',
               'en'
             ),
-            r('Generics: от простого к сложному', 'https://habr.com/ru/articles/488350/', 'Habr'),
-            r('Глубокое погружение в дженерики', 'https://habr.com/ru/articles/515018/', 'Habr'),
             r(
-              'Generics в React — учимся типизировать хуки',
-              'https://habr.com/ru/companies/skyeng/articles/672700/',
+              'Дженерики в TypeScript',
+              'https://habr.com/ru/companies/tbank/articles/588655/',
+              'Habr'
+            ),
+            r(
+              'Школа магии TypeScript: дженерики и расширение типов',
+              'https://habr.com/ru/companies/ruvds/articles/426729/',
               'Habr'
             ),
           ]
@@ -922,17 +874,11 @@ const frontendRoadmap: Roadmap = {
               'https://github.com/type-challenges/type-challenges/blob/main/README.ja.md',
               'GitHub'
             ),
-            r('Условные типы и infer', 'https://habr.com/ru/articles/461959/', 'Habr'),
             r(
               'Mapped types — официально',
               'https://www.typescriptlang.org/docs/handbook/2/mapped-types.html',
               'TypeScript',
               'en'
-            ),
-            r(
-              'TS-паттерны: свои утилитарные типы',
-              'https://habr.com/ru/companies/skyeng/articles/670802/',
-              'Habr'
             ),
           ]
         ),
@@ -943,14 +889,12 @@ const frontendRoadmap: Roadmap = {
           'optional',
           [
             r('Справочник tsconfig', 'https://www.typescriptlang.org/tsconfig', 'TypeScript', 'en'),
-            r('tsconfig: strict-режим', 'https://habr.com/ru/articles/492980/', 'Habr'),
             r(
               'Module resolution — официально',
               'https://www.typescriptlang.org/docs/handbook/modules/theory.html',
               'TypeScript',
               'en'
             ),
-            r('Абсолютные пути и paths', 'https://habr.com/ru/articles/658187/', 'Habr'),
             r(
               'tsconfig/bases — готовые пресеты',
               'https://github.com/tsconfig/bases',
@@ -979,13 +923,17 @@ const frontendRoadmap: Roadmap = {
               'React.dev',
               'en'
             ),
-            r('Подробный гайд по React-хукам', 'https://habr.com/ru/articles/671820/', 'Habr'),
             r('Канал Ulbi TV — React', 'https://www.youtube.com/@ulbitv', 'YouTube'),
             r(
               'Mixing React с TypeScript — cheat sheet',
               'https://react-typescript-cheatsheet.netlify.app/',
               'React+TS Cheatsheet',
               'en'
+            ),
+            r(
+              '5 практических рекомендаций по использованию React-хуков в продакшне',
+              'https://habr.com/ru/companies/ruvds/articles/494712/',
+              'Habr'
             ),
           ]
         ),
@@ -1011,11 +959,6 @@ const frontendRoadmap: Roadmap = {
               'Pinia',
               'en'
             ),
-            r(
-              'Vue за 10 минут',
-              'https://habr.com/ru/companies/cdek_blog/articles/749876/',
-              'Habr'
-            ),
             r('Курс по Vue 3', 'https://stepik.org/course/118302/', 'Stepik'),
           ]
         ),
@@ -1026,18 +969,12 @@ const frontendRoadmap: Roadmap = {
           'alternative',
           [
             r('Введение в Angular', 'https://angular.io/docs', 'Angular', 'en'),
-            r('Angular для начинающих', 'https://habr.com/ru/articles/580406/', 'Habr'),
             r('RxJS — ру-гайд', 'https://rxjs-dev.firebaseapp.com/guide/overview', 'RxJS', 'en'),
             r(
               'Стартовый гайд Tour of Heroes',
               'https://angular.io/tutorial/tour-of-heroes',
               'Angular',
               'en'
-            ),
-            r(
-              'Angular vs React vs Vue',
-              'https://habr.com/ru/companies/otus/articles/720558/',
-              'Habr'
             ),
           ]
         ),
@@ -1055,8 +992,6 @@ const frontendRoadmap: Roadmap = {
               'SvelteKit',
               'en'
             ),
-            r('Зачем нужен Svelte', 'https://habr.com/ru/companies/ruvds/articles/584248/', 'Habr'),
-            r('Svelte vs React', 'https://habr.com/ru/companies/timeweb/articles/702374/', 'Habr'),
           ]
         ),
       ],
@@ -1073,22 +1008,12 @@ const frontendRoadmap: Roadmap = {
           'required',
           [
             r('Документация Tailwind', 'https://tailwindcss.com/docs', 'Tailwind CSS', 'en'),
-            r(
-              'Зачем нужен Tailwind',
-              'https://habr.com/ru/companies/ruvds/articles/598769/',
-              'Habr'
-            ),
             r('Cheatsheet Tailwind', 'https://nerdcave.com/tailwind-cheat-sheet', 'nerdcave', 'en'),
             r(
               'Tailwind Play — онлайн-песочница',
               'https://play.tailwindcss.com/',
               'Tailwind Play',
               'en'
-            ),
-            r(
-              'Tailwind vs CSS-in-JS',
-              'https://habr.com/ru/companies/ruvds/articles/651931/',
-              'Habr'
             ),
           ]
         ),
@@ -1104,7 +1029,6 @@ const frontendRoadmap: Roadmap = {
               'CSS-Tricks',
               'en'
             ),
-            r('CSS Modules в React', 'https://habr.com/ru/articles/319440/', 'Habr'),
             r(
               'Репозиторий CSS Modules',
               'https://github.com/css-modules/css-modules',
@@ -1133,21 +1057,10 @@ const frontendRoadmap: Roadmap = {
           [
             r('styled-components', 'https://styled-components.com/docs', 'styled-components', 'en'),
             r(
-              'CSS-in-JS: плюсы и минусы',
-              'https://habr.com/ru/companies/ruvds/articles/440250/',
-              'Habr'
-            ),
-            r(
               'Emotion — официальные доки',
               'https://emotion.sh/docs/introduction',
               'Emotion',
               'en'
-            ),
-            r('styled-components: практика', 'https://habr.com/ru/articles/444600/', 'Habr'),
-            r(
-              'Сравнение CSS-in-JS решений',
-              'https://habr.com/ru/companies/otus/articles/671866/',
-              'Habr'
             ),
           ]
         ),
@@ -1155,11 +1068,6 @@ const frontendRoadmap: Roadmap = {
           r('Get BEM — введение', 'https://getbem.com/introduction/', 'Get BEM', 'en'),
           r('Get BEM — наименования', 'https://getbem.com/naming/', 'Get BEM', 'en'),
           r('Get BEM — FAQ', 'https://getbem.com/faq/', 'Get BEM', 'en'),
-          r(
-            'BEM для начинающих',
-            'https://habr.com/ru/companies/htmlacademy/articles/254825/',
-            'Habr'
-          ),
           r('CSS Guidelines — гайдлайны', 'https://cssguidelin.es/', 'CSS Guidelines', 'en'),
         ]),
       ],
@@ -1181,17 +1089,11 @@ const frontendRoadmap: Roadmap = {
               'React.dev',
               'en'
             ),
-            r('useContext на пальцах', 'https://habr.com/ru/articles/664530/', 'Habr'),
             r(
               'Reference: createContext',
               'https://react.dev/reference/react/createContext',
               'React.dev',
               'en'
-            ),
-            r(
-              'Ошибки при использовании Context',
-              'https://habr.com/ru/companies/yandex/articles/540298/',
-              'Habr'
             ),
             r(
               'Reducer + Context — React.dev',
@@ -1209,22 +1111,21 @@ const frontendRoadmap: Roadmap = {
           [
             r('Zustand на GitHub', 'https://github.com/pmndrs/zustand', 'GitHub', 'en'),
             r(
-              'Zustand — лёгкий стейт-менеджер',
-              'https://habr.com/ru/companies/yandex/articles/783108/',
-              'Habr'
-            ),
-            r(
               'Zustand — официальная документация',
               'https://zustand.docs.pmnd.rs/',
               'Zustand Docs',
               'en'
             ),
-            r('Zustand vs Redux Toolkit', 'https://habr.com/ru/articles/783046/', 'Habr'),
             r(
               'Persist middleware — Zustand',
               'https://zustand.docs.pmnd.rs/middlewares/persist',
               'Zustand Docs',
               'en'
+            ),
+            r(
+              'Zustand.js: современный, невесомый и очень гибкий state manager',
+              'https://habr.com/ru/articles/798923/',
+              'Habr'
             ),
           ]
         ),
@@ -1235,7 +1136,6 @@ const frontendRoadmap: Roadmap = {
             'Redux Toolkit',
             'en'
           ),
-          r('Redux Toolkit без боли', 'https://habr.com/ru/articles/665518/', 'Habr'),
           r(
             'RTK Query — серверное состояние',
             'https://redux-toolkit.js.org/rtk-query/overview',
@@ -1244,8 +1144,8 @@ const frontendRoadmap: Roadmap = {
           ),
           r('Stepik: курс по Redux', 'https://stepik.org/course/127468/', 'Stepik'),
           r(
-            'Redux Toolkit в реальном проекте',
-            'https://habr.com/ru/companies/ruvds/articles/570178/',
+            'Redux Toolkit как средство эффективной Redux-разработки',
+            'https://habr.com/ru/companies/inobitec/articles/481288/',
             'Habr'
           ),
         ]),
@@ -1262,11 +1162,6 @@ const frontendRoadmap: Roadmap = {
               'en'
             ),
             r(
-              'Зачем нужен React Query',
-              'https://habr.com/ru/companies/timeweb/articles/762314/',
-              'Habr'
-            ),
-            r(
               'Практические рецепты',
               'https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults',
               'TanStack Query',
@@ -1278,7 +1173,11 @@ const frontendRoadmap: Roadmap = {
               'TanStack Query',
               'en'
             ),
-            r('7 антипаттернов React Query', 'https://habr.com/ru/articles/716892/', 'Habr'),
+            r(
+              'React Query: стейт-менеджер для любителей кэша',
+              'https://habr.com/ru/companies/ru_mts/articles/828240/',
+              'Habr'
+            ),
           ]
         ),
       ],
@@ -1290,18 +1189,7 @@ const frontendRoadmap: Roadmap = {
       nodes: [
         n('vitest', 'Vitest / Jest', 'Юнит-тесты для функций, хуков и утилит.', 'required', [
           r('Документация Vitest', 'https://vitest.dev/guide/', 'Vitest', 'en'),
-          r(
-            'Jest для начинающих',
-            'https://habr.com/ru/companies/southbridge/articles/527940/',
-            'Habr'
-          ),
           r('Jest — официальные доки', 'https://jestjs.io/docs/getting-started', 'Jest', 'en'),
-          r('Vitest vs Jest', 'https://habr.com/ru/articles/706830/', 'Habr'),
-          r(
-            'Пишем юнит-тесты в React',
-            'https://habr.com/ru/companies/dododev/articles/732636/',
-            'Habr'
-          ),
         ]),
         n(
           'rtl',
@@ -1316,11 +1204,6 @@ const frontendRoadmap: Roadmap = {
               'en'
             ),
             r(
-              'Тестируем React-приложения с RTL',
-              'https://habr.com/ru/companies/timeweb/articles/660331/',
-              'Habr'
-            ),
-            r(
               'Шпаргалка по queries',
               'https://testing-library.com/docs/queries/about',
               'Testing Library',
@@ -1333,8 +1216,8 @@ const frontendRoadmap: Roadmap = {
               'en'
             ),
             r(
-              'Стратегия тестирования React',
-              'https://habr.com/ru/companies/flant/articles/705888/',
+              'React: тестируем компоненты с помощью Jest и Testing Library',
+              'https://habr.com/ru/companies/timeweb/articles/670480/',
               'Habr'
             ),
           ]
@@ -1347,20 +1230,10 @@ const frontendRoadmap: Roadmap = {
           [
             r('Документация Playwright', 'https://playwright.dev/docs/intro', 'Playwright', 'en'),
             r(
-              'Playwright vs Cypress',
-              'https://habr.com/ru/companies/cdek_blog/articles/772064/',
-              'Habr'
-            ),
-            r(
               'Test generator и кодогенерация',
               'https://playwright.dev/docs/codegen',
               'Playwright',
               'en'
-            ),
-            r(
-              'Playwright для QA-инженера',
-              'https://habr.com/ru/companies/yandex_praktikum/articles/701552/',
-              'Habr'
             ),
             r(
               'Конфигурация CI для Playwright',
@@ -1377,7 +1250,6 @@ const frontendRoadmap: Roadmap = {
             'Cypress',
             'en'
           ),
-          r('Cypress за час', 'https://habr.com/ru/companies/otus/articles/484996/', 'Habr'),
           r(
             'Best practices',
             'https://docs.cypress.io/guides/references/best-practices',
@@ -1390,7 +1262,6 @@ const frontendRoadmap: Roadmap = {
             'Cypress',
             'en'
           ),
-          r('Cypress для новичка', 'https://habr.com/ru/companies/otus/articles/685464/', 'Habr'),
         ]),
       ],
     },
@@ -1406,16 +1277,11 @@ const frontendRoadmap: Roadmap = {
           'required',
           [
             r('Core Web Vitals на web.dev', 'https://web.dev/articles/vitals?hl=ru', 'web.dev'),
-            r(
-              'Метрики Web Vitals: что это и зачем',
-              'https://habr.com/ru/companies/jugru/articles/707034/',
-              'Habr'
-            ),
             r('Оптимизация LCP', 'https://web.dev/articles/lcp?hl=ru', 'web.dev'),
             r('Что такое INP', 'https://web.dev/articles/inp?hl=ru', 'web.dev'),
             r(
-              'Lighthouse: как читать отчёт',
-              'https://habr.com/ru/companies/ruvds/articles/425825/',
+              'Наиболее эффективные методы улучшения Core Web Vitals',
+              'https://habr.com/ru/companies/timeweb/articles/860574/',
               'Habr'
             ),
           ]
@@ -1432,11 +1298,6 @@ const frontendRoadmap: Roadmap = {
               'learn.javascript.ru'
             ),
             r('React.lazy', 'https://react.dev/reference/react/lazy', 'React.dev', 'en'),
-            r(
-              'Разделение кода в React',
-              'https://habr.com/ru/companies/ruvds/articles/487020/',
-              'Habr'
-            ),
             r(
               'Loading images lazily',
               'https://web.dev/articles/browser-level-image-lazy-loading?hl=ru',
@@ -1456,11 +1317,6 @@ const frontendRoadmap: Roadmap = {
           'useMemo, useCallback, React.memo — когда помогает, а когда только шум.',
           'required',
           [
-            r(
-              'Когда нужна мемоизация в React',
-              'https://habr.com/ru/companies/timeweb/articles/707422/',
-              'Habr'
-            ),
             r('React.memo', 'https://react.dev/reference/react/memo', 'React.dev', 'en'),
             r('useMemo — API', 'https://react.dev/reference/react/useMemo', 'React.dev', 'en'),
             r(
@@ -1468,11 +1324,6 @@ const frontendRoadmap: Roadmap = {
               'https://react.dev/reference/react/useCallback',
               'React.dev',
               'en'
-            ),
-            r(
-              'Антипаттерны useMemo/useCallback',
-              'https://habr.com/ru/companies/flant/articles/709832/',
-              'Habr'
             ),
           ]
         ),
@@ -1502,7 +1353,6 @@ const frontendRoadmap: Roadmap = {
               'https://web.dev/articles/compress-images-avif?hl=ru',
               'web.dev'
             ),
-            r('Оптимизация картинок на фронте', 'https://habr.com/ru/articles/653813/', 'Habr'),
           ]
         ),
       ],
@@ -1524,7 +1374,6 @@ const frontendRoadmap: Roadmap = {
               'learn.javascript.ru'
             ),
             r('CORS', 'https://developer.mozilla.org/ru/docs/Web/HTTP/CORS', 'MDN'),
-            r('CORS: разбираемся полностью', 'https://habr.com/ru/articles/452248/', 'Habr'),
             r(
               'Same-origin policy — MDN',
               'https://developer.mozilla.org/ru/docs/Web/Security/Same-origin_policy',
@@ -1535,6 +1384,11 @@ const frontendRoadmap: Roadmap = {
               'https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors',
               'MDN',
               'en'
+            ),
+            r(
+              'CORS для чайников: история возникновения, как устроен и оптимальные методы работы',
+              'https://habr.com/ru/companies/macloud/articles/553826/',
+              'Habr'
             ),
           ]
         ),
@@ -1549,11 +1403,6 @@ const frontendRoadmap: Roadmap = {
               'https://developer.mozilla.org/ru/docs/Web/HTTP/CSP',
               'MDN'
             ),
-            r(
-              'CSP простыми словами',
-              'https://habr.com/ru/companies/nixys/articles/542568/',
-              'Habr'
-            ),
             r('Evaluator для CSP', 'https://csp-evaluator.withgoogle.com/', 'Google', 'en'),
             r(
               'Примеры CSP-политик',
@@ -1561,20 +1410,9 @@ const frontendRoadmap: Roadmap = {
               'content-security-policy.com',
               'en'
             ),
-            r(
-              'CSP в боевом проекте',
-              'https://habr.com/ru/companies/ruvds/articles/440030/',
-              'Habr'
-            ),
           ]
         ),
         n('xss', 'XSS и CSRF', 'Как их эксплуатируют и как защищаться.', 'required', [
-          r(
-            'XSS-уязвимости простыми словами',
-            'https://habr.com/ru/companies/otus/articles/541336/',
-            'Habr'
-          ),
-          r('CSRF: что это и как защититься', 'https://habr.com/ru/articles/417397/', 'Habr'),
           r('OWASP: Top 10 уязвимостей', 'https://owasp.org/www-project-top-ten/', 'OWASP', 'en'),
           r(
             'XSS — MDN',
@@ -1587,6 +1425,7 @@ const frontendRoadmap: Roadmap = {
             'OWASP',
             'en'
           ),
+          r('Методы защиты от CSRF-атаки', 'https://habr.com/ru/articles/318748/', 'Habr'),
         ]),
         n(
           'auth',
@@ -1595,20 +1434,14 @@ const frontendRoadmap: Roadmap = {
           'required',
           [
             r(
-              'JWT простыми словами',
-              'https://habr.com/ru/companies/otus/articles/697618/',
-              'Habr'
-            ),
-            r('OAuth 2.0 на пальцах', 'https://habr.com/ru/articles/441656/', 'Habr'),
-            r(
               'Cookie, document.cookie',
               'https://learn.javascript.ru/cookie',
               'learn.javascript.ru'
             ),
             r('jwt.io — отладчик токенов', 'https://jwt.io/', 'jwt.io', 'en'),
             r(
-              'HttpOnly cookies vs localStorage',
-              'https://habr.com/ru/companies/dsec/articles/665616/',
+              'Разработчики всё ещё путают JWT, JWKS, OAuth2 и OpenID Connect — разбираем на примерах',
+              'https://habr.com/ru/companies/ozontech/articles/976950/',
               'Habr'
             ),
           ]
@@ -1629,7 +1462,6 @@ const frontendRoadmap: Roadmap = {
             r('Next.js Learn — официальный курс', 'https://nextjs.org/learn', 'Next.js', 'en'),
             r('Next.js 14 — официальный блог', 'https://nextjs.org/blog/next-14', 'Next.js', 'en'),
             r('App Router — документация', 'https://nextjs.org/docs/app', 'Next.js', 'en'),
-            r('Server Components на пальцах', 'https://habr.com/ru/articles/730168/', 'Habr'),
             r(
               'Deployment на Vercel',
               'https://nextjs.org/docs/pages/building-your-application/deploying',
@@ -1645,7 +1477,6 @@ const frontendRoadmap: Roadmap = {
             'Nuxt',
             'en'
           ),
-          r('Nuxt 3 за 10 минут', 'https://habr.com/ru/companies/timeweb/articles/702060/', 'Habr'),
           r(
             'Data fetching в Nuxt',
             'https://nuxt.com/docs/getting-started/data-fetching',
@@ -1662,7 +1493,6 @@ const frontendRoadmap: Roadmap = {
         ]),
         n('remix', 'Remix', 'Ориентирован на web-стандарты и loaders/actions.', 'alternative', [
           r('Документация Remix', 'https://remix.run/docs/en/main', 'Remix', 'en'),
-          r('Remix за час: обзор', 'https://habr.com/ru/companies/ruvds/articles/599319/', 'Habr'),
           r('Data loaders — Remix', 'https://remix.run/docs/en/main/route/loader', 'Remix', 'en'),
           r('Remix — блог и релизы', 'https://remix.run/blog', 'Remix', 'en'),
           r(
@@ -1706,7 +1536,6 @@ const frontendRoadmap: Roadmap = {
               'https://web.dev/articles/push-notifications-overview?hl=ru',
               'web.dev'
             ),
-            r('Service Worker: как отлаживать', 'https://habr.com/ru/articles/658093/', 'Habr'),
           ]
         ),
         n(
@@ -1724,11 +1553,6 @@ const frontendRoadmap: Roadmap = {
               'Добавляем manifest в проект',
               'https://web.dev/articles/add-manifest?hl=ru',
               'web.dev'
-            ),
-            r(
-              'PWA-иконки: чеклист',
-              'https://habr.com/ru/companies/ruvds/articles/334614/',
-              'Habr'
             ),
             r('Maskable.app — генератор иконок', 'https://maskable.app/', 'Maskable', 'en'),
             r(
@@ -1756,7 +1580,6 @@ const frontendRoadmap: Roadmap = {
               'Chrome for Developers',
               'en'
             ),
-            r('Offline-first приложения', 'https://habr.com/ru/articles/450468/', 'Habr'),
             r(
               'Background Sync API — MDN',
               'https://developer.mozilla.org/en-US/docs/Web/API/Background_Synchronization_API',
@@ -1789,28 +1612,19 @@ const frontendRoadmap: Roadmap = {
               'en'
             ),
             r('Lit — фреймворк для Web Components', 'https://lit.dev/docs/', 'Lit', 'en'),
-            r(
-              'Web Components в реальных проектах',
-              'https://habr.com/ru/companies/ruvds/articles/586676/',
-              'Habr'
-            ),
           ]
         ),
       ],
     },
   ],
 }
-
 export const ROADMAPS: Roadmap[] = [frontendRoadmap]
-
 export function getRoadmapBySlug(slug?: string) {
   return ROADMAPS.find((roadmap) => roadmap.slug === slug)
 }
-
 export function getRoadmapNodeCount(roadmap: Roadmap) {
   return roadmap.stages.reduce((sum, stage) => sum + stage.nodes.length, 0)
 }
-
 export function getRoadmapRequiredCount(roadmap: Roadmap) {
   return roadmap.stages.reduce(
     (sum, stage) => sum + stage.nodes.filter((node) => node.kind === 'required').length,

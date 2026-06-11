@@ -65,7 +65,7 @@ export function Header() {
           >
             <Avatar
               src={user?.avatarUrl ?? undefined}
-              name={user?.fullName ?? user?.email}
+              name={user?.fullName || user?.email}
               size="sm"
             />
           </button>
@@ -79,7 +79,7 @@ export function Header() {
             <div className="flex items-center gap-3 border-b border-border px-2 pb-3 pt-1">
               <Avatar
                 src={user?.avatarUrl ?? undefined}
-                name={user?.fullName ?? user?.email}
+                name={user?.fullName || user?.email}
                 size="md"
               />
               <div className="min-w-0">

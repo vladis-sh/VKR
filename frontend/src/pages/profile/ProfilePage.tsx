@@ -73,7 +73,7 @@ export default function ProfilePage() {
       >
         <Avatar
           src={user?.avatarUrl ?? undefined}
-          name={user?.fullName ?? user?.email}
+          name={user?.fullName || user?.email}
           size="lg"
           className="mx-auto mb-3"
         />

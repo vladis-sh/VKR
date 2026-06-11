@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, MaxLength, IsIn } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, MaxLength } from 'class-validator';
 
 export class RegisterProfileDto {
   @ApiProperty({ example: 'Иван Иванов' })
@@ -13,11 +13,3 @@ export class RegisterProfileDto {
   @IsString()
   avatarUrl?: string;
 }
-
-// export class RegisterLevelDto {
-//   @ApiProperty({ enum: ['junior', 'middle', 'senior'] })
-//   @IsIn(['junior', 'middle', 'senior'], {
-//     message: 'Уровень знаний должен быть junior, middle или senior',
-//   })
-//   knowledgeLevel: 'junior' | 'middle' | 'senior';
-// }

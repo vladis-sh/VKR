@@ -20,7 +20,18 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
       store.resetInitialized()
     }
     window.addEventListener('auth:logout', handler)
-    return () => window.removeEventListener('auth:logout', handler)
+
+    // Server rejected a request with EMAIL_NOT_VERIFIED — lock the app
+    // until the user confirms their email.
+    const lockHandler = () => {
+      useAuthStore.getState().setVerificationLockout(true)
+    }
+    window.addEventListener('auth:email-unverified', lockHandler)
+
+    return () => {
+      window.removeEventListener('auth:logout', handler)
+      window.removeEventListener('auth:email-unverified', lockHandler)
+    }
   }, [checkAuth])
 
   return <>{children}</>
@@ -31,7 +42,8 @@ export default function App() {
     <QueryProvider>
       <ThemeProvider>
         <AuthInitializer>
-          <RouterProvider router={router} />
+          {/* Opt in to the v7 behavior to silence the future-flag console warning. */}
+          <RouterProvider router={router} future={{ v7_startTransition: true }} />
           <ToastContainer />
         </AuthInitializer>
       </ThemeProvider>

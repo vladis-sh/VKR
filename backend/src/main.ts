@@ -79,7 +79,6 @@ async function bootstrap() {
       .addTag('Tests', 'Quiz and testing')
       .addTag('Stats', 'Statistics')
       .addTag('Profile', 'User profile management')
-      .addTag('Notifications', 'Notification settings')
       .addTag('Roadmaps', 'Database-backed learning roadmaps')
       .addTag('Live Coding', 'Database-backed coding tasks')
       .addTag('Test Catalog', 'Database-backed test catalog')

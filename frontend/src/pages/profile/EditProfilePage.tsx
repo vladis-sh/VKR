@@ -243,9 +243,12 @@ export default function EditProfilePage() {
 
   const onSubmit = async (data: FormData) => {
     setIsSaving(true)
-    try {
-      let avatarUrl = user?.avatarUrl
-      if (avatarFile) {
+
+    // Step 1: avatar. Reflect it in the store as soon as the upload succeeds,
+    // so a later name-save failure doesn't hide an already-changed avatar.
+    let avatarUrl = user?.avatarUrl
+    if (avatarFile) {
+      try {
         const formData = new FormData()
         const preparedAvatar = await cropAvatarFile(avatarFile, {
           zoom: cropZoom,
@@ -256,7 +259,16 @@ export default function EditProfilePage() {
         formData.append('file', preparedAvatar)
         const uploadRes = await profileApi.uploadAvatar(formData)
         avatarUrl = uploadRes.data.avatarUrl
+        setUser({ ...user!, avatarUrl })
+      } catch {
+        toast.error('Не удалось загрузить аватар. Попробуйте ещё раз.')
+        setIsSaving(false)
+        return
       }
+    }
+
+    // Step 2: name.
+    try {
       const res = await profileApi.updateProfile({
         fullName: data.fullName,
       })
@@ -264,7 +276,7 @@ export default function EditProfilePage() {
       toast.success('Профиль обновлён')
       navigate('/app/profile')
     } catch {
-      toast.error('Не удалось сохранить профиль')
+      toast.error('Не удалось сохранить имя. Попробуйте ещё раз.')
     } finally {
       setIsSaving(false)
     }
