@@ -1,4 +1,4 @@
-version: '3.9'
+name: prepai
 
 services:
   postgres:
@@ -11,10 +11,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,7 +20,6 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
     container_name: prepai_backend
     restart: unless-stopped
     depends_on:
@@ -32,36 +29,36 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?JWT_ACCESS_SECRET is required (>=32 chars)}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required (>=32 chars)}
-      JWT_ACCESS_EXPIRES_IN: "15m"
-      JWT_REFRESH_EXPIRES_IN: "7d"
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
-      AI_PROVIDER: ${AI_PROVIDER:-mock}
-      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash-lite}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      # Same-origin scheme: the SPA and the API share one public origin.
+      FRONTEND_URL: https://${DOMAIN:?DOMAIN is required}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-InterviewPrep <no-reply@interviewprep.local>}
       PORT: 3000
       NODE_ENV: production
     volumes:
       - uploads_data:/app/uploads
-    ports:
-      - "3000:3000"
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      args:
+        # Baked into the static bundle at build time. A relative /api keeps the
+        # build origin-agnostic; nginx strips the prefix before the backend.
+        VITE_API_URL: /api
     container_name: prepai_frontend
     restart: unless-stopped
-    depends_on:
-      - backend
-    environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
-    ports:
-      - "5173:80"
 
   nginx:
-    image: nginx:alpine
+    image: nginx:1.27-alpine
     container_name: prepai_nginx
     restart: unless-stopped
     depends_on:
@@ -69,10 +66,46 @@ services:
       - frontend
     ports:
       - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN is required}
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/templates:/etc/nginx/templates:ro
       - uploads_data:/var/www/uploads:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+    # The image entrypoint only renders /etc/nginx/templates when the command
+    # starts with "nginx", so run the envsubst step explicitly, then reload
+    # every 6h so renewed certificates get picked up.
+    command: "/bin/sh -c '/docker-entrypoint.d/20-envsubst-on-templates.sh && (while :; do sleep 6h & wait $${!}; nginx -s reload; done &) && exec nginx -g \"daemon off;\"'"
+
+  certbot:
+    image: certbot/certbot
+    container_name: prepai_certbot
+    restart: unless-stopped
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    # Try renewal twice a day; nginx reloads on its own schedule above.
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done'"
+
+  # One-off tool (not started by `up`): apply the Prisma schema / seed content.
+  #   docker compose run --rm migrate                      # prisma db push
+  #   docker compose run --rm migrate npm run prisma:seed  # seed demo data
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: ./backend
+      target: builder
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    command: npx prisma db push --skip-generate
 
 volumes:
   postgres_data:
   uploads_data:
+  certbot_conf:
+  certbot_www:

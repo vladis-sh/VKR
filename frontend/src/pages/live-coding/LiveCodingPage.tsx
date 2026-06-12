@@ -160,19 +160,30 @@ function CategorySection({
         </div>
       </button>
 
-      {open && (
-        <div className="border-t border-border">
-          {tasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              solved={isSolved(task.id)}
-              favorite={isFavorite(task.id)}
-              onToggleFavorite={() => onToggleFavorite(task.id)}
-            />
-          ))}
+      {/* Smooth expand/collapse via the grid-rows trick: content stays mounted,
+          height animates 0fr↔1fr. visibility transitions discretely (hidden only
+          after the collapse finishes), which also removes hidden rows from the
+          tab order and accessibility tree. */}
+      <div
+        className={cn(
+          'grid transition-[grid-template-rows,visibility] duration-300 ease-in-out',
+          open ? 'visible grid-rows-[1fr]' : 'invisible grid-rows-[0fr]'
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="border-t border-border">
+            {tasks.map((task) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                solved={isSolved(task.id)}
+                favorite={isFavorite(task.id)}
+                onToggleFavorite={() => onToggleFavorite(task.id)}
+              />
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -353,16 +364,20 @@ export default function LiveCodingPage() {
             Избранное
           </button>
 
-          {isFiltering && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="inline-flex h-9 items-center gap-1 rounded-lg px-2 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <X size={13} />
-              Сбросить
-            </button>
-          )}
+          {/* Always rendered (fades in/out) so the filter row never reflows. */}
+          <button
+            type="button"
+            onClick={resetFilters}
+            disabled={!isFiltering}
+            aria-hidden={!isFiltering}
+            className={cn(
+              'inline-flex h-9 items-center gap-1 rounded-lg px-2 text-xs text-muted-foreground transition-opacity duration-200 hover:text-foreground',
+              isFiltering ? 'opacity-100' : 'pointer-events-none opacity-0'
+            )}
+          >
+            <X size={13} />
+            Сбросить
+          </button>
         </div>
       </section>
 

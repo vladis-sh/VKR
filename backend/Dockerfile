@@ -1,5 +1,8 @@
 FROM node:20-alpine AS builder
 
+# Prisma engines need OpenSSL to detect the platform and load libssl.
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -14,6 +17,9 @@ RUN npm run build
 
 FROM node:20-alpine AS production
 
+# The Prisma query engine links against libssl at runtime.
+RUN apk add --no-cache openssl
+
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -21,7 +27,7 @@ ENV NODE_ENV=production
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma

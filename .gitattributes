@@ -1,0 +1,4 @@
+# Shell scripts and nginx templates must keep LF endings: they are executed
+# on Linux servers even when the repo is checked out on Windows.
+*.sh text eol=lf
+*.template text eol=lf

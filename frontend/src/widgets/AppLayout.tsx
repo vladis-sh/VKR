@@ -19,8 +19,9 @@ export function AppLayout() {
         {/* Desktop Header */}
         <Header />
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+        {/* Page content. scrollbar-gutter keeps the width stable when the
+            scrollbar appears/disappears (e.g. expanding all task categories). */}
+        <main className="flex-1 overflow-y-auto pb-20 [scrollbar-gutter:stable] md:pb-0">
           <div className={cn('mx-auto p-4 md:p-6', isWidePage ? 'max-w-7xl' : 'max-w-5xl')}>
             <EmailVerificationBanner />
             <Outlet />
