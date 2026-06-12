@@ -76,8 +76,8 @@ export default function AdminQuestionsListPage() {
           description="Создайте первый вопрос, нажав на кнопку выше."
         />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-card">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-lg border border-border bg-card">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-secondary text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Вопрос</th>

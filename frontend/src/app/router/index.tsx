@@ -49,15 +49,6 @@ function LazyWrapper({ children }: { children: React.ReactNode }) {
 }
 
 export const router = createBrowserRouter([
-  // TEMP preview-only route (no auth) — remove after verifying the AI modal.
-  {
-    path: '/preview-tests-hub',
-    element: (
-      <LazyWrapper>
-        <TestsHubPage />
-      </LazyWrapper>
-    ),
-  },
   {
     path: '/',
     element: (

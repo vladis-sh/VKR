@@ -24,8 +24,6 @@ export interface LiveCodingTask {
   successRate: number
   estimatedMinutes: number
   languages: LiveCodingLanguage[]
-  isNew?: boolean
-  isPremium?: boolean
   description: string
   constraints: string[]
   examples: LiveCodingExample[]

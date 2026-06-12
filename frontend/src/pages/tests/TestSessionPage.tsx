@@ -68,7 +68,7 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
   const [error, setError] = useState('')
   const initialized = useRef(false)
   const timeUpSubmitted = useRef(false)
-  const { data: topics } = useTestTopics()
+  const { data: topics, isError: topicsError } = useTestTopics()
 
   const isTimeAttack = mode === 'time-attack'
   const isAi = mode === 'ai'
@@ -147,8 +147,8 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
     totalQuestions,
     selectedIndex,
     hasAnswered,
-    isLastQuestion,
     isGameOver,
+    willFinish,
     revealed,
     isChecking,
     handleAnswer,
@@ -187,23 +187,29 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
   }, [isSubmitting, stopTimer])
 
   // ── Render ──────────────────────────────────────────────────────────────────
+  // The session waits on the topic list to resolve the slug; if that request
+  // failed, surface it instead of spinning forever.
+  const blockedByTopics = hasTopicSlug && !topicName && topicsError
+
+  if (error || blockedByTopics) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-center">
+        <div className="text-4xl">😕</div>
+        <p className="text-sm text-muted-foreground">
+          {error || 'Не удалось загрузить список тем. Попробуйте снова.'}
+        </p>
+        <Button variant="outline" onClick={() => navigate('/app/tests')}>
+          Назад к тестам
+        </Button>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
         <Spinner size="lg" />
         <p className="text-sm text-muted-foreground">Загрузка теста...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-center">
-        <div className="text-4xl">😕</div>
-        <p className="text-sm text-muted-foreground">{error}</p>
-        <Button variant="outline" onClick={() => navigate('/app/tests')}>
-          Назад к тестам
-        </Button>
       </div>
     )
   }
@@ -293,7 +299,7 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
               </div>
             )}
             <Button className="w-full" onClick={handleNext} loading={isSubmitting}>
-              {isLastQuestion || isGameOver ? (
+              {willFinish ? (
                 <><Trophy size={16} />Завершить тест</>
               ) : (
                 <>Следующий вопрос<ChevronRight size={16} /></>

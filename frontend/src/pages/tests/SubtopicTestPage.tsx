@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -46,6 +46,14 @@ export default function SubtopicTestPage() {
   const [showResults, setShowResults] = useState(false)
   const queryClient = useQueryClient()
   const startedAtRef = useRef(Date.now())
+
+  // The component stays mounted when navigating between subtopics of the same
+  // route — start the new test from question 1 with a fresh clock.
+  useEffect(() => {
+    setCurrentIndex(0)
+    setShowResults(false)
+    startedAtRef.current = Date.now()
+  }, [subtopicSlug])
 
   if (isLoading) return <TestPageSkeleton />
 
@@ -307,7 +315,7 @@ export default function SubtopicTestPage() {
           <ChevronLeft size={16} />
           Назад
         </Button>
-        <Button onClick={goNext} size="lg">
+        <Button onClick={goNext} size="lg" disabled={selectedIndex === undefined}>
           {isLast ? 'Завершить' : 'Далее'}
           {isLast ? <CheckCircle2 size={16} /> : <ChevronRight size={16} />}
         </Button>

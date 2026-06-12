@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Group, Panel, Separator } from 'react-resizable-panels'
-import CodeMirror from '@uiw/react-codemirror'
+// EditorView/keymap/Prec come from the re-exports of @uiw/react-codemirror so that
+// dev pre-bundling never loads a second copy of @codemirror/state (instanceof breaks).
+import CodeMirror, { EditorView, keymap, Prec } from '@uiw/react-codemirror'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { EditorView } from '@codemirror/view'
 import {
   ArrowLeft,
   Bot,
@@ -124,6 +125,9 @@ function CodeEditor({
     () => [
       javascript({ typescript: language === 'typescript' }),
       EditorView.lineWrapping,
+      // The default keymap binds Mod-Enter to "insert blank line"; swallow it so
+      // the global run/submit shortcut doesn't also edit the code.
+      Prec.highest(keymap.of([{ key: 'Mod-Enter', run: () => true }])),
       EditorView.theme({
         '&': { height: '100%', fontSize: `${fontSize}px`, backgroundColor: 'transparent' },
         '.cm-scroller': { fontFamily: FONT_FAMILY },
@@ -363,7 +367,7 @@ function ProblemPanel({
 }) {
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <div className="flex shrink-0 gap-1 border-b border-border px-2 pt-1">
+      <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-border px-2 pt-1">
         {leftTabs.map((tab) => {
           const isHints = tab.value === 'interviewer'
           return (
@@ -874,22 +878,6 @@ export default function LiveCodingTaskPage() {
           </Button>
         }
       />
-    )
-  }
-
-  if (task.isPremium) {
-    return (
-      <div className="mx-auto max-w-xl">
-        <EmptyState
-          title="Задача по подписке"
-          description="Эта задача закрыта для текущего тарифа. В списке задач она помечена Premium."
-          action={
-            <Button asChild>
-              <Link to="/app/live-coding">Вернуться к Live Coding</Link>
-            </Button>
-          }
-        />
-      </div>
     )
   }
 

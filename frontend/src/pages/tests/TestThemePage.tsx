@@ -206,7 +206,7 @@ export default function TestThemePage() {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-6 md:flex-col md:items-stretch md:gap-4">
+          <div className="flex shrink-0 flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:gap-6 md:flex-col md:items-stretch md:gap-4">
             <CircularProgress
               value={stats.progressPercent}
               size={108}

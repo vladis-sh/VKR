@@ -110,8 +110,6 @@ export const liveCodingPayloadSchema = z.object({
   successRate: z.number(),
   estimatedMinutes: z.number(),
   languages: z.array(z.enum(['javascript', 'typescript'])).min(1),
-  isNew: z.boolean().optional(),
-  isPremium: z.boolean().optional(),
   description: z.string(),
   constraints: z.array(z.string()),
   examples: z.array(liveExampleSchema),

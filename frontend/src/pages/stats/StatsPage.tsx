@@ -154,8 +154,7 @@ export default function StatsPage() {
 
   const practice = useMemo(() => {
     const solvedSet = new Set(lcProgress.solved)
-    const freeTasks = tasks.filter((task) => !task.isPremium)
-    const tasksSolved = freeTasks.filter((task) => solvedSet.has(task.id)).length
+    const tasksSolved = tasks.filter((task) => solvedSet.has(task.id)).length
 
     let nodesTotal = 0
     let nodesDone = 0
@@ -180,7 +179,7 @@ export default function StatsPage() {
 
     return {
       tasksSolved,
-      tasksTotal: freeTasks.length,
+      tasksTotal: tasks.length,
       nodesDone,
       nodesTotal,
       favoriteTasks,
@@ -382,8 +381,8 @@ export default function StatsPage() {
           delay={0.15}
           className={cn(!showTrend && 'lg:col-span-2')}
         >
-          <div className="flex items-center gap-4">
-            <div className="relative h-[200px] flex-1">
+          <div className="flex flex-col items-center gap-4 sm:flex-row">
+            <div className="relative h-[200px] w-full sm:flex-1">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie

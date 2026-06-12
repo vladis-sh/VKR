@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   CheckCircle2,
@@ -6,7 +6,6 @@ import {
   Circle,
   Clock,
   Code2,
-  Lock,
   Search,
   Star,
   X,
@@ -61,8 +60,10 @@ function TaskRow({
   favorite: boolean
   onToggleFavorite: () => void
 }) {
-  const rowContent = (
-    <>
+  // The row is a div with a "stretched" link over it (Link's ::after covers the
+  // whole row) so the favorite button is not nested inside the anchor.
+  return (
+    <div className="relative flex items-center gap-3 border-b border-border/60 px-4 py-2.5 transition-colors last:border-b-0 hover:bg-accent/60">
       <div className="flex w-6 shrink-0 justify-center">
         {solved ? (
           <CheckCircle2 size={18} className="text-green-500" />
@@ -73,13 +74,9 @@ function TaskRow({
 
       <button
         type="button"
-        onClick={(event) => {
-          event.preventDefault()
-          event.stopPropagation()
-          onToggleFavorite()
-        }}
+        onClick={onToggleFavorite}
         className={cn(
-          'flex w-6 shrink-0 justify-center transition-colors',
+          'relative z-10 flex w-6 shrink-0 justify-center transition-colors',
           favorite ? 'text-amber-500' : 'text-muted-foreground/40 hover:text-amber-500'
         )}
         aria-label={favorite ? 'Убрать из избранного' : 'Добавить в избранное'}
@@ -88,24 +85,12 @@ function TaskRow({
       </button>
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              'truncate text-sm font-medium',
-              task.isPremium ? 'text-muted-foreground' : 'text-foreground'
-            )}
-          >
-            {task.title}
-          </span>
-          {task.isNew && (
-            <span className="shrink-0 rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
-              Новая
-            </span>
-          )}
-          {task.isPremium && (
-            <Lock size={12} className="shrink-0 text-amber-500" aria-label="Premium" />
-          )}
-        </div>
+        <Link
+          to={`/app/live-coding/${task.slug}`}
+          className="block truncate text-sm font-medium text-foreground after:absolute after:inset-0"
+        >
+          {task.title}
+        </Link>
       </div>
 
       <div className="hidden w-20 shrink-0 items-center gap-1 text-xs text-muted-foreground sm:flex">
@@ -116,27 +101,7 @@ function TaskRow({
       <div className={cn('w-20 shrink-0 text-right text-xs font-semibold', difficultyTone(task.difficulty))}>
         {DIFFICULTY_LABELS[task.difficulty]}
       </div>
-    </>
-  )
-
-  const commonClasses =
-    'group flex items-center gap-3 border-b border-border/60 px-4 py-2.5 last:border-b-0 transition-colors'
-
-  if (task.isPremium) {
-    return (
-      <div className={cn(commonClasses, 'cursor-not-allowed opacity-70')}>
-        {rowContent}
-      </div>
-    )
-  }
-
-  return (
-    <Link
-      to={`/app/live-coding/${task.slug}`}
-      className={cn(commonClasses, 'hover:bg-accent/60')}
-    >
-      {rowContent}
-    </Link>
+    </div>
   )
 }
 
@@ -158,6 +123,9 @@ function CategorySection({
   onToggleFavorite: (id: string) => void
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  // When filters toggle, follow the new default (open while searching, collapsed
+  // otherwise); manual toggles still work in between.
+  useEffect(() => setOpen(defaultOpen), [defaultOpen])
   const percent = stats.total > 0 ? Math.round((stats.solved / stats.total) * 100) : 0
 
   return (
@@ -244,15 +212,12 @@ export default function LiveCodingPage() {
     return Array.from(map.entries())
   }, [filteredTasks])
 
-  const freeTasks = tasks.filter((task) => !task.isPremium)
-  const solvedFree = freeTasks.filter((task) => progress.solved.includes(task.id))
+  const solvedTasks = tasks.filter((task) => progress.solved.includes(task.id))
   const progressPercent =
-    freeTasks.length > 0 ? Math.round((solvedFree.length / freeTasks.length) * 100) : 0
+    tasks.length > 0 ? Math.round((solvedTasks.length / tasks.length) * 100) : 0
 
   const difficultyCounts = (['easy', 'medium', 'hard'] as const).map((item) => {
-    const tasksInDifficulty = tasks.filter(
-      (task) => task.difficulty === item && !task.isPremium
-    )
+    const tasksInDifficulty = tasks.filter((task) => task.difficulty === item)
     return {
       difficulty: item,
       solved: tasksInDifficulty.filter((task) => progress.solved.includes(task.id)).length,
@@ -297,7 +262,7 @@ export default function LiveCodingPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {difficultyCounts.map((item) => (
               <div
                 key={item.difficulty}
@@ -417,10 +382,9 @@ export default function LiveCodingPage() {
           </div>
         ) : (
           groupedTasks.map(([category, tasks]) => {
-            const categoryFree = tasks.filter((task) => !task.isPremium)
             const stats: CategoryStats = {
-              solved: categoryFree.filter((task) => progress.solved.includes(task.id)).length,
-              total: categoryFree.length,
+              solved: tasks.filter((task) => progress.solved.includes(task.id)).length,
+              total: tasks.length,
             }
 
             return (
@@ -429,7 +393,7 @@ export default function LiveCodingPage() {
                 category={category}
                 tasks={tasks}
                 stats={stats}
-                defaultOpen={false}
+                defaultOpen={isFiltering}
                 isSolved={isSolved}
                 isFavorite={isFavorite}
                 onToggleFavorite={toggleFavorite}

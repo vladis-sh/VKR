@@ -18,18 +18,27 @@ import { cn } from '@/shared/lib/cn'
 /** How many cards a category shows before "Показать все". */
 const PREVIEW_COUNT = 3
 
-/** A single test theme rendered as a horizontal card (icon · text · progress). */
+interface ThemeStats {
+  progressPercent: number
+  status: string
+}
+
+/**
+ * A single test theme rendered as a horizontal card (icon · text · progress).
+ * Stats come in as props — a per-card progress hook would re-fetch the synced
+ * progress from the server once per theme.
+ */
 function TestThemeCard({
   theme,
   accentClass,
   index,
+  stats,
 }: {
   theme: TestTheme
   accentClass: string
   index: number
+  stats: ThemeStats
 }) {
-  const { getThemeStats } = useTestCatalogProgress()
-  const stats = getThemeStats(theme)
   const questionsCount = getThemeQuestionCount(theme)
 
   return (
@@ -74,7 +83,15 @@ function TestThemeCard({
 }
 
 /** A category header followed by its theme cards, collapsed to a preview. */
-function CategorySection({ group, index }: { group: CategoryGroup; index: number }) {
+function CategorySection({
+  group,
+  index,
+  getThemeStats,
+}: {
+  group: CategoryGroup
+  index: number
+  getThemeStats: (theme: TestTheme) => ThemeStats
+}) {
   const [expanded, setExpanded] = useState(false)
   const { category, themes } = group
   const CategoryIcon = category.icon
@@ -115,6 +132,7 @@ function CategorySection({ group, index }: { group: CategoryGroup; index: number
             theme={theme}
             accentClass={category.accentClass}
             index={themeIndex}
+            stats={getThemeStats(theme)}
           />
         ))}
       </div>
@@ -157,6 +175,8 @@ function CategorySectionSkeleton() {
 
 export default function ThemesCatalogPage() {
   const { data: themes = [], isLoading } = useTestCatalogThemes()
+  // One progress hook for the whole page — cards receive their stats as props.
+  const { getThemeStats } = useTestCatalogProgress()
   const groups = groupThemesByCategory(themes)
 
   return (
@@ -196,7 +216,12 @@ export default function ThemesCatalogPage() {
       ) : (
         <div className="space-y-8">
           {groups.map((group, index) => (
-            <CategorySection key={group.category.id} group={group} index={index} />
+            <CategorySection
+              key={group.category.id}
+              group={group}
+              index={index}
+              getThemeStats={getThemeStats}
+            />
           ))}
         </div>
       )}

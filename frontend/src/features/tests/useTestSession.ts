@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { testsApi } from '@/shared/api/tests.api'
 import { QUERY_KEYS } from '@/shared/constants'
 import { toast } from '@/features/theme/useToastStore'
@@ -24,10 +24,10 @@ export function useTestSession({
   initialSeconds = 0,
 }: UseTestSessionOptions) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answers, setAnswers] = useState<TestAnswer[]>([])
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [showResult, setShowResult] = useState(false)
   const [isGameOver, setIsGameOver] = useState(false)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [timerSeconds, setTimerSeconds] = useState(countdown ? initialSeconds : 0)
@@ -39,6 +39,12 @@ export function useTestSession({
   const currentQuestion = questions[currentIndex]
   const isLastQuestion = currentIndex === questions.length - 1
   const hasAnswered = selectedIndex !== null
+  // One-mistake: a wrong answer ends the test. isGameOver flips on a delay (so the
+  // user sees the reveal first), but "next" must finish the session right away —
+  // otherwise a quick click advances past the game over.
+  const lastAnswerWrong =
+    mode === 'one-mistake' && answers.length > 0 && !answers[answers.length - 1].isCorrect
+  const willFinish = isLastQuestion || isGameOver || lastAnswerWrong
 
   const completeSessionMutation = useMutation({
     mutationFn: (data: { durationSeconds: number }) =>
@@ -47,6 +53,8 @@ export function useTestSession({
         durationSeconds: data.durationSeconds,
       }),
     onSuccess: () => {
+      // Stats are cached for 5 minutes — drop them so the fresh session shows up.
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.STATS })
       navigate(`/app/tests/results/${sessionId}`)
     },
     onError: () => {
@@ -95,7 +103,7 @@ export function useTestSession({
   const handleNext = useCallback(() => {
     if (!hasAnswered) return
 
-    if (isLastQuestion || isGameOver) {
+    if (willFinish) {
       const duration = countdown ? initialSeconds - timerSeconds : elapsedSeconds
       completeSessionMutation.mutate({ durationSeconds: Math.max(duration, 1) })
       return
@@ -103,11 +111,9 @@ export function useTestSession({
 
     setCurrentIndex((prev) => prev + 1)
     setSelectedIndex(null)
-    setShowResult(false)
   }, [
     hasAnswered,
-    isLastQuestion,
-    isGameOver,
+    willFinish,
     countdown,
     initialSeconds,
     timerSeconds,
@@ -129,10 +135,9 @@ export function useTestSession({
     hasAnswered,
     isLastQuestion,
     isGameOver,
+    willFinish,
     revealed,
     isChecking,
-    showResult,
-    setShowResult,
     handleAnswer,
     handleNext,
     handleTimeUp,
@@ -147,14 +152,6 @@ export function useTestTopics() {
   return useQuery({
     queryKey: QUERY_KEYS.TEST_TOPICS,
     queryFn: () => testsApi.getTopics().then((r) => r.data),
-  })
-}
-
-export function useTestQuestions(params: { topic?: string; limit?: number; difficulty?: string } = {}) {
-  return useQuery({
-    queryKey: QUERY_KEYS.TEST_QUESTIONS(params),
-    queryFn: () => testsApi.getQuestions(params).then((r) => r.data),
-    enabled: Object.keys(params).length > 0,
   })
 }
 

@@ -54,7 +54,6 @@ export default function TestHistoryPage() {
       {/* Answer list */}
       <div className="space-y-3">
         {answers.map((item, i) => {
-          const letters = ['A', 'B', 'C', 'D']
           return (
             <motion.div
               key={item.questionId}
@@ -101,7 +100,7 @@ export default function TestHistoryPage() {
                         isSelected && !isCorrect && 'border-red-500 bg-red-500 text-white',
                         !isSelected && !isCorrect && 'border-border bg-secondary'
                       )}>
-                        {letters[idx]}
+                        {String.fromCharCode(65 + idx)}
                       </span>
                       {opt}
                       {isCorrect && <span className="ml-auto text-[10px] font-semibold">Верный</span>}

@@ -247,7 +247,7 @@ export default function ChatPage() {
       {/* Session sidebar */}
       <div
         className={cn(
-          'fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border flex flex-col transition-transform duration-200 md:relative md:translate-x-0 md:z-auto md:w-56 lg:w-64',
+          'fixed bottom-20 left-0 top-0 z-40 w-64 bg-card border-r border-border flex flex-col transition-transform duration-200 md:relative md:bottom-0 md:translate-x-0 md:z-auto md:w-56 lg:w-64',
           showSidebar ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         )}
       >

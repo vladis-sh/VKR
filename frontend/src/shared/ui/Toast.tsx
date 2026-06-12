@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { forwardRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, XCircle, Info, X } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
@@ -24,7 +24,10 @@ const variantBorder = {
   info: 'border-primary/30',
 }
 
-function ToastItemComponent({ toast }: { toast: ToastItem }) {
+// AnimatePresence mode="popLayout" measures children through a ref, so the item
+// must forward it to the motion element.
+const ToastItemComponent = forwardRef<HTMLDivElement, { toast: ToastItem }>(
+  function ToastItemComponent({ toast }, ref) {
   const { remove } = useToastStore()
 
   useEffect(() => {
@@ -34,6 +37,7 @@ function ToastItemComponent({ toast }: { toast: ToastItem }) {
 
   return (
     <motion.div
+      ref={ref}
       layout
       role={toast.variant === 'error' ? 'alert' : 'status'}
       initial={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -55,7 +59,7 @@ function ToastItemComponent({ toast }: { toast: ToastItem }) {
       </button>
     </motion.div>
   )
-}
+})
 
 export function ToastContainer() {
   const { toasts } = useToastStore()
