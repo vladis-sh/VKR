@@ -124,8 +124,12 @@ export default function TestSessionPage({ mode }: TestSessionPageProps) {
         const qs: TestQuestion[] = Array.isArray(questionsRes.data) ? questionsRes.data : []
         if (qs.length === 0) { setError('Нет вопросов для этой темы'); return }
         setQuestions(qs)
-      } catch {
-        setError('Не удалось загрузить тест. Попробуйте снова.')
+      } catch (err) {
+        // Surface the backend's message (e.g. the off-topic rejection for AI
+        // tests) when present; fall back to a generic message otherwise.
+        const message = (err as { response?: { data?: { error?: { message?: string } } } })
+          ?.response?.data?.error?.message
+        setError(message || 'Не удалось загрузить тест. Попробуйте снова.')
       } finally {
         setLoading(false)
       }

@@ -1,5 +1,6 @@
 import {
   BadGatewayException,
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -75,7 +76,28 @@ export class DeepseekProvider implements IAiProvider {
     });
 
     const text = this.extractText(data);
-    return this.normalizeQuestions(this.parseQuestionJson(text), count);
+    const payload = this.parseQuizPayload(text);
+
+    // The model returns {"error":"off_topic"} when the topic is not IT-related.
+    if (this.isOffTopic(payload)) {
+      throw new BadRequestException(
+        'Тема должна относиться к программированию или IT. Укажите техническую тему — например: React, SQL или алгоритмы.',
+      );
+    }
+
+    const questions = Array.isArray(payload)
+      ? payload
+      : (payload as { questions?: unknown })?.questions;
+    return this.normalizeQuestions(questions, count);
+  }
+
+  private isOffTopic(payload: unknown): boolean {
+    return (
+      !!payload &&
+      typeof payload === 'object' &&
+      !Array.isArray(payload) &&
+      (payload as { error?: unknown }).error === 'off_topic'
+    );
   }
 
   private toOpenAiMessages(messages: ChatMessage[], systemPrompt?: string): OpenAiMessage[] {
@@ -174,15 +196,16 @@ export class DeepseekProvider implements IAiProvider {
     return text;
   }
 
-  private parseQuestionJson(text: string): unknown {
+  private parseQuizPayload(text: string): unknown {
     const withoutFence = text
       .trim()
       .replace(/^```(?:json)?\s*/i, '')
       .replace(/\s*```$/i, '');
 
     try {
-      const parsed = JSON.parse(withoutFence);
-      return Array.isArray(parsed) ? parsed : (parsed as { questions?: unknown }).questions;
+      // Return the raw value (array of questions, {questions:[...]}, or the
+      // {error:"off_topic"} marker) — the caller decides how to interpret it.
+      return JSON.parse(withoutFence);
     } catch {
       const match = withoutFence.match(/\[[\s\S]*\]/);
       if (!match) {
