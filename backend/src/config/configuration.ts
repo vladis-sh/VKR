@@ -33,6 +33,10 @@ export default () => ({
     deepseekBaseUrl: (process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com').trim(),
   },
   mail: {
+    // HTTPS-based sending (port 443) for hosts where outbound SMTP is blocked.
+    // Takes priority over SMTP when set; resend wins over brevo.
+    resendApiKey: (process.env.RESEND_API_KEY || '').trim(),
+    brevoApiKey: (process.env.BREVO_API_KEY || '').trim(),
     // Empty host => fall back to an Ethereal test inbox (preview URL in logs).
     host: (process.env.SMTP_HOST || '').trim(),
     port: parseInt(process.env.SMTP_PORT, 10) || 587,

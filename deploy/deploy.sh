@@ -72,7 +72,9 @@ if [ "$SELF_SIGNED" -eq 0 ] && cert_shell "test -f /etc/letsencrypt/live/$DOMAIN
     exit 1
   fi
   cert_shell "rm -rf /etc/letsencrypt/live/$DOMAIN /etc/letsencrypt/archive/$DOMAIN /etc/letsencrypt/renewal/$DOMAIN.conf"
-  if docker compose run --rm --no-deps certbot certonly --webroot -w /var/www/certbot \
+  # --entrypoint is required: the compose service overrides the image
+  # entrypoint with the renew loop, which would swallow the certonly args.
+  if docker compose run --rm --no-deps --entrypoint certbot certbot certonly --webroot -w /var/www/certbot \
        -d "$DOMAIN" --email "$CERTBOT_EMAIL" --agree-tos --no-eff-email --non-interactive; then
     docker compose exec nginx nginx -s reload
     echo '    Certificate issued.'

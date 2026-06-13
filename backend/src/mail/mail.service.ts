@@ -5,9 +5,13 @@ import * as nodemailer from 'nodemailer';
 /**
  * Thin wrapper around nodemailer.
  *
- * If SMTP_HOST is configured, a real SMTP transport is used. Otherwise the
- * service lazily creates an Ethereal test account: emails are not delivered,
- * but every send logs a one-click preview URL — ideal for local dev / demos.
+ * Transport selection, in priority order:
+ * 1. RESEND_API_KEY / BREVO_API_KEY — send over an HTTPS API (port 443);
+ *    for hosts where outbound SMTP ports are firewalled.
+ * 2. SMTP_HOST — a real SMTP transport.
+ * 3. Neither — lazily create an Ethereal test account: emails are not
+ *    delivered, but every send logs a one-click preview URL — ideal for
+ *    local dev / demos.
  */
 @Injectable()
 export class MailService {
@@ -70,6 +74,13 @@ export class MailService {
     html: string,
     text: string,
   ): Promise<void> {
+    if (this.configService.get<string>('mail.resendApiKey')) {
+      return this.sendViaResend(to, subject, html, text);
+    }
+    if (this.configService.get<string>('mail.brevoApiKey')) {
+      return this.sendViaBrevo(to, subject, html, text);
+    }
+
     const transporter = await this.getTransporter();
     const info = await transporter.sendMail({ from: this.from, to, subject, html, text });
 
@@ -79,6 +90,70 @@ export class MailService {
     } else {
       this.logger.log(`Email "${subject}" → ${to} (id: ${info.messageId})`);
     }
+  }
+
+  /** MAIL_FROM is "Name <email>" or a bare address. */
+  private parseFrom(): { name: string; email: string } {
+    const match = this.from.match(/^(.*)<([^>]+)>\s*$/);
+    if (match) {
+      return { name: match[1].trim() || 'PrepStation', email: match[2].trim() };
+    }
+    return { name: 'PrepStation', email: this.from };
+  }
+
+  private async sendViaResend(
+    to: string,
+    subject: string,
+    html: string,
+    text: string,
+  ): Promise<void> {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${this.configService.get<string>('mail.resendApiKey')}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ from: this.from, to: [to], subject, html, text }),
+    });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw new Error(`Resend API responded ${response.status}: ${detail}`);
+    }
+
+    const info = (await response.json().catch(() => ({}))) as { id?: string };
+    this.logger.log(`Email "${subject}" → ${to} (resend id: ${info.id ?? 'n/a'})`);
+  }
+
+  private async sendViaBrevo(
+    to: string,
+    subject: string,
+    html: string,
+    text: string,
+  ): Promise<void> {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': this.configService.get<string>('mail.brevoApiKey'),
+        'content-type': 'application/json',
+        accept: 'application/json',
+      },
+      body: JSON.stringify({
+        sender: this.parseFrom(),
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        textContent: text,
+      }),
+    });
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '');
+      throw new Error(`Brevo API responded ${response.status}: ${detail}`);
+    }
+
+    const info = (await response.json().catch(() => ({}))) as { messageId?: string };
+    this.logger.log(`Email "${subject}" → ${to} (brevo id: ${info.messageId ?? 'n/a'})`);
   }
 
   async sendEmailVerification(to: string, link: string): Promise<void> {
