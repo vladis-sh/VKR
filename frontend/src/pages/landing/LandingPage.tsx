@@ -1,5 +1,4 @@
-import { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   BrainCircuit,
@@ -9,6 +8,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { Button } from '@/shared/ui/Button'
+import { FullPageSpinner } from '@/shared/ui/Spinner'
 import { useAuthStore } from '@/features/auth/useAuthStore'
 
 const features = [
@@ -40,13 +40,17 @@ const features = [
 
 export default function LandingPage() {
   const { isAuthenticated, isLoading } = useAuthStore()
-  const navigate = useNavigate()
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/app/roadmaps', { replace: true })
-    }
-  }, [isAuthenticated, isLoading, navigate])
+  // Don't paint the marketing page until the session check resolves —
+  // otherwise a logged-in user sees it flash before being redirected.
+  if (isLoading) {
+    return <FullPageSpinner />
+  }
+
+  // Logged-in users belong in the app; redirect during render (no flash).
+  if (isAuthenticated) {
+    return <Navigate to="/app/roadmaps" replace />
+  }
 
   return (
     <div className="min-h-screen bg-background">
