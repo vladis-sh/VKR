@@ -62,7 +62,7 @@ export class TestsService {
       .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
   }
 
-  async getQuestions(userId: string, query: QueryQuestionsDto) {
+  async getQuestions(_userId: string, query: QueryQuestionsDto) {
     const { topic, limit = 10, difficulty } = query;
 
     const where: any = {
@@ -75,19 +75,11 @@ export class TestsService {
       where.topic = topic;
     }
 
+    // Questions are not filtered by the user's knowledge level: a picked topic
+    // serves all of its questions, so it is never empty. An explicit difficulty
+    // (opt-in via the query) still narrows the set when a caller asks for it.
     if (difficulty) {
       where.difficulty = difficulty as KnowledgeLevel;
-    }
-
-    if (!difficulty) {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-        select: { knowledgeLevel: true },
-      });
-
-      if (user) {
-        where.difficulty = user.knowledgeLevel;
-      }
     }
 
     const questions = await this.prisma.question.findMany({
@@ -96,7 +88,11 @@ export class TestsService {
       orderBy: { createdAt: 'asc' },
     });
 
-    return questions.sort(() => Math.random() - 0.5).map((question) => this.mapQuestion(question));
+    return this.shuffle(questions).map((question) => this.mapQuestion(question));
+  }
+
+  private shuffle<T>(items: T[]): T[] {
+    return [...items].sort(() => Math.random() - 0.5);
   }
 
   async createTestSession(userId: string, dto: CreateTestSessionDto) {
