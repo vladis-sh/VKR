@@ -31,11 +31,15 @@ const ACCESS_COOKIE_OPTIONS = {
   maxAge: 15 * 60 * 1000,
 };
 
+// path '/' (not '/auth/refresh'): the browser-facing URL is '/api/auth/refresh'
+// because nginx strips the '/api' prefix server-side. A '/auth/refresh' path
+// would never match, so the cookie wouldn't be sent and refresh would fail —
+// kicking users to /login once the 15-minute access token expires.
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   sameSite: 'lax' as const,
   secure: process.env.NODE_ENV === 'production',
-  path: '/auth/refresh',
+  path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
@@ -89,7 +93,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout - clears auth cookies' })
   async logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('access_token');
-    res.clearCookie('refresh_token', { path: '/auth/refresh' });
+    res.clearCookie('refresh_token', { path: '/' });
     return { message: 'Logged out successfully' };
   }
 
